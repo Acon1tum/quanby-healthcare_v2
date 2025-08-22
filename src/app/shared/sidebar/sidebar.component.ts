@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../auth/auth.service';
 
 interface MenuItem {
   label: string;
@@ -21,6 +22,11 @@ export class SidebarComponent implements OnInit {
   @Input() userRole: 'admin' | 'doctor' | 'patient' = 'patient';
   
   menuItems: MenuItem[] = [];
+  
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
   
   ngOnInit() {
     this.setMenuItems();
@@ -126,5 +132,9 @@ export class SidebarComponent implements OnInit {
     if (item.children) {
       item.expanded = !item.expanded;
     }
+  }
+  
+  logout(): void {
+    this.authService.logout();
   }
 }

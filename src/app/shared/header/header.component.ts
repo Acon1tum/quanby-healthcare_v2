@@ -42,18 +42,6 @@ export class HeaderComponent implements OnInit {
     this.closeMobileMenu();
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.closeMobileMenu();
-  }
-
-  navigateToDashboard(): void {
-    if (this.currentUser) {
-      this.authService.redirectBasedOnRole();
-    }
-    this.closeMobileMenu();
-  }
-
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
     this.updateBodyScroll();
