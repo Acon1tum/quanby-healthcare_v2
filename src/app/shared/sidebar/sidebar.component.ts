@@ -37,12 +37,12 @@ export class SidebarComponent implements OnInit {
           },
           {
             label: 'Schedule Management',
-            icon: 'schedule',
+            icon: 'event',
             route: '/admin/schedule-management'
           },
           {
             label: 'System Administration',
-            icon: 'admin_panel_settings',
+            icon: 'settings',
             route: '/admin/system-administration',
             children: [
               {
@@ -89,7 +89,7 @@ export class SidebarComponent implements OnInit {
           },
           {
             label: 'Schedule',
-            icon: 'schedule',
+            icon: 'event',
             route: '/doctor/schedule'
           }
         ];
@@ -114,7 +114,7 @@ export class SidebarComponent implements OnInit {
           },
           {
             label: 'Schedule',
-            icon: 'schedule',
+            icon: 'event',
             route: '/patient/schedule'
           }
         ];

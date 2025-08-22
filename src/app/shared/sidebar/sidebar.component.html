@@ -15,7 +15,7 @@
           [class.has-children]="item.children"
           (click)="toggleSubmenu(item)"
         >
-          <span class="material-icons icon">{{ item.icon }}</span>
+          <i class="material-icons icon" [title]="item.label">{{ item.icon }}</i>
           <span class="label">{{ item.label }}</span>
           <span 
             *ngIf="item.children" 
@@ -38,7 +38,7 @@
               routerLinkActive="active"
               class="submenu-link"
             >
-              <span class="material-icons icon">{{ child.icon }}</span>
+              <i class="material-icons icon" [title]="child.label">{{ child.icon }}</i>
               <span class="label">{{ child.label }}</span>
             </a>
           </li>
