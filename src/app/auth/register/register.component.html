@@ -1,0 +1,127 @@
+<div class="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
+  <!-- Animated floating particles -->
+  <div class="floating-particles">
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+    <div class="particle particle-3"></div>
+    <div class="particle particle-4"></div>
+    <div class="particle particle-5"></div>
+    <div class="particle particle-6"></div>
+    <div class="particle particle-7"></div>
+    <div class="particle particle-8"></div>
+  </div>
+  
+  <div class="layout-container flex h-full grow flex-col">
+    <app-header></app-header>
+    
+    <main class="flex flex-1 items-center justify-center p-4 sm:p-6 md:p-8">
+      <div class="flex flex-col w-full max-w-md space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-2xl bg-opacity-80 backdrop-blur-sm border border-gray-200">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold text-[var(--color-text)] tracking-tight">Create Account</h2>
+          <p class="mt-2 text-sm text-[var(--color-muted)]">Join Quanby Health and start your wellness journey today</p>
+        </div>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="fullName">Full Name</label>
+            <input 
+              formControlName="fullName"
+              class="form-input flex w-full rounded-lg border-gray-300 bg-gray-50 h-12 px-4 text-sm focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-200 ease-in-out" 
+              id="fullName" 
+              placeholder="Enter your full name" 
+              type="text"
+            />
+            <div *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched" class="text-red-500 text-xs mt-1">
+              <span *ngIf="registerForm.get('fullName')?.errors?.['required']">Full name is required</span>
+              <span *ngIf="registerForm.get('fullName')?.errors?.['minlength']">Full name must be at least 2 characters</span>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="email">Email</label>
+            <input 
+              formControlName="email"
+              class="form-input flex w-full rounded-lg border-gray-300 bg-gray-50 h-12 px-4 text-sm focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-200 ease-in-out" 
+              id="email" 
+              placeholder="you@example.com" 
+              type="email"
+            />
+            <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+              <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required</span>
+              <span *ngIf="registerForm.get('email')?.errors?.['email']">Please enter a valid email address</span>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="password">Password</label>
+            <input 
+              formControlName="password"
+              class="form-input flex w-full rounded-lg border-gray-300 bg-gray-50 h-12 px-4 text-sm focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-200 ease-in-out" 
+              id="password" 
+              placeholder="••••••••" 
+              type="password"
+            />
+            <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-xs mt-1">
+              <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required</span>
+              <span *ngIf="registerForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
+              <span *ngIf="registerForm.get('password')?.errors?.['pattern']">Password must contain uppercase, lowercase, number and special character</span>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="confirmPassword">Confirm Password</label>
+            <input 
+              formControlName="confirmPassword"
+              class="form-input flex w-full rounded-lg border-gray-300 bg-gray-50 h-12 px-4 text-sm focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all duration-200 ease-in-out" 
+              id="confirmPassword" 
+              placeholder="••••••••" 
+              type="password"
+            />
+            <div *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">
+              <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Please confirm your password</span>
+            </div>
+            <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">
+              Passwords do not match
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input 
+              formControlName="agreeToTerms"
+              class="h-4 w-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]" 
+              id="agreeToTerms" 
+              type="checkbox"
+            />
+            <label class="text-sm text-[var(--color-muted)]" for="agreeToTerms">
+              I agree to the 
+              <a href="#" class="text-[var(--color-primary)] hover:underline">Terms of Service</a> 
+              and 
+              <a href="#" class="text-[var(--color-primary)] hover:underline">Privacy Policy</a>
+            </label>
+          </div>
+          <div *ngIf="registerForm.get('agreeToTerms')?.invalid && registerForm.get('agreeToTerms')?.touched" class="text-red-500 text-xs -mt-2">
+            You must agree to the terms and conditions
+          </div>
+
+          <button 
+            type="submit"
+            [disabled]="registerForm.invalid || isSubmitting"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[var(--color-primary)] hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            <span *ngIf="!isSubmitting">Create Account</span>
+            <span *ngIf="isSubmitting" class="flex items-center gap-2">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Creating Account...
+            </span>
+          </button>
+        </form>
+        <p class="text-center text-sm text-[var(--color-muted)]">
+          Already have an account? 
+          <a routerLink="/login" class="font-medium text-[var(--color-primary)] hover:underline">Sign In</a>
+        </p>
+      </div>
+    </main>
+  </div>
+</div>

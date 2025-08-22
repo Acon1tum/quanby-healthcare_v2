@@ -1,0 +1,228 @@
+:host {
+  --color-primary: #0c7ff2;
+  --color-secondary: #e7edf4;
+  --color-text: #0d141c;
+  --color-muted: #49739c;
+  --color-background: #f8fbfd;
+  --color-beige: #f5f5dc;
+  --color-soft-blue: #a8d8ea;
+}
+
+:host .relative {
+  font-family: Lexend, "Noto Sans", sans-serif;
+  background: linear-gradient(-45deg, #667eea, #764ba2, #6a82fb, #fc5c7d);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="p" width="100" height="100" patternUnits="userSpaceOnUse"%3E%3Ccircle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.1"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%" height="100%" fill="url(%23p)"/%3E%3C/svg%3E');
+    opacity: 0.3;
+    animation: patternMove 20s linear infinite;
+  }
+}
+
+// Gradient animation
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// Pattern movement animation
+@keyframes patternMove {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-50px) translateY(-50px);
+  }
+  50% {
+    transform: translateX(-100px) translateY(0);
+  }
+  75% {
+    transform: translateX(-50px) translateY(50px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+// Ensure form inputs have proper styling
+.form-input {
+  border: 1px solid #d1d5db;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(12, 127, 242, 0.2);
+  }
+}
+
+// Button hover effects
+button[type="submit"] {
+  background-color: var(--color-primary);
+  
+  &:hover {
+    background-color: #0056b3;
+  }
+}
+
+// Link styling
+a {
+  color: var(--color-primary);
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Floating particles animation
+.floating-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: pulse 3s ease-in-out infinite;
+  }
+}
+
+.particle-1 {
+  width: 60px;
+  height: 60px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+
+.particle-2 {
+  width: 40px;
+  height: 40px;
+  top: 60%;
+  left: 80%;
+  animation-delay: -2s;
+  animation-duration: 6s;
+}
+
+.particle-3 {
+  width: 80px;
+  height: 80px;
+  top: 80%;
+  left: 20%;
+  animation-delay: -4s;
+  animation-duration: 10s;
+}
+
+.particle-4 {
+  width: 30px;
+  height: 30px;
+  top: 30%;
+  left: 70%;
+  animation-delay: -1s;
+  animation-duration: 7s;
+}
+
+.particle-5 {
+  width: 50px;
+  height: 50px;
+  top: 10%;
+  left: 60%;
+  animation-delay: -3s;
+  animation-duration: 9s;
+}
+
+.particle-6 {
+  width: 35px;
+  height: 35px;
+  top: 70%;
+  left: 5%;
+  animation-delay: -5s;
+  animation-duration: 8s;
+}
+
+.particle-7 {
+  width: 45px;
+  height: 45px;
+  top: 40%;
+  left: 90%;
+  animation-delay: -1.5s;
+  animation-duration: 7.5s;
+}
+
+.particle-8 {
+  width: 55px;
+  height: 55px;
+  top: 90%;
+  left: 50%;
+  animation-delay: -3.5s;
+  animation-duration: 8.5s;
+}
+
+// Float animation for particles
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(-40px) translateX(-5px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(-20px) translateX(-10px) rotate(270deg);
+  }
+}
+
+// Pulse animation for particle cores
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+// Ensure login form appears above particles
+main {
+  position: relative;
+  z-index: 10;
+}

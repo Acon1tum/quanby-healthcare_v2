@@ -1,0 +1,231 @@
+<div class="relative flex size-full min-h-screen flex-col bg-sky-50 group/design-root overflow-x-hidden" style='font-family: Lexend, "Noto Sans", sans-serif;'>
+  <div class="layout-container flex h-full grow flex-col">
+    <app-header></app-header>
+    
+    <main class="flex-1">
+      <section class="relative py-20 lg:py-40 flex items-center justify-center" id="hero">
+        <div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDRhR72vTo2xAJgkGpXfah9vcU9alLmiVYRmBnihIaTCVw2-oczugk3FFBRtJAJRFz7fRngA3jj6sD5w2jDfgcDrZtcDcj2wbjqEGlkTb0m7_CbX8C7AdzjHd0YDfTL8VEubV6OrPyk7kxEem9LPHTDturtVz70WqI1NL3l4Wx0dSk_926vwal-92nTmCmzxC-tMictB0BLs_KpWDKDRmVgV2kfTm2K5s1vVF02l4zsg2cFDxwamA6y1DFyffa84cShATHiCTrBLQ4V");'></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-sky-50 to-transparent"></div>
+        <div class="relative z-10 mx-auto max-w-4xl text-center px-4">
+          <h1 class="text-slate-800 text-5xl md:text-6xl font-black leading-tight tracking-tighter">Your Path to Smarter Wellness Starts Here</h1>
+          <p class="mt-6 text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">Get AI-powered insights into your health, stress, sleep, and more — all in one intuitive platform.</p>
+          <div class="mt-10 flex flex-wrap gap-4 justify-center">
+            <button (click)="navigateToFaceScan()" class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-sky-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-all transform hover:scale-105">
+              <span class="truncate">Try Demo</span>
+            </button>
+            <button class="flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-white shadow-sm text-slate-800 text-base font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 transition-colors transform hover:scale-105">
+              <span class="truncate">Learn More</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-20 lg:py-28 bg-sky-50" id="how-it-works">
+        <div class="mx-auto max-w-5xl px-4">
+          <h2 class="text-center text-4xl font-bold tracking-tight text-slate-800">How It Works</h2>
+          <p class="text-center mt-4 text-lg text-gray-600"> Our AI analyzes subtle facial biomarkers to provide a holistic view of your well-being. It's non-invasive,
+            fast, and secure. Just a daily glance into your camera unlocks a world of personal health data.</p>
+          
+          <!-- Face animation GIF -->
+          <div class="flex justify-center mt-8 mb-8">
+            <img src="face1.gif" alt="AI Health Analysis Animation" class="max-w-md w-full h-auto rounded-lg shadow-lg"/>
+          </div>
+          
+          <div class="mt-16 grid md:grid-cols-3 gap-12 text-center">
+            <div class="flex flex-col items-center">
+              <div class="flex items-center justify-center size-16 rounded-full bg-sky-100 mb-6">
+                <svg class="text-sky-500" fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M208,88H152V32a8,8,0,0,0-8-8H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H176a8,8,0,0,0,8-8V152h24a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88ZM160,208H48V40h96V88a8,8,0,0,0,8,8h48v48H176a8,8,0,0,0-8,8v48Zm40-64h-8V104h8Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-slate-800">1. Face Scanning</h3>
+              <p class="mt-2 text-gray-600">Use your camera for a quick AI-powered face scan to analyze your health indicators.</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="flex items-center justify-center size-16 rounded-full bg-sky-100 mb-6">
+                <svg class="text-sky-500" fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm48.44-116.25-64,32a8,8,0,0,0-4,7.16V168a8,8,0,0,0,16,0V140.35l48.44-24.22a8,8,0,1,0-8.88-14.88Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-slate-800">2. Get Instant Wellness Insights</h3>
+              <p class="mt-2 text-gray-600">Our AI analyzes your data to reveal trends and patterns in your wellbeing.</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="flex items-center justify-center size-16 rounded-full bg-sky-100 mb-6">
+                <svg class="text-sky-500" fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm48-40H48A16,16,0,0,0,32,88V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V88A16,16,0,0,0,208,72ZM48,56H208a8,8,0,0,1,0,16H48a8,8,0,0,1,0-16Zm160,144H48V88H208V200Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-slate-800">3. Personalized Recommendations</h3>
+              <p class="mt-2 text-gray-600">Receive actionable tips and track your progress towards your health goals.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-20 lg:py-28 bg-white" id="features">
+        <div class="mx-auto max-w-6xl px-4">
+          <h2 class="text-center text-4xl font-bold tracking-tight text-slate-800">Features</h2>
+          <p class="text-center mt-4 text-lg text-gray-600">Everything you need for a holistic view of your health.</p>
+          <div class="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow">
+              <div class="text-rose-400">
+                <svg fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32Zm-50,182.61C101,202,32,156.33,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,156.33,155,202,128,214.61Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-slate-800">Heart & Stress Monitoring</h3>
+              <p class="text-gray-600">Track your heart rate variability and stress levels to better manage your emotional wellbeing.</p>
+            </div>
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow">
+              <div class="text-indigo-400">
+                <svg fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-slate-800">Sleep & Recovery Analysis</h3>
+              <p class="text-gray-600">Understand your sleep cycles and get personalized tips for more restorative nights.</p>
+            </div>
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow">
+              <div class="text-amber-400">
+                <svg fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M248,120a8,8,0,0,1-8,8H144v88a8,8,0,0,1-16,0V128H32a8,8,0,0,1,0-16h96V24a8,8,0,0,1,16,0v88h96a8,8,0,0,1,8,8Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-slate-800">Activity Insights</h3>
+              <p class="text-gray-600">Go beyond step counting. Analyze your activity levels, intensity, and sedentary time.</p>
+            </div>
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow">
+              <div class="text-sky-500">
+                <svg fill="currentColor" height="32" viewBox="0 0 256 256" width="32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M128,24a8,8,0,0,0-8,8V46.66a88,88,0,1,0,16,0V32A8,8,0,0,0,128,24Zm0,176a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,200Z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-slate-800">Personalized Health Tips</h3>
+              <p class="text-gray-600">Receive AI-generated, science-backed advice tailored to your unique health profile.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+<!-- 
+      <section class="py-20 lg:py-28 bg-sky-100" id="testimonials">
+        <div class="mx-auto max-w-5xl px-4">
+          <h2 class="text-center text-4xl font-bold tracking-tight text-slate-800">Trusted by people like you</h2>
+          <p class="text-center mt-4 text-lg text-gray-600">See what our users are saying about their journey with us.</p>
+          <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="flex flex-col gap-6 rounded-xl bg-white p-8 shadow-sm">
+              <div class="flex items-center gap-4">
+                <img alt="Sophia L." class="size-12 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU0A1Jnq82ovfZTwGcvKCp5e1dK8rVn2E6sQ2g76rtNWwk-SVu0BwlUF_Qj6qgW9s_Zk0eA6XSH5PB0wNdJnbwfJXgzy4pA5A8wxSF6jth7NBM2TI7bCpoGlndfHFYGZCZSGghCv96Oq_qSImUKuaG5Yuog6ewSoG6LfEsw0YwEELAVZHWJdnpl0GOjvzpkbyJqb33fwZWxlI-do2K3tUawQuzcDB6gBeeo73z3A8mvPWrRuaDQJs7Jx9_rnLtnx5b8uRIa0mwFH4T"/>
+                <div>
+                  <p class="text-slate-800 font-semibold">Sophia L.</p>
+                  <div class="flex gap-0.5 mt-1 text-sky-500">
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 leading-relaxed">"This platform has completely transformed how I approach my health. The insights are incredibly accurate and I feel more in control of my wellbeing than ever before."</p>
+            </div>
+            <div class="flex flex-col gap-6 rounded-xl bg-white p-8 shadow-sm">
+              <div class="flex items-center gap-4">
+                <img alt="Ethan M." class="size-12 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBERRXbDSmt4XNkYWcryMbLAswRj3DUWWaeqxP21IPgVCBh7lrTCy-TG0IFjoow5oumWsPA2M6v8cobHq1d5IE76TYopmnJuxwpu7rGYXA29uUfEK4ZfQpran8Inl0vlhWjR91Md8GdKmTmFE_eF_TR8PiUXgcQUySAxSYn7EJGV5SzWUi9lceShgtCqP7ZJCreVQ9HCGvSZNB8hMnJ8nYHz1ueQpSerOZ7K40JVFKpP2GfkFOzVDGgf8XiGH2PPDxE3ME6GZXwY8pm"/>
+                <div>
+                  <p class="text-slate-800 font-semibold">Ethan M.</p>
+                  <div class="flex gap-0.5 mt-1 text-sky-500">
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg class="text-gray-300" fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 leading-relaxed">"I was skeptical at first, but the AI analysis is surprisingly insightful. It's helped me identify areas I need to focus on and make meaningful changes to my lifestyle."</p>
+            </div>
+            <div class="flex flex-col gap-6 rounded-xl bg-white p-8 shadow-sm">
+              <div class="flex items-center gap-4">
+                <img alt="Olivia R." class="size-12 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkGutwBcdDjob2c0Iuazfzcii0xFXA5dUGPC_o35aZ1X5f5_ELj6xBZmF5F7bDQ14EPdzCgZVvqNTrA2K40HikXM5nKTOA7lJacObj-cKkECbyNWfWGU7aazsZ4ZzmQPnmhEAynnaC22_X_UZBGd6tBJ3NAV0qHHhsBm6eRwZiu_kgxYKC30d9W1pnBrSiOW0GG9JvF5wh8vuwzT4EGMsSGbRIOpT6tCGcVOngn_bBLB2Rjz_8Lo1DAvlL26GwMgF8AVwwm3RVLvzX"/>
+                <div>
+                  <p class="text-slate-800 font-semibold">Olivia R.</p>
+                  <div class="flex gap-0.5 mt-1 text-sky-500">
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                    <svg class="text-gray-300" fill="currentColor" height="16" viewBox="0 0 256 256" width="16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M234.5,114.38l-45.1,39.36,13.51,58.6a16,16,0,0,1-23.84,17.34l-51.11-31-51,31a16,16,0,0,1-23.84-17.34L66.61,153.8,21.5,114.38a16,16,0,0,1,9.11-28.06l59.46-5.15,23.21-55.36a15.95,15.95,0,0,1,29.44,0h0L166,81.17l59.44,5.15a16,16,0,0,1,9.11,28.06Z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 leading-relaxed">"The platform is easy to use and provides valuable information. While I've seen improvements, I'm still working on implementing all the recommendations."</p>
+            </div>
+          </div>
+        </div>
+      </section> -->
+
+      <section class="bg-white py-20 lg:py-24" id="cta-banner">
+        <div class="mx-auto max-w-4xl text-center px-4">
+          <h2 class="text-4xl font-extrabold tracking-tight text-slate-800">Ready to Take Control of Your Health?</h2>
+          <p class="mt-4 text-lg text-gray-600">See how it works in 30 seconds — no sign-up required.</p>
+          <div class="mt-8 flex justify-center">
+            <button (click)="navigateToFaceScan()" class="flex min-w-[150px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-8 bg-sky-500 text-white text-lg font-bold leading-normal tracking-wide hover:bg-opacity-90 transition-all transform hover:scale-105">
+              <span class="truncate">Try Demo Now</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-sky-100 text-slate-800">
+      <div class="mx-auto max-w-7xl px-4 py-12">
+        <div class="flex flex-col items-center gap-8">
+          <div class="flex items-center gap-3">
+            <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="h-8 w-8">
+            <span class="text-xl font-bold">Quanby Health</span>
+          </div>
+          <nav class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-gray-600">
+            <a class="hover:text-slate-800 transition-colors" href="#">About</a>
+            <a class="hover:text-slate-800 transition-colors" href="#">Contact</a>
+            <a class="hover:text-slate-800 transition-colors" href="#">Privacy Policy</a>
+          </nav>
+          <p class="text-sm text-gray-500">© 2024 Quanby Health. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+
+</div>
