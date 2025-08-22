@@ -1,0 +1,49 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h3>QHealth</h3>
+    <p class="role-badge">{{ userRole | titlecase }}</p>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems" class="nav-item">
+        <!-- Main menu item -->
+        <a 
+          [routerLink]="item.route" 
+          routerLinkActive="active"
+          class="nav-link"
+          [class.has-children]="item.children"
+          (click)="toggleSubmenu(item)"
+        >
+          <span class="material-icons icon">{{ item.icon }}</span>
+          <span class="label">{{ item.label }}</span>
+          <span 
+            *ngIf="item.children" 
+            class="expand-icon"
+            [class.expanded]="item['expanded']"
+          >
+            ▼
+          </span>
+        </a>
+        
+        <!-- Submenu items -->
+        <ul 
+          *ngIf="item.children" 
+          class="submenu"
+          [class.expanded]="item['expanded']"
+        >
+          <li *ngFor="let child of item.children" class="submenu-item">
+            <a 
+              [routerLink]="child.route" 
+              routerLinkActive="active"
+              class="submenu-link"
+            >
+              <span class="material-icons icon">{{ child.icon }}</span>
+              <span class="label">{{ child.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>

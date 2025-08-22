@@ -7,19 +7,43 @@
 
   <!-- Desktop Navigation -->
   <div class="hidden lg:flex flex-1 justify-end gap-6">
-    <nav class="flex items-center gap-8">
+    <!-- Not Logged In -->
+    <nav *ngIf="!isLoggedIn" class="flex items-center gap-8">
       <a class="text-gray-600 hover:text-slate-800 text-sm font-medium leading-normal transition-colors" href="#">Home</a>
       <a class="text-gray-600 hover:text-slate-800 text-sm font-medium leading-normal transition-colors" href="#features">Features</a>
       <a class="text-gray-600 hover:text-slate-800 text-sm font-medium leading-normal transition-colors" href="#how-it-works">How it Works</a>
-      <a class="text-gray-600 hover:text-slate-800 text-sm font-medium leading-normal transition-colors" href="/login">Login</a>
+      <a (click)="navigateToLogin()" class="text-gray-600 hover:text-slate-800 text-sm font-medium leading-normal transition-colors cursor-pointer">Login</a>
     </nav>
+    
+    <!-- Logged In User -->
+    <div *ngIf="isLoggedIn" class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p class="text-sm font-medium text-slate-800">{{ currentUser?.name }}</p>
+          <p class="text-xs text-gray-500 capitalize">{{ currentUser?.role }}</p>
+        </div>
+        <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
+          <span class="text-white text-sm font-medium">{{ currentUser?.name?.charAt(0) }}</span>
+        </div>
+      </div>
+      <button (click)="navigateToDashboard()" class="text-sky-600 hover:text-sky-700 text-sm font-medium transition-colors">
+        Dashboard
+      </button>
+      <button (click)="logout()" class="text-gray-600 hover:text-red-600 text-sm font-medium transition-colors">
+        Logout
+      </button>
+    </div>
+    
     <div class="flex gap-3">
-      <button (click)="navigateToRegister()" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-transparent border border-sky-500 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-sky-500/10 transition-colors">
+      <!-- Not Logged In -->
+      <button *ngIf="!isLoggedIn" (click)="navigateToRegister()" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-transparent border border-sky-500 text-slate-800 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-sky-500/10 transition-colors">
         <span class="truncate">Sign Up</span>
       </button>
-      <!-- <button (click)="navigateToFaceScan()" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-sky-500 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-opacity">
+      
+      <!-- Logged In -->
+      <button *ngIf="isLoggedIn" (click)="navigateToFaceScan()" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-sky-500 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-opacity">
         <span class="truncate">Try Demo</span>
-      </button> -->
+      </button>
     </div>
   </div>
 
@@ -43,19 +67,48 @@
     style="background-color: #ffffff;"
   >
     <nav class="mobile-menu-content flex flex-col p-4 space-y-4">
-      <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#">Home</a>
-      <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#features">Features</a>
-      <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#how-it-works">How it Works</a>
-      <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="/login">Login</a>
+      <!-- Not Logged In -->
+      <div *ngIf="!isLoggedIn">
+        <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#">Home</a>
+        <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#features">Features</a>
+        <a (click)="closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2" href="#how-it-works">How it Works</a>
+        <a (click)="navigateToLogin()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2 cursor-pointer">Login</a>
+        
+        <!-- Mobile Buttons -->
+        <div class="flex flex-col gap-3 pt-4 border-t border-gray-200">
+          <button (click)="navigateToRegister()" class="flex items-center justify-center rounded-lg h-12 px-5 bg-transparent border border-sky-500 text-slate-800 text-base font-bold leading-normal tracking-[0.015em] hover:bg-sky-500/10 transition-colors">
+            Sign Up
+          </button>
+          <button (click)="navigateToFaceScan()" class="flex items-center justify-center rounded-lg h-12 px-5 bg-sky-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-opacity">
+            Try Demo
+          </button>
+        </div>
+      </div>
       
-      <!-- Mobile Buttons -->
-      <div class="flex flex-col gap-3 pt-4 border-t border-gray-200">
-        <button (click)="navigateToRegister()" class="flex items-center justify-center rounded-lg h-12 px-5 bg-transparent border border-sky-500 text-slate-800 text-base font-bold leading-normal tracking-[0.015em] hover:bg-sky-500/10 transition-colors">
-          Sign Up
-        </button>
-        <button (click)="navigateToFaceScan()" class="flex items-center justify-center rounded-lg h-12 px-5 bg-sky-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-opacity">
+      <!-- Logged In User -->
+      <div *ngIf="isLoggedIn">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-4">
+          <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center">
+            <span class="text-white text-sm font-medium">{{ currentUser?.name?.charAt(0) }}</span>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-slate-800">{{ currentUser?.name }}</p>
+            <p class="text-xs text-gray-500 capitalize">{{ currentUser?.role }}</p>
+          </div>
+        </div>
+        
+        <a (click)="navigateToDashboard(); closeMobileMenu()" class="mobile-nav-link text-sky-600 hover:text-sky-700 text-base font-medium leading-normal transition-colors py-2 cursor-pointer">
+          Dashboard
+        </a>
+        <a (click)="navigateToFaceScan(); closeMobileMenu()" class="mobile-nav-link text-gray-600 hover:text-slate-800 text-base font-medium leading-normal transition-colors py-2 cursor-pointer">
           Try Demo
-        </button>
+        </a>
+        
+        <div class="flex flex-col gap-3 pt-4 border-t border-gray-200">
+          <button (click)="logout(); closeMobileMenu()" class="flex items-center justify-center rounded-lg h-12 px-5 bg-red-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-red-600 transition-colors">
+            Logout
+          </button>
+        </div>
       </div>
     </nav>
   </div>
