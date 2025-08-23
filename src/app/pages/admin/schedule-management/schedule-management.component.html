@@ -1,1 +1,486 @@
-<p>schedule-management works!</p>
+<div class="schedule-management-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Schedule Management</h1>
+      <p class="page-description">Manage doctor schedules, consultations, and appointments efficiently</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        *ngIf="selectedView === 'schedules'" 
+        class="btn btn-primary" 
+        (click)="openAddScheduleModal()"
+      >
+        <i class="material-icons">add</i>
+        Add Schedule
+      </button>
+      <button 
+        *ngIf="selectedView === 'consultations'" 
+        class="btn btn-primary" 
+        (click)="openAddConsultationModal()"
+      >
+        <i class="material-icons">add</i>
+        Add Consultation
+      </button>
+    </div>
+  </div>
+
+  <!-- View Toggle -->
+  <div class="view-toggle-section">
+    <div class="toggle-buttons">
+      <button 
+        class="toggle-btn" 
+        [class.active]="selectedView === 'schedules'"
+        (click)="setView('schedules')"
+      >
+        <i class="material-icons">schedule</i>
+        Doctor Schedules
+      </button>
+      <button 
+        class="toggle-btn" 
+        [class.active]="selectedView === 'consultations'"
+        (click)="setView('consultations')"
+      >
+        <i class="material-icons">video_call</i>
+        Consultations
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-section">
+    <form class="search-form">
+      <div class="search-row">
+        <div class="form-group">
+          <label for="doctorFilter">Doctor</label>
+          <select [(ngModel)]="filters.doctorId" name="doctorFilter" id="doctorFilter" class="form-control">
+            <option value="">All Doctors</option>
+            <option *ngFor="let doctor of doctors" [value]="doctor.id">
+              {{ doctor.name }} - {{ doctor.specialization }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group" *ngIf="selectedView === 'schedules'">
+          <label for="dayFilter">Day of Week</label>
+          <select [(ngModel)]="filters.dayOfWeek" name="dayFilter" id="dayFilter" class="form-control">
+            <option value="">All Days</option>
+            <option *ngFor="let day of daysOfWeek" [value]="day">{{ day }}</option>
+          </select>
+        </div>
+        
+        <div class="form-group" *ngIf="selectedView === 'consultations'">
+          <label for="statusFilter">Status</label>
+          <select [(ngModel)]="filters.status" name="statusFilter" id="statusFilter" class="form-control">
+            <option value="">All Status</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="dateFilter">Date</label>
+          <input type="date" [(ngModel)]="filters.date" name="dateFilter" id="dateFilter" class="form-control">
+        </div>
+      </div>
+      
+      <div class="search-row">
+        <div class="form-group">
+          <button type="button" class="btn btn-secondary" (click)="applyFilters()">
+            <i class="material-icons">filter_list</i>
+            Apply Filters
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <button type="button" class="btn btn-outline" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <div *ngIf="selectedView === 'schedules'">
+      <p>Showing {{ doctorSchedules.length }} schedules ({{ availableSchedulesCount }} available)</p>
+    </div>
+    <div *ngIf="selectedView === 'consultations'">
+      <p>Showing {{ consultations.length }} consultations ({{ scheduledConsultationsCount }} scheduled)</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading schedule data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="main-content">
+    <!-- Doctor Schedules View -->
+    <div *ngIf="selectedView === 'schedules'" class="table-container">
+      <table class="schedules-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let schedule of doctorSchedules" class="schedule-row" [class.unavailable]="!schedule.isAvailable">
+            <td class="doctor-info">
+              <div class="name-info">
+                <strong>{{ schedule.doctorName }}</strong>
+                <small>{{ schedule.specialization }}</small>
+              </div>
+            </td>
+            <td>{{ schedule.dayOfWeek }}</td>
+            <td>{{ schedule.startTime }} - {{ schedule.endTime }}</td>
+            <td>{{ calculateDuration(schedule.startTime, schedule.endTime) }}</td>
+            <td>
+              <span class="status-badge" [class.status-available]="schedule.isAvailable" [class.status-unavailable]="!schedule.isAvailable">
+                {{ schedule.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn btn-icon btn-info" (click)="toggleScheduleAvailability(schedule.id)" title="Toggle Availability">
+                <i class="material-icons">{{ schedule.isAvailable ? 'block' : 'check_circle' }}</i>
+              </button>
+              <button class="btn btn-icon btn-warning" (click)="openEditScheduleModal(schedule)" title="Edit Schedule">
+                <i class="material-icons">edit</i>
+              </button>
+              <button class="btn btn-icon btn-danger" (click)="deleteSchedule(schedule.id)" title="Delete Schedule">
+                <i class="material-icons">delete</i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div *ngIf="doctorSchedules.length === 0" class="empty-state">
+        <i class="material-icons">schedule</i>
+        <h3>No schedules found</h3>
+        <p>Add a new doctor schedule to get started.</p>
+      </div>
+    </div>
+
+    <!-- Consultations View -->
+    <div *ngIf="selectedView === 'consultations'" class="table-container">
+      <table class="consultations-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>Patient</th>
+            <th>Date & Time</th>
+            <th>Status</th>
+            <th>Consultation Link</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let consultation of consultations" class="consultation-row">
+            <td class="doctor-info">
+              <div class="name-info">
+                <strong>{{ consultation.doctorName }}</strong>
+                <small>{{ consultation.specialization }}</small>
+              </div>
+            </td>
+            <td class="patient-info">
+              <strong>{{ consultation.patientName }}</strong>
+            </td>
+            <td class="datetime-info">
+              <div class="date">{{ formatDateTime(consultation.startTime) }}</div>
+              <small>{{ consultation.startTime | slice:11:16 }} - {{ consultation.endTime | slice:11:16 }}</small>
+            </td>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(consultation.status)">
+                <i class="material-icons">{{ getStatusIcon(consultation.status) }}</i>
+                {{ consultation.status }}
+              </span>
+            </td>
+            <td>
+              <a 
+                [href]="consultation.consultationLink" 
+                target="_blank" 
+                class="consultation-link"
+              >
+                <i class="material-icons">video_call</i>
+                Join Meeting
+              </a>
+            </td>
+            <td class="actions">
+              <button class="btn btn-icon btn-info" (click)="openEditConsultationModal(consultation)" title="Edit Consultation">
+                <i class="material-icons">edit</i>
+              </button>
+              <button class="btn btn-icon btn-danger" (click)="deleteConsultation(consultation.id)" title="Delete Consultation">
+                <i class="material-icons">delete</i>
+              </button>
+              <div class="status-dropdown">
+                <button class="btn btn-icon btn-secondary dropdown-toggle" title="Change Status">
+                  <i class="material-icons">more_vert</i>
+                </button>
+                <div class="dropdown-menu">
+                  <button 
+                    *ngFor="let status of consultationStatuses"
+                    class="dropdown-item"
+                    (click)="updateConsultationStatus(consultation.id, status)"
+                    [class.active]="consultation.status === status"
+                  >
+                    {{ status }}
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div *ngIf="consultations.length === 0" class="empty-state">
+        <i class="material-icons">video_call</i>
+        <h3>No consultations found</h3>
+        <p>Add a new consultation to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Schedule Modal -->
+  <div *ngIf="isAddScheduleModalOpen" class="dialog-overlay" (click)="closeAddScheduleModal()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Add Doctor Schedule</h2>
+        <button class="btn btn-icon" (click)="closeAddScheduleModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="scheduleForm" (ngSubmit)="saveSchedule()" class="dialog-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="doctorId">Doctor *</label>
+            <select id="doctorId" formControlName="doctorId" class="form-control" required>
+              <option value="">Select Doctor</option>
+              <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                {{ doctor.name }} - {{ doctor.specialization }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="dayOfWeek">Day of Week *</label>
+            <select id="dayOfWeek" formControlName="dayOfWeek" class="form-control" required>
+              <option value="">Select Day</option>
+              <option *ngFor="let day of daysOfWeek" [value]="day">{{ day }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startTime">Start Time *</label>
+            <select id="startTime" formControlName="startTime" class="form-control" required>
+              <option value="">Select Time</option>
+              <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="endTime">End Time *</label>
+            <select id="endTime" formControlName="endTime" class="form-control" required>
+              <option value="">Select Time</option>
+              <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeAddScheduleModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!scheduleForm.valid">Save Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Schedule Modal -->
+  <div *ngIf="isEditScheduleModalOpen" class="dialog-overlay" (click)="closeEditScheduleModal()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Edit Doctor Schedule</h2>
+        <button class="btn btn-icon" (click)="closeEditScheduleModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="scheduleForm" (ngSubmit)="saveSchedule()" class="dialog-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editDoctorId">Doctor *</label>
+            <select id="editDoctorId" formControlName="doctorId" class="form-control" required>
+              <option value="">Select Doctor</option>
+              <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                {{ doctor.name }} - {{ doctor.specialization }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="editDayOfWeek">Day of Week *</label>
+            <select id="editDayOfWeek" formControlName="dayOfWeek" class="form-control" required>
+              <option value="">Select Day</option>
+              <option *ngFor="let day of daysOfWeek" [value]="day">{{ day }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editStartTime">Start Time *</label>
+            <select id="editStartTime" formControlName="startTime" class="form-control" required>
+              <option value="">Select Time</option>
+              <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="editEndTime">End Time *</label>
+            <select id="editEndTime" formControlName="endTime" class="form-control" required>
+              <option value="">Select Time</option>
+              <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeEditScheduleModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!scheduleForm.valid">Update Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Consultation Modal -->
+  <div *ngIf="isAddConsultationModalOpen" class="dialog-overlay" (click)="closeAddConsultationModal()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Add Consultation</h2>
+        <button class="btn btn-icon" (click)="closeAddConsultationModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="consultationForm" (ngSubmit)="saveConsultation()" class="dialog-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="consultationDoctorId">Doctor *</label>
+            <select id="consultationDoctorId" formControlName="doctorId" class="form-control" required>
+              <option value="">Select Doctor</option>
+              <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                {{ doctor.name }} - {{ doctor.specialization }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="consultationPatientId">Patient *</label>
+            <select id="consultationPatientId" formControlName="patientId" class="form-control" required>
+              <option value="">Select Patient</option>
+              <option *ngFor="let patient of patients" [value]="patient.id">
+                {{ patient.name }} ({{ patient.age }} years)
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="consultationStartTime">Start Date & Time *</label>
+            <input type="datetime-local" id="consultationStartTime" formControlName="startTime" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="consultationEndTime">End Date & Time *</label>
+            <input type="datetime-local" id="consultationEndTime" formControlName="endTime" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="consultationLink">Consultation Link *</label>
+          <input type="url" id="consultationLink" formControlName="consultationLink" class="form-control" placeholder="https://meet.google.com/..." required>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeAddConsultationModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!consultationForm.valid">Save Consultation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Consultation Modal -->
+  <div *ngIf="isEditConsultationModalOpen" class="dialog-overlay" (click)="closeEditConsultationModal()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Edit Consultation</h2>
+        <button class="btn btn-icon" (click)="closeEditConsultationModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="consultationForm" (ngSubmit)="saveConsultation()" class="dialog-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editConsultationDoctorId">Doctor *</label>
+            <select id="editConsultationDoctorId" formControlName="doctorId" class="form-control" required>
+              <option value="">Select Doctor</option>
+              <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                {{ doctor.name }} - {{ doctor.specialization }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="editConsultationPatientId">Patient *</label>
+            <select id="editConsultationPatientId" formControlName="patientId" class="form-control" required>
+              <option value="">Select Patient</option>
+              <option *ngFor="let patient of patients" [value]="patient.id">
+                {{ patient.name }} ({{ patient.age }} years)
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editConsultationStartTime">Start Date & Time *</label>
+            <input type="datetime-local" id="editConsultationStartTime" formControlName="startTime" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="editConsultationEndTime">End Date & Time *</label>
+            <input type="datetime-local" id="editConsultationEndTime" formControlName="endTime" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="editConsultationLink">Consultation Link *</label>
+          <input type="url" id="editConsultationLink" formControlName="consultationLink" class="form-control" placeholder="https://meet.google.com/..." required>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeEditConsultationModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!consultationForm.valid">Update Consultation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
