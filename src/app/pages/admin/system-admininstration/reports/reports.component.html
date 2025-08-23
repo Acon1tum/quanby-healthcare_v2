@@ -1,1 +1,355 @@
-<p>reports works!</p>
+<div class="reports-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Reports Management</h1>
+      <p class="page-description">Generate, manage, and download various healthcare system reports</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        class="btn btn-primary" 
+        (click)="generateReport('system')"
+        [disabled]="isGeneratingReport"
+      >
+        <i class="material-icons">{{ isGeneratingReport ? 'hourglass_empty' : 'add' }}</i>
+        {{ isGeneratingReport ? 'Generating...' : 'Generate Report' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Types Overview -->
+  <div class="report-types-section">
+    <h2 class="section-title">Report Types</h2>
+    <div class="report-types-grid">
+      <div 
+        *ngFor="let reportType of reportTypes" 
+        class="report-type-card"
+        (click)="generateReport(reportType.value)"
+      >
+        <div class="report-type-icon">
+          <i class="material-icons">{{ reportType.icon }}</i>
+        </div>
+        <div class="report-type-content">
+          <h3 class="report-type-title">{{ reportType.label }}</h3>
+          <p class="report-type-description">{{ reportType.description }}</p>
+          <div class="report-type-stats">
+            <span class="stat-item">
+              <i class="material-icons">description</i>
+              {{ getReportCountByType(reportType.value) }} reports
+            </span>
+          </div>
+        </div>
+        <div class="report-type-action">
+          <i class="material-icons">arrow_forward</i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Statistics -->
+  <div class="summary-stats">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">analytics</i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ getTotalReportCount() }}</h3>
+        <p class="stat-label">Total Reports</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">check_circle</i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ getReadyReportCount() }}</h3>
+        <p class="stat-label">Ready to Download</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">schedule</i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ getReportCountByType('patient') }}</h3>
+        <p class="stat-label">Patient Reports</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">medical_services</i>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ getReportCountByType('doctor') }}</h3>
+        <p class="stat-label">Doctor Reports</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <h2 class="section-title">Filter Reports</h2>
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-row">
+        <div class="form-group">
+          <label for="typeFilter">Report Type</label>
+          <select id="typeFilter" formControlName="type" class="form-control">
+            <option value="">All Types</option>
+            <option *ngFor="let type of reportTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="dateRangeFilter">Date Range</label>
+          <select id="dateRangeFilter" formControlName="dateRange" class="form-control">
+            <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter" formControlName="status" class="form-control">
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="formatFilter">Format</label>
+          <select id="formatFilter" formControlName="format" class="form-control">
+            <option *ngFor="let option of formatOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-row">
+        <div class="form-group search-group">
+          <label for="searchFilter">Search</label>
+          <div class="search-input-wrapper">
+            <i class="material-icons search-icon">search</i>
+            <input 
+              type="text" 
+              id="searchFilter" 
+              formControlName="searchTerm" 
+              class="form-control search-input"
+              placeholder="Search by name, description, or generated by..."
+            >
+          </div>
+        </div>
+        
+        <div class="filter-actions">
+          <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Reports List -->
+  <div class="reports-section">
+    <div class="reports-header">
+      <h2 class="section-title">Generated Reports</h2>
+      <p class="reports-count">Showing {{ filteredReports.length }} of {{ reports.length }} reports</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading reports...</p>
+    </div>
+
+    <!-- Reports Table -->
+    <div *ngIf="!isLoading" class="reports-table-container">
+      <table class="reports-table">
+        <thead>
+          <tr>
+            <th>Report Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Format</th>
+            <th>Size</th>
+            <th>Last Generated</th>
+            <th>Generated By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let report of filteredReports" class="report-row">
+            <td class="report-name">
+              <strong>{{ report.name }}</strong>
+            </td>
+            <td class="report-type">
+              <span class="type-badge type-{{ report.type }}">
+                <i class="material-icons">{{ getReportTypeIcon(report.type) }}</i>
+                {{ getReportTypeLabel(report.type) }}
+              </span>
+            </td>
+            <td class="report-description">
+              {{ report.description }}
+            </td>
+            <td class="report-status">
+              <span class="status-badge" [class]="getStatusClass(report.status)">
+                <i class="material-icons">{{ getStatusIcon(report.status) }}</i>
+                {{ report.status }}
+              </span>
+            </td>
+            <td class="report-format">
+              <span class="format-badge">
+                <i class="material-icons">{{ getFormatIcon(report.format) }}</i>
+                {{ report.format.toUpperCase() }}
+              </span>
+            </td>
+            <td class="report-size">{{ report.size }}</td>
+            <td class="report-date">
+              {{ report.lastGenerated | date:'MMM dd, yyyy HH:mm' }}
+            </td>
+            <td class="report-author">{{ report.generatedBy }}</td>
+            <td class="report-actions">
+              <button 
+                class="btn btn-icon btn-info" 
+                (click)="viewReportDetails(report)"
+                title="View Details"
+              >
+                <i class="material-icons">visibility</i>
+              </button>
+              
+              <button 
+                class="btn btn-icon btn-primary" 
+                (click)="downloadReport(report)"
+                [disabled]="report.status !== 'ready'"
+                title="Download Report"
+              >
+                <i class="material-icons">download</i>
+              </button>
+              
+              <button 
+                class="btn btn-icon btn-warning" 
+                (click)="regenerateReport(report)"
+                [disabled]="report.status === 'generating'"
+                title="Regenerate Report"
+              >
+                <i class="material-icons">refresh</i>
+              </button>
+              
+              <button 
+                class="btn btn-icon btn-danger" 
+                (click)="deleteReport(report)"
+                title="Delete Report"
+              >
+                <i class="material-icons">delete</i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredReports.length === 0" class="empty-state">
+        <i class="material-icons">description</i>
+        <h3>No reports found</h3>
+        <p>Try adjusting your filters or generate a new report to get started.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Details Modal -->
+<div *ngIf="showReportModal" class="modal-overlay" (click)="closeReportModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Report Details</h2>
+      <button class="btn btn-icon" (click)="closeReportModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-content" *ngIf="selectedReport">
+      <div class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Report Name</label>
+            <span>{{ selectedReport.name }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Type</label>
+            <span class="type-badge type-{{ selectedReport.type }}">
+              {{ getReportTypeLabel(selectedReport.type) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Status</label>
+            <span class="status-badge" [class]="getStatusClass(selectedReport.status)">
+              {{ selectedReport.status }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Format</label>
+            <span class="format-badge">
+              {{ selectedReport.format.toUpperCase() }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Description</h3>
+        <p>{{ selectedReport.description }}</p>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Technical Details</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>File Size</label>
+            <span>{{ selectedReport.size }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Generated By</label>
+            <span>{{ selectedReport.generatedBy }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Last Generated</label>
+            <span>{{ selectedReport.lastGenerated | date:'full' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Report ID</label>
+            <span>{{ selectedReport.id }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="closeReportModal()"
+      >
+        Close
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="downloadReport(selectedReport!)"
+        [disabled]="selectedReport?.status !== 'ready'"
+      >
+        <i class="material-icons">download</i>
+        Download Report
+      </button>
+    </div>
+  </div>
+</div>

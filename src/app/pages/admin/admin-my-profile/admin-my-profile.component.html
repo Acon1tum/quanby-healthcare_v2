@@ -1,1 +1,528 @@
-<p>admin-my-profile works!</p>
+<div class="admin-profile-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">My Profile</h1>
+      <p class="page-description">Manage your personal information, preferences, and account settings</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        *ngIf="!isEditing" 
+        class="btn btn-primary" 
+        (click)="startEditing()"
+      >
+        <i class="material-icons">edit</i>
+        Edit Profile
+      </button>
+      <button 
+        *ngIf="!isEditing" 
+        class="btn btn-secondary" 
+        (click)="openPasswordChange()"
+      >
+        <i class="material-icons">lock</i>
+        Change Password
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading profile information...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading && profile" class="profile-content">
+    <!-- Profile Overview Card -->
+    <div class="profile-overview">
+      <div class="profile-header">
+        <div class="profile-image-section">
+          <div class="profile-image">
+            <img 
+              [src]="imagePreview || profile.profileImage || 'assets/images/default-avatar.jpg'" 
+              alt="Profile Image"
+              class="avatar"
+            >
+            <div *ngIf="isEditing" class="image-upload-overlay">
+              <input 
+                type="file" 
+                id="profileImage" 
+                accept="image/*" 
+                (change)="onImageSelected($event)"
+                class="image-input"
+              >
+              <label for="profileImage" class="upload-label">
+                <i class="material-icons">camera_alt</i>
+                Change Photo
+              </label>
+            </div>
+          </div>
+          
+          <div *ngIf="isEditing && (selectedImage || imagePreview)" class="image-actions">
+            <button 
+              class="btn btn-sm btn-danger" 
+              (click)="removeSelectedImage()"
+              title="Remove selected image"
+            >
+              <i class="material-icons">delete</i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="profile-info">
+          <h2 class="profile-name">{{ getFullName() }}</h2>
+          <p class="profile-role">{{ profile.role }}</p>
+          <p class="profile-department">{{ profile.department }}</p>
+          
+          <div class="profile-stats">
+            <div class="stat-item">
+              <i class="material-icons">badge</i>
+              <span>{{ profile.employeeId }}</span>
+            </div>
+            <div class="stat-item">
+              <i class="material-icons">cake</i>
+              <span>{{ getAge() }} years old</span>
+            </div>
+            <div class="stat-item">
+              <i class="material-icons">work</i>
+              <span>{{ getYearsOfService() }} years of service</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Details -->
+    <div class="profile-details">
+      <div class="details-grid">
+        <!-- Personal Information -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="material-icons">person</i>
+            Personal Information
+          </h3>
+          
+          <div *ngIf="!isEditing" class="info-grid">
+            <div class="info-item">
+              <label>Full Name</label>
+              <span>{{ getFullName() }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email</label>
+              <span>{{ profile.email }}</span>
+            </div>
+            <div class="info-item">
+              <label>Gender</label>
+              <span>{{ profile.gender === 'MALE' ? 'Male' : profile.gender === 'FEMALE' ? 'Female' : 'Other' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Date of Birth</label>
+              <span>{{ profile.dateOfBirth | date:'longDate' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Contact Number</label>
+              <span>{{ profile.contactNumber }}</span>
+            </div>
+            <div class="info-item">
+              <label>Address</label>
+              <span>{{ profile.address }}</span>
+            </div>
+          </div>
+          
+          <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  formControlName="firstName" 
+                  class="form-control"
+                  [class.ng-invalid]="firstName?.invalid && firstName?.touched"
+                >
+                <div *ngIf="firstName?.invalid && firstName?.touched" class="error-message">
+                  <span *ngIf="firstName?.errors?.['required']">First name is required</span>
+                  <span *ngIf="firstName?.errors?.['minlength']">First name must be at least 2 characters</span>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="middleName">Middle Name</label>
+                <input 
+                  type="text" 
+                  id="middleName" 
+                  formControlName="middleName" 
+                  class="form-control"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  formControlName="lastName" 
+                  class="form-control"
+                  [class.ng-invalid]="lastName?.invalid && lastName?.touched"
+                >
+                <div *ngIf="lastName?.invalid && lastName?.touched" class="error-message">
+                  <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
+                  <span *ngIf="lastName?.errors?.['minlength']">Last name must be at least 2 characters</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gender">Gender *</label>
+                <select id="gender" formControlName="gender" class="form-control" required>
+                  <option value="">Select Gender</option>
+                  <option *ngFor="let option of genderOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="dateOfBirth">Date of Birth *</label>
+                <input 
+                  type="date" 
+                  id="dateOfBirth" 
+                  formControlName="dateOfBirth" 
+                  class="form-control" 
+                  required
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="contactNumber">Contact Number *</label>
+                <input 
+                  type="tel" 
+                  id="contactNumber" 
+                  formControlName="contactNumber" 
+                  class="form-control"
+                  [class.ng-invalid]="contactNumber?.invalid && contactNumber?.touched"
+                >
+                <div *ngIf="contactNumber?.invalid && contactNumber?.touched" class="error-message">
+                  <span *ngIf="contactNumber?.errors?.['required']">Contact number is required</span>
+                  <span *ngIf="contactNumber?.errors?.['pattern']">Please enter a valid phone number</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="address">Address *</label>
+              <textarea 
+                id="address" 
+                formControlName="address" 
+                class="form-control" 
+                rows="3"
+                [class.ng-invalid]="address?.invalid && address?.touched"
+              ></textarea>
+              <div *ngIf="address?.invalid && address?.touched" class="error-message">
+                <span *ngIf="address?.errors?.['required']">Address is required</span>
+                <span *ngIf="address?.errors?.['minlength']">Address must be at least 10 characters</span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Professional Information -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="material-icons">work</i>
+            Professional Information
+          </h3>
+          
+          <div *ngIf="!isEditing" class="info-grid">
+            <div class="info-item">
+              <label>Employee ID</label>
+              <span>{{ profile.employeeId }}</span>
+            </div>
+            <div class="info-item">
+              <label>Department</label>
+              <span>{{ profile.department }}</span>
+            </div>
+            <div class="info-item">
+              <label>Role</label>
+              <span>{{ profile.role }}</span>
+            </div>
+            <div class="info-item">
+              <label>Hire Date</label>
+              <span>{{ profile.hireDate | date:'longDate' }}</span>
+            </div>
+          </div>
+          
+          <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
+            <div class="form-group">
+              <label for="department">Department *</label>
+              <input 
+                type="text" 
+                id="department" 
+                formControlName="department" 
+                class="form-control" 
+                required
+              >
+            </div>
+          </form>
+        </div>
+
+        <!-- Bio Section -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="material-icons">description</i>
+            Biography
+          </h3>
+          
+          <div *ngIf="!isEditing" class="bio-content">
+            <p>{{ profile.bio }}</p>
+          </div>
+          
+          <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
+            <div class="form-group">
+              <label for="bio">Bio *</label>
+              <textarea 
+                id="bio" 
+                formControlName="bio" 
+                class="form-control" 
+                rows="4"
+                [class.ng-invalid]="bio?.invalid && bio?.touched"
+              ></textarea>
+              <div *ngIf="bio?.invalid && bio?.touched" class="error-message">
+                <span *ngIf="bio?.errors?.['required']">Bio is required</span>
+                <span *ngIf="bio?.errors?.['minlength']">Bio must be at least 20 characters</span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="material-icons">emergency</i>
+            Emergency Contact
+          </h3>
+          
+          <div *ngIf="!isEditing" class="info-grid">
+            <div class="info-item">
+              <label>Name</label>
+              <span>{{ profile.emergencyContact.name }}</span>
+            </div>
+            <div class="info-item">
+              <label>Relationship</label>
+              <span>{{ profile.emergencyContact.relationship }}</span>
+            </div>
+            <div class="info-item">
+              <label>Phone</label>
+              <span>{{ profile.emergencyContact.phone }}</span>
+            </div>
+          </div>
+          
+          <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="emergencyContactName">Contact Name *</label>
+                <input 
+                  type="text" 
+                  id="emergencyContactName" 
+                  formControlName="emergencyContactName" 
+                  class="form-control" 
+                  required
+                >
+              </div>
+              
+              <div class="form-group">
+                <label for="emergencyContactRelationship">Relationship *</label>
+                <input 
+                  type="text" 
+                  id="emergencyContactRelationship" 
+                  formControlName="emergencyContactRelationship" 
+                  class="form-control" 
+                  required
+                >
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="emergencyContactPhone">Contact Phone *</label>
+              <input 
+                type="tel" 
+                id="emergencyContactPhone" 
+                formControlName="emergencyContactPhone" 
+                class="form-control" 
+                required
+              >
+            </div>
+          </form>
+        </div>
+
+        <!-- Preferences -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="material-icons">settings</i>
+            Preferences
+          </h3>
+          
+          <div *ngIf="!isEditing" class="info-grid">
+            <div class="info-item">
+              <label>Language</label>
+              <span>{{ languageLabel }}</span>
+            </div>
+            <div class="info-item">
+              <label>Timezone</label>
+              <span>{{ timezoneLabel }}</span>
+            </div>
+            <div class="info-item">
+              <label>Notifications</label>
+              <span>{{ notificationLabels }}</span>
+            </div>
+          </div>
+          
+          <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="language">Language *</label>
+                <select id="language" formControlName="language" class="form-control" required>
+                  <option value="">Select Language</option>
+                  <option *ngFor="let option of languageOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="timezone">Timezone *</label>
+                <select id="timezone" formControlName="timezone" class="form-control" required>
+                  <option value="">Select Timezone</option>
+                  <option *ngFor="let option of timezoneOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Notification Preferences</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" formControlName="emailNotifications">
+                  Email Notifications
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" formControlName="smsNotifications">
+                  SMS Notifications
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" formControlName="pushNotifications">
+                  Push Notifications
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Actions -->
+    <div *ngIf="isEditing" class="edit-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="cancelEditing()"
+        [disabled]="isSaving"
+      >
+        Cancel
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="saveProfile()"
+        [disabled]="isSaving || profileForm.invalid"
+      >
+        <span *ngIf="isSaving">Saving...</span>
+        <span *ngIf="!isSaving">Save Changes</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Change Password Dialog -->
+  <div *ngIf="isChangingPassword" class="dialog-overlay" (click)="closePasswordChange()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>Change Password</h2>
+        <button class="btn btn-icon" (click)="closePasswordChange()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="dialog-form">
+        <div class="form-group">
+          <label for="currentPassword">Current Password *</label>
+          <input 
+            type="password" 
+            id="currentPassword" 
+            formControlName="currentPassword" 
+            class="form-control"
+            [class.ng-invalid]="currentPassword?.invalid && currentPassword?.touched"
+          >
+          <div *ngIf="currentPassword?.invalid && currentPassword?.touched" class="error-message">
+            <span *ngIf="currentPassword?.errors?.['required']">Current password is required</span>
+            <span *ngIf="currentPassword?.errors?.['minlength']">Password must be at least 8 characters</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="newPassword">New Password *</label>
+          <input 
+            type="password" 
+            id="newPassword" 
+            formControlName="newPassword" 
+            class="form-control"
+            [class.ng-invalid]="newPassword?.invalid && newPassword?.touched"
+          >
+          <div *ngIf="newPassword?.invalid && newPassword?.touched" class="error-message">
+            <span *ngIf="newPassword?.errors?.['required']">New password is required</span>
+            <span *ngIf="newPassword?.errors?.['minlength']">Password must be at least 8 characters</span>
+            <span *ngIf="newPassword?.errors?.['pattern']">Password must contain uppercase, lowercase, number, and special character</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password *</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            formControlName="confirmPassword" 
+            class="form-control"
+            [class.ng-invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+          >
+          <div *ngIf="confirmPassword?.invalid && confirmPassword?.touched" class="error-message">
+            <span *ngIf="confirmPassword?.errors?.['required']">Please confirm your new password</span>
+          </div>
+          <div *ngIf="passwordForm.errors?.['passwordMismatch'] && confirmPassword?.touched" class="error-message">
+            Passwords do not match
+          </div>
+        </div>
+        
+        <div class="password-requirements">
+          <h4>Password Requirements:</h4>
+          <ul>
+            <li>At least 8 characters long</li>
+            <li>Contains uppercase letter (A-Z)</li>
+            <li>Contains lowercase letter (a-z)</li>
+            <li>Contains number (0-9)</li>
+                         <li>Contains special character (&#64;$!%*?&)</li>
+          </ul>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closePasswordChange()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving || passwordForm.invalid">
+            <span *ngIf="isSaving">Changing...</span>
+            <span *ngIf="!isSaving">Change Password</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
