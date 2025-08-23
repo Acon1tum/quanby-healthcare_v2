@@ -72,6 +72,11 @@ export class SidebarComponent implements OnInit {
                 route: '/admin/system-administration/reports'
               }
             ]
+          },
+          {
+            label: 'My Profile',
+            icon: 'person',
+            route: '/admin/my-profile'
           }
         ];
         break;

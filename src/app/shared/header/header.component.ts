@@ -42,6 +42,23 @@ export class HeaderComponent implements OnInit {
     this.closeMobileMenu();
   }
 
+  navigateToProfile(): void {
+    if (this.currentUser) {
+      switch (this.currentUser.role) {
+        case 'admin':
+          this.router.navigate(['/admin/my-profile']);
+          break;
+        case 'doctor':
+          this.router.navigate(['/doctor/my-profile']);
+          break;
+        case 'patient':
+          this.router.navigate(['/patient/my-profile']);
+          break;
+      }
+    }
+    this.closeMobileMenu();
+  }
+
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
     this.updateBodyScroll();
