@@ -1,30 +1,30 @@
-<div class="doctor-information-container">
+<div class="patient-information-container">
   <!-- Header Section -->
   <div class="header-section">
     <div class="header-content">
       <button class="btn btn-secondary back-button" (click)="goBack()">
         <i class="material-icons">arrow_back</i>
       </button>
-      <h1 class="page-title">Patient Information</h1>
+      <h1 class="page-title">Doctor Information</h1>
     </div>
   </div>
 
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
-    <p>Loading patient information...</p>
-    <small>Please wait while we retrieve the patient details</small>
+    <p>Loading doctor information...</p>
+    <small>Please wait while we retrieve the doctor details</small>
   </div>
 
   <!-- Error State -->
   <div *ngIf="error && !isLoading" class="error-state">
     <i class="material-icons">error</i>
-    <h3>No Patient Data Available</h3>
+    <h3>No Doctor Data Available</h3>
     <p>{{ error }}</p>
     <div class="error-actions">
-      <button class="btn btn-primary" (click)="goToPatientManagement()">
+      <button class="btn btn-primary" (click)="goToDoctorManagement()">
         <i class="material-icons">people</i>
-        Go to Patient Management
+        Go to Doctor Management
       </button>
       <button class="btn btn-secondary" (click)="goBack()">
         <i class="material-icons">arrow_back</i>
@@ -33,128 +33,62 @@
     </div>
   </div>
 
-  <!-- Patient Details -->
-  <div *ngIf="patient && !isLoading" class="doctor-details">
+  <!-- Doctor Details -->
+  <div *ngIf="doctor && !isLoading" class="patient-details">
     <!-- Personal Information -->
     <div class="detail-section">
       <h3>Personal Information</h3>
       <div class="detail-grid">
         <div class="detail-item">
           <label>Full Name:</label>
-          <span>{{ getPatientFullName(patient) }}</span>
+          <span>{{ getDoctorFullName(doctor) }}</span>
         </div>
         <div class="detail-item">
           <label>Email:</label>
-          <span>{{ patient.email }}</span>
+          <span>{{ doctor.email }}</span>
         </div>
         <div class="detail-item">
           <label>Gender:</label>
-          <span>{{ patient.patientInfo?.gender }}</span>
+          <span>{{ doctor.doctorInfo?.gender }}</span>
         </div>
         <div class="detail-item">
           <label>Date of Birth:</label>
-          <span>{{ patient.patientInfo?.dateOfBirth | date:'mediumDate' }}</span>
+          <span>{{ doctor.doctorInfo?.dateOfBirth | date:'mediumDate' }}</span>
         </div>
         <div class="detail-item">
           <label>Age:</label>
-          <span>{{ calculateAge(patient.patientInfo?.dateOfBirth) }} years</span>
+          <span>{{ calculateAge(doctor.doctorInfo?.dateOfBirth) }} years</span>
         </div>
         <div class="detail-item">
           <label>Contact Number:</label>
-          <span>{{ patient.patientInfo?.contactNumber }}</span>
+          <span>{{ doctor.doctorInfo?.contactNumber }}</span>
         </div>
         <div class="detail-item">
           <label>Address:</label>
-          <span>{{ patient.patientInfo?.address }}</span>
+          <span>{{ doctor.doctorInfo?.address }}</span>
         </div>
       </div>
     </div>
     
-    <!-- Physical Information -->
+    <!-- Professional Information -->
     <div class="detail-section">
-      <h3>Physical Information</h3>
+      <h3>Professional Information</h3>
       <div class="detail-grid">
         <div class="detail-item">
-          <label>Weight:</label>
-          <span>{{ patient.patientInfo?.weight }} kg</span>
+          <label>Specialization:</label>
+          <span class="blood-type-badge">{{ doctor.doctorInfo?.specialization }}</span>
         </div>
         <div class="detail-item">
-          <label>Height:</label>
-          <span>{{ patient.patientInfo?.height }} cm</span>
+          <label>Qualifications:</label>
+          <span>{{ doctor.doctorInfo?.qualifications }}</span>
         </div>
         <div class="detail-item">
-          <label>Blood Type:</label>
-          <span class="specialization-badge">{{ patient.patientInfo?.bloodType }}</span>
+          <label>Experience:</label>
+          <span>{{ doctor.doctorInfo?.experience }} years</span>
         </div>
         <div class="detail-item">
-          <label>BMI:</label>
-          <div class="bmi-info">
-            <span class="bmi-value">{{ getBMI(patient) }}</span>
-            <small *ngIf="getBMI(patient) !== 'N/A'" [class]="getBMIStatusClass(getBMI(patient))">
-              {{ getBMIStatus(getBMI(patient)) }}
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Medical Information -->
-    <div class="detail-section">
-      <h3>Medical Information</h3>
-      <div class="detail-grid">
-        <div class="detail-item">
-          <label>Medical History:</label>
-          <span>{{ patient.patientInfo?.medicalHistory || 'None' }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Allergies:</label>
-          <span>{{ patient.patientInfo?.allergies || 'None known' }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Current Medications:</label>
-          <span>{{ patient.patientInfo?.medications || 'None' }}</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Emergency Contact -->
-    <div class="detail-section">
-      <h3>Emergency Contact</h3>
-      <div class="detail-grid">
-        <div class="detail-item">
-          <label>Contact Name:</label>
-          <span>{{ patient.emergencyContact?.contactName }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Relationship:</label>
-          <span>{{ patient.emergencyContact?.relationship }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Contact Number:</label>
-          <span>{{ patient.emergencyContact?.contactNumber }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Contact Address:</label>
-          <span>{{ patient.emergencyContact?.contactAddress || 'Not provided' }}</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Insurance Information -->
-    <div class="detail-section">
-      <h3>Insurance Information</h3>
-      <div class="detail-grid">
-        <div class="detail-item">
-          <label>Provider:</label>
-          <span>{{ patient.insuranceInfo?.providerName }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Policy Number:</label>
-          <span>{{ patient.insuranceInfo?.policyNumber }}</span>
-        </div>
-        <div class="detail-item">
-          <label>Insurance Contact:</label>
-          <span>{{ patient.insuranceInfo?.insuranceContact }}</span>
+          <label>Bio:</label>
+          <span>{{ doctor.doctorInfo?.bio }}</span>
         </div>
       </div>
     </div>
@@ -165,11 +99,11 @@
       <div class="detail-grid">
         <div class="detail-item">
           <label>Created:</label>
-          <span>{{ patient.createdAt | date:'medium' }}</span>
+          <span>{{ doctor.createdAt | date:'medium' }}</span>
         </div>
         <div class="detail-item">
           <label>Last Updated:</label>
-          <span>{{ patient.updatedAt | date:'medium' }}</span>
+          <span>{{ doctor.updatedAt | date:'medium' }}</span>
         </div>
       </div>
     </div>
@@ -182,8 +116,8 @@
           <thead>
             <tr>
               <th>Date & Time</th>
-              <th>Doctor</th>
-              <th>Specialization</th>
+              <th>Patient</th>
+              <th>Patient Info</th>
               <th>Duration</th>
               <th>Status</th>
               <th>Actions</th>
@@ -199,11 +133,19 @@
               </td>
               <td>
                 <div class="doctor-info">
-                  <div class="doctor-name">Dr. {{ getDoctorFullName(consultation.doctor!) }}</div>
-                  <div class="doctor-qualifications">{{ consultation.doctor?.qualifications }}</div>
+                  <div class="doctor-name">{{ getPatientFullName(consultation.patient!) }}</div>
+                  <div class="doctor-qualifications">
+                    {{ consultation.patient?.gender }} • {{ calculateAge(consultation.patient?.dateOfBirth) }} years
+                  </div>
                 </div>
               </td>
-              <td>{{ consultation.doctor?.specialization }}</td>
+              <td>
+                <div class="vital-summary">
+                  <div>BP: {{ consultation.patient?.bloodType }}</div>
+                  <div>HR: {{ consultation.patient?.weight }} kg</div>
+                  <div>H: {{ consultation.patient?.height }} cm</div>
+                </div>
+              </td>
               <td>{{ getConsultationDuration(consultation.startTime, consultation.endTime) }}</td>
               <td>
                 <span class="status-badge completed">Completed</span>
@@ -230,7 +172,7 @@
 
     <!-- Face-Scan Results -->
     <div class="detail-section">
-      <h3>Face-Scan Results</h3>
+      <h3>Health Scan Results</h3>
       <div *ngIf="healthScans.length > 0; else noHealthScans" class="table-container">
         <table class="data-table">
           <thead>
@@ -279,42 +221,31 @@
       <ng-template #noHealthScans>
         <div class="empty-state">
           <i class="material-icons">monitor_heart</i>
-          <p>No face-scan results available</p>
+          <p>No health scan results available</p>
         </div>
       </ng-template>
     </div>
 
     <!-- Schedules -->
     <div class="detail-section">
-      <h3>Upcoming Schedules</h3>
+      <h3>Work Schedule</h3>
       <div *ngIf="schedules.length > 0; else noSchedules" class="table-container">
         <table class="data-table">
           <thead>
             <tr>
               <th>Day</th>
-              <th>Doctor</th>
-              <th>Specialization</th>
-              <th>Time</th>
-              <th>Location</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Duration</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let schedule of schedules">
               <td>{{ schedule.dayOfWeek }}</td>
-              <td>
-                <div class="doctor-info">
-                  <div class="doctor-name">Dr. {{ getDoctorFullName(schedule.doctor!) }}</div>
-                  <div class="doctor-qualifications">{{ schedule.doctor?.qualifications }}</div>
-                </div>
-              </td>
-              <td>{{ schedule.doctor?.specialization }}</td>
-              <td>
-                <div class="time-range">
-                  {{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}
-                </div>
-              </td>
-              <td>{{ schedule.doctor?.address }}</td>
+              <td>{{ formatTime(schedule.startTime) }}</td>
+              <td>{{ formatTime(schedule.endTime) }}</td>
+              <td>8 hours</td>
               <td>
                 <div class="actions">
                   <button class="btn btn-sm btn-primary" (click)="openScheduleModal(schedule)">
@@ -330,7 +261,7 @@
       <ng-template #noSchedules>
         <div class="empty-state">
           <i class="material-icons">schedule</i>
-          <p>No upcoming schedules available</p>
+          <p>No work schedule available</p>
         </div>
       </ng-template>
     </div>
@@ -378,31 +309,43 @@
       </div>
 
       <div class="doctor-details">
-        <h4>Doctor Information</h4>
+        <h4>Patient Information</h4>
         <div class="detail-grid">
           <div class="detail-item">
             <label>Name:</label>
-            <span>Dr. {{ getDoctorFullName(selectedConsultation.doctor!) }}</span>
+            <span>{{ getPatientFullName(selectedConsultation.patient!) }}</span>
           </div>
           <div class="detail-item">
-            <label>Specialization:</label>
-            <span>{{ selectedConsultation.doctor?.specialization }}</span>
+            <label>Gender:</label>
+            <span>{{ selectedConsultation.patient?.gender }}</span>
           </div>
           <div class="detail-item">
-            <label>Qualifications:</label>
-            <span>{{ selectedConsultation.doctor?.qualifications }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Experience:</label>
-            <span>{{ selectedConsultation.doctor?.experience }} years</span>
+            <label>Age:</label>
+            <span>{{ calculateAge(selectedConsultation.patient?.dateOfBirth) }} years</span>
           </div>
           <div class="detail-item">
             <label>Contact:</label>
-            <span>{{ selectedConsultation.doctor?.contactNumber }}</span>
+            <span>{{ selectedConsultation.patient?.contactNumber }}</span>
           </div>
           <div class="detail-item">
             <label>Address:</label>
-            <span>{{ selectedConsultation.doctor?.address }}</span>
+            <span>{{ selectedConsultation.patient?.address }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Blood Type:</label>
+            <span class="blood-type-badge">{{ selectedConsultation.patient?.bloodType }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Medical History:</label>
+            <span>{{ selectedConsultation.patient?.medicalHistory || 'None' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Allergies:</label>
+            <span>{{ selectedConsultation.patient?.allergies || 'None known' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Current Medications:</label>
+            <span>{{ selectedConsultation.patient?.medications || 'None' }}</span>
           </div>
         </div>
       </div>
@@ -610,33 +553,9 @@
       </div>
 
       <div class="doctor-details">
-        <h4>Doctor Information</h4>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Name:</label>
-            <span>Dr. {{ getDoctorFullName(selectedSchedule.doctor!) }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Specialization:</label>
-            <span>{{ selectedSchedule.doctor?.specialization }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Qualifications:</label>
-            <span>{{ selectedSchedule.doctor?.qualifications }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Experience:</label>
-            <span>{{ selectedSchedule.doctor?.experience }} years</span>
-          </div>
-          <div class="detail-item">
-            <label>Contact:</label>
-            <span>{{ selectedSchedule.doctor?.contactNumber }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Address:</label>
-            <span>{{ selectedSchedule.doctor?.address }}</span>
-          </div>
-        </div>
+        <h4>Schedule Information</h4>
+        <p>This is a regular {{ selectedSchedule.dayOfWeek }} schedule from {{ formatTime(selectedSchedule.startTime) }} to {{ formatTime(selectedSchedule.endTime) }}.</p>
+        <p>Total working hours: 8 hours</p>
       </div>
     </div>
   </div>

@@ -1,5 +1,5 @@
-// Doctor Information Component Styles
-.doctor-information-container {
+// Patient Information Component Styles
+.patient-information-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -105,8 +105,8 @@
   }
 }
 
-// Doctor Details
-.doctor-details {
+// Patient Details
+.patient-details {
   .detail-section {
     background: white;
     border-radius: 12px;
@@ -145,16 +145,6 @@
         span {
           color: #111827;
           font-size: 1rem;
-        }
-        
-        .specialization-badge {
-          display: inline-block;
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 0.25rem 0.75rem;
-          border-radius: 9999px;
-          font-size: 0.875rem;
-          font-weight: 500;
         }
         
         .blood-type-badge {
@@ -592,7 +582,7 @@
 
 // Responsive Design
 @media (max-width: 768px) {
-  .doctor-information-container {
+  .patient-information-container {
     padding: 1rem;
   }
   

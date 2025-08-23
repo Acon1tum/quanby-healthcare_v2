@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 // Interfaces based on the database schema
 interface Doctor {
@@ -61,7 +62,6 @@ export class DoctorManagementComponent implements OnInit {
   
   isAddDialogOpen = false;
   isEditDialogOpen = false;
-  isViewDialogOpen = false;
   selectedDoctor: Doctor | null = null;
   
   // Pagination
@@ -74,7 +74,7 @@ export class DoctorManagementComponent implements OnInit {
   isLoading = false;
   isSaving = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private router: Router) {
     this.searchForm = this.fb.group({
       searchTerm: [''],
       specialization: [''],
@@ -176,14 +176,18 @@ export class DoctorManagementComponent implements OnInit {
   }
 
   openViewDialog(doctor: Doctor): void {
-    this.selectedDoctor = doctor;
-    this.isViewDialogOpen = true;
+    // Navigate to doctor information page with doctor data
+    this.router.navigate(['/admin/system-administration/doctor-management/doctor-information'], {
+      state: { doctor: doctor }
+    });
+    
+    // Also store in localStorage as backup
+    localStorage.setItem('selectedDoctor', JSON.stringify(doctor));
   }
 
   closeDialog(): void {
     this.isAddDialogOpen = false;
     this.isEditDialogOpen = false;
-    this.isViewDialogOpen = false;
     this.selectedDoctor = null;
     this.doctorForm.reset();
   }
