@@ -1,37 +1,39 @@
 .sidebar {
   width: 280px;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #ffffff;
+  color: #1f2937;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 1000;
+  border-right: 1px solid #e5e7eb;
 }
 
 .sidebar-header {
   padding: 2rem 1.5rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e5e7eb;
   text-align: center;
   
   h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: #1f2937;
   }
   
   .role-badge {
     margin: 0;
     padding: 0.25rem 0.75rem;
-    background: rgba(255, 255, 255, 0.2);
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
     display: inline-block;
-    backdrop-filter: blur(10px);
+    color: #374151;
   }
 }
 
@@ -54,22 +56,22 @@
   display: flex;
   align-items: center;
   padding: 0.875rem 1.5rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: #f9fafb;
+    color: #1f2937;
     transform: translateX(5px);
   }
   
   &.active {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border-right: 3px solid #fff;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-right: 3px solid #3b82f6;
     
     &::before {
       content: '';
@@ -78,7 +80,7 @@
       top: 0;
       height: 100%;
       width: 3px;
-      background: white;
+      background: #3b82f6;
     }
   }
   
@@ -93,6 +95,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #6b7280;
   }
   
   .label {
@@ -103,6 +106,7 @@
   .expand-icon {
     font-size: 0.75rem;
     transition: transform 0.3s ease;
+    color: #9ca3af;
     
     &.expanded {
       transform: rotate(180deg);
@@ -114,10 +118,11 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: #f9fafb;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
+  border-left: 2px solid #e5e7eb;
   
   &.expanded {
     max-height: 300px;
@@ -132,19 +137,19 @@
   display: flex;
   align-items: center;
   padding: 0.75rem 1.5rem 0.75rem 3.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: #6b7280;
   text-decoration: none;
   transition: all 0.3s ease;
   font-size: 0.9rem;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: #f3f4f6;
+    color: #374151;
   }
   
   &.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: #eff6ff;
+    color: #1d4ed8;
   }
   
   .icon {
@@ -154,6 +159,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #6b7280;
   }
   
   .label {
@@ -236,8 +242,8 @@
   left: 0;
   right: 0;
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .logout-button {
@@ -247,13 +253,13 @@
   padding: 0.875rem 1rem;
   background: none;
   border: none;
-  color: #ff6b6b;
+  color: #dc2626;
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.3s ease;
   
   &:hover {
-    background: rgba(255, 107, 107, 0.1);
+    background: #fef2f2;
     transform: translateX(5px);
   }
   
@@ -264,12 +270,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ff6b6b;
+    color: #dc2626;
   }
   
   .label {
     font-weight: 600;
-    color: #ff6b6b;
+    color: #dc2626;
   }
 }
 
@@ -279,14 +285,14 @@
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f3f4f6;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: #d1d5db;
   border-radius: 3px;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: #9ca3af;
   }
 }
