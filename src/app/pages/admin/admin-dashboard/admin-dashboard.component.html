@@ -1,1 +1,256 @@
-<p>admin-dashboard works!</p>
+<div class="admin-dashboard-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-description">Welcome back! Here's what's happening in your QHealth system today.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="navigateTo('/admin/system-administration')">
+        <i class="material-icons">settings</i>
+        System Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading dashboard data...</p>
+    <small>Please wait while we retrieve your system information</small>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading" class="dashboard-content">
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+      <h2 class="section-title">System Overview</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+            <i class="material-icons">people</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.totalPatients.toLocaleString() }}</h3>
+            <p class="stat-label">Total Patients</p>
+            <small class="stat-change positive">+12 this week</small>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="material-icons">medical_services</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.totalDoctors.toLocaleString() }}</h3>
+            <p class="stat-label">Total Doctors</p>
+            <small class="stat-change positive">+3 this week</small>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="material-icons">video_call</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.totalConsultations.toLocaleString() }}</h3>
+            <p class="stat-label">Total Consultations</p>
+            <small class="stat-change positive">+156 this month</small>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <i class="material-icons">attach_money</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</h3>
+            <p class="stat-label">Total Revenue</p>
+            <small class="stat-change positive">+8.5% this month</small>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+            <i class="material-icons">schedule</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.activeAppointments }}</h3>
+            <p class="stat-label">Active Appointments</p>
+            <small class="stat-change neutral">Today's schedule</small>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #6b7280, #4b5563);">
+            <i class="material-icons">assessment</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats.pendingReports }}</h3>
+            <p class="stat-label">Pending Reports</p>
+            <small class="stat-change warning">Requires attention</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions and Recent Activities -->
+    <div class="dashboard-main">
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of quickActions" 
+            class="quick-action-card"
+            (click)="navigateTo(action.route)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon" [style.background-color]="action.color">
+              <i class="material-icons">{{ action.icon }}</i>
+            </div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activities -->
+      <div class="recent-activities-section">
+        <div class="section-header">
+          <h2 class="section-title">Recent Activities</h2>
+          <button class="btn btn-text" (click)="navigateTo('/admin/system-administration/audit-logs')">
+            View All
+            <i class="material-icons">arrow_forward</i>
+          </button>
+        </div>
+        
+        <div class="activities-list">
+          <div 
+            *ngFor="let activity of recentActivities" 
+            class="activity-item"
+            [class]="getStatusClass(activity.status)"
+          >
+            <div class="activity-icon" [style.color]="getActivityIconColor(activity.type)">
+              <i class="material-icons">{{ getActivityIcon(activity.type) }}</i>
+            </div>
+            <div class="activity-content">
+              <p class="activity-description">{{ activity.description }}</p>
+              <div class="activity-meta">
+                <span class="activity-user">{{ activity.user }}</span>
+                <span class="activity-time">{{ formatTimeAgo(activity.timestamp) }}</span>
+              </div>
+            </div>
+            <div class="activity-status">
+              <span class="status-badge" [class]="getStatusClass(activity.status)">
+                {{ activity.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Dashboard Sections -->
+    <div class="dashboard-secondary">
+      <!-- System Health -->
+      <div class="system-health-section">
+        <h2 class="section-title">System Health</h2>
+        <div class="health-metrics">
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Server Status</span>
+              <span class="metric-value status-success">Online</span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" style="width: 100%"></div>
+            </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Database Performance</span>
+              <span class="metric-value status-success">98%</span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" style="width: 98%"></div>
+            </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">API Response Time</span>
+              <span class="metric-value status-warning">245ms</span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill status-warning" style="width: 75%"></div>
+            </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Storage Usage</span>
+              <span class="metric-value status-danger">87%</span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill status-danger" style="width: 87%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="upcoming-events-section">
+        <h2 class="section-title">Upcoming Events</h2>
+        <div class="events-list">
+          <div class="event-item">
+            <div class="event-date">
+              <span class="event-day">15</span>
+              <span class="event-month">Dec</span>
+            </div>
+            <div class="event-content">
+              <h4 class="event-title">Monthly Staff Meeting</h4>
+              <p class="event-time">10:00 AM - Conference Room A</p>
+            </div>
+            <div class="event-actions">
+              <button class="btn btn-sm btn-outline">Join</button>
+            </div>
+          </div>
+          
+          <div class="event-item">
+            <div class="event-date">
+              <span class="event-day">18</span>
+              <span class="event-month">Dec</span>
+            </div>
+            <div class="event-content">
+              <h4 class="event-title">System Maintenance</h4>
+              <p class="event-time">2:00 AM - 4:00 AM</p>
+            </div>
+            <div class="event-actions">
+              <span class="maintenance-badge">Scheduled</span>
+            </div>
+          </div>
+          
+          <div class="event-item">
+            <div class="event-date">
+              <span class="event-day">22</span>
+              <span class="event-month">Dec</span>
+            </div>
+            <div class="event-content">
+              <h4 class="event-title">Q4 Review Meeting</h4>
+              <p class="event-time">3:00 PM - Virtual</p>
+            </div>
+            <div class="event-actions">
+              <button class="btn btn-sm btn-outline">Join</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
