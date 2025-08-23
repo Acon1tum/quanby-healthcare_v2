@@ -1,1 +1,359 @@
-<p>patient-management works!</p>
+<div class="patient-management-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Patient Management</h1>
+      <p class="page-description">Manage all patients in the QHealth system</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddDialog()">
+      <i class="material-icons">add</i>
+      Add New Patient
+    </button>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-section">
+    <form [formGroup]="searchForm" class="search-form">
+      <div class="search-row">
+        <div class="form-group">
+          <label for="searchTerm">Search</label>
+          <input 
+            type="text" 
+            id="searchTerm" 
+            formControlName="searchTerm" 
+            placeholder="Search by name or email..."
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="bloodType">Blood Type</label>
+          <select id="bloodType" formControlName="bloodType" class="form-control">
+            <option value="">All Blood Types</option>
+            <option *ngFor="let bloodType of bloodTypes" [value]="bloodType">
+              {{ bloodType }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="ageMin">Min Age</label>
+          <input 
+            type="number" 
+            id="ageMin" 
+            formControlName="ageMin" 
+            placeholder="0"
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="ageMax">Max Age</label>
+          <input 
+            type="number" 
+            id="ageMax" 
+            formControlName="ageMax" 
+            placeholder="100"
+            class="form-control"
+          >
+        </div>
+      </div>
+      
+      <div class="search-row search-actions">
+        <div class="form-group">
+          <button type="button" class="btn btn-secondary" (click)="searchForm.reset()">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <p>Showing {{ filteredPatients.length }} of {{ patients.length }} patients</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading patients...</p>
+  </div>
+
+  <!-- Patients Table -->
+  <div *ngIf="!isLoading" class="table-container">
+    <table class="patients-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Blood Type</th>
+          <th>BMI</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let patient of getPaginatedPatients()" class="patient-row">
+          <td class="patient-name">
+            <div class="name-info">
+              <strong>{{ getPatientFullName(patient) }}</strong>
+              <small *ngIf="patient.patientInfo?.medicalHistory">{{ patient.patientInfo?.medicalHistory }}</small>
+            </div>
+          </td>
+          <td>{{ patient.email }}</td>
+          <td>{{ calculateAge(patient.patientInfo?.dateOfBirth) }} years</td>
+          <td>
+            <span class="gender-badge gender-{{ patient.patientInfo?.gender?.toLowerCase() }}">
+              {{ patient.patientInfo?.gender }}
+            </span>
+          </td>
+          <td>
+            <span class="blood-type-badge">{{ patient.patientInfo?.bloodType }}</span>
+          </td>
+          <td>
+            <div class="bmi-info">
+              <span class="bmi-value">{{ getBMI(patient) }}</span>
+              <small *ngIf="getBMI(patient) !== 'N/A'" [class]="getBMIStatusClass(getBMI(patient))">
+                {{ getBMIStatus(getBMI(patient)) }}
+              </small>
+            </div>
+          </td>
+          <td>{{ patient.patientInfo?.contactNumber }}</td>
+          <td>
+            <span class="status-badge status-active">{{ getPatientStatus(patient) }}</span>
+          </td>
+          <td class="actions">
+            <button class="btn btn-icon btn-info" (click)="openViewDialog(patient)" title="View Details">
+              <i class="material-icons">visibility</i>
+            </button>
+            <button class="btn btn-icon btn-warning" (click)="openEditDialog(patient)" title="Edit Patient">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="btn btn-icon btn-danger" (click)="deletePatient(patient)" title="Delete Patient">
+              <i class="material-icons">delete</i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredPatients.length === 0" class="empty-state">
+      <i class="material-icons">search_off</i>
+      <h3>No patients found</h3>
+      <p>Try adjusting your search criteria or add a new patient.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="filteredPatients.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage * pageSize) + 1 }} to {{ Math.min((currentPage + 1) * pageSize, totalItems) }} of {{ totalItems }} results
+    </div>
+    
+    <div class="pagination-controls">
+      <button 
+        class="btn btn-secondary" 
+        [disabled]="currentPage === 0"
+        (click)="currentPage = currentPage - 1"
+      >
+        Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()" 
+          class="btn btn-page" 
+          [class.active]="page === currentPage"
+          (click)="currentPage = page"
+        >
+          {{ page + 1 }}
+        </button>
+      </div>
+      
+      <button 
+        class="btn btn-secondary" 
+        [disabled]="currentPage >= getTotalPages() - 1"
+        (click)="currentPage = currentPage + 1"
+      >
+        Next
+      </button>
+    </div>
+    
+    <div class="page-size-selector">
+      <label for="pageSize">Show:</label>
+      <select id="pageSize" [ngModel]="pageSize" (ngModelChange)="pageSize = $event" class="form-control">
+        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+      </select>
+      <span>per page</span>
+    </div>
+  </div>
+
+  <!-- Add/Edit Patient Dialog -->
+  <div *ngIf="isAddDialogOpen || isEditDialogOpen" class="dialog-overlay">
+    <div class="dialog dialog-large">
+      <div class="dialog-header">
+        <h2>{{ isEditDialogOpen ? 'Edit Patient' : 'Add New Patient' }}</h2>
+        <button class="btn btn-icon" (click)="closeDialog()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="patientForm" (ngSubmit)="savePatient()" class="dialog-form">
+        <!-- Patient Information Section -->
+        <div class="form-section">
+          <h3>Patient Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input type="email" id="email" formControlName="email" class="form-control" required>
+              <div *ngIf="patientForm.get('email')?.invalid && patientForm.get('email')?.touched" class="error-message">
+                Please enter a valid email address
+              </div>
+            </div>
+            
+            <div class="form-group" *ngIf="!isEditDialogOpen">
+              <label for="password">Password *</label>
+              <input type="password" id="password" formControlName="password" class="form-control" required>
+              <div *ngIf="patientForm.get('password')?.invalid && patientForm.get('password')?.touched" class="error-message">
+                Password must be at least 8 characters long
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fullName">Full Name *</label>
+              <input type="text" id="fullName" formControlName="fullName" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="gender">Gender *</label>
+              <select id="gender" formControlName="gender" class="form-control" required>
+                <option value="">Select Gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="dateOfBirth">Date of Birth *</label>
+              <input type="date" id="dateOfBirth" formControlName="dateOfBirth" class="form-control" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contactNumber">Contact Number *</label>
+              <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="bloodType">Blood Type *</label>
+              <select id="bloodType" formControlName="bloodType" class="form-control" required>
+                <option value="">Select Blood Type</option>
+                <option *ngFor="let bloodType of bloodTypes" [value]="bloodType">
+                  {{ bloodType }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="address">Address *</label>
+            <textarea id="address" formControlName="address" class="form-control" rows="2" required></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="weight">Weight (kg) *</label>
+              <input type="number" id="weight" formControlName="weight" class="form-control" min="0" step="0.1" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="height">Height (cm) *</label>
+              <input type="number" id="height" formControlName="height" class="form-control" min="0" step="0.1" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="medicalHistory">Medical History</label>
+            <textarea id="medicalHistory" formControlName="medicalHistory" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="allergies">Allergies</label>
+              <textarea id="allergies" formControlName="allergies" class="form-control" rows="2"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="medications">Current Medications</label>
+              <textarea id="medications" formControlName="medications" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency Contact Section -->
+        <div class="form-section">
+          <h3>Emergency Contact</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contactName">Contact Name *</label>
+              <input type="text" id="contactName" formControlName="contactName" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="relationship">Relationship *</label>
+              <input type="text" id="relationship" formControlName="relationship" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="contactNumber">Contact Number *</label>
+              <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="contactAddress">Contact Address</label>
+            <textarea id="contactAddress" formControlName="contactAddress" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Insurance Information Section -->
+        <div class="form-section">
+          <h3>Insurance Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="providerName">Insurance Provider *</label>
+              <input type="text" id="providerName" formControlName="providerName" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="policyNumber">Policy Number *</label>
+              <input type="text" id="policyNumber" formControlName="policyNumber" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="insuranceContact">Insurance Contact *</label>
+              <input type="text" id="insuranceContact" formControlName="insuranceContact" class="form-control" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeDialog()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving || patientForm.invalid || emergencyContactForm.invalid || insuranceForm.invalid">
+            <span *ngIf="isSaving">Saving...</span>
+            <span *ngIf="!isSaving">{{ isEditDialogOpen ? 'Update' : 'Add' }} Patient</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

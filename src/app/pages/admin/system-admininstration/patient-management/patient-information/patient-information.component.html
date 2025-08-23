@@ -1,0 +1,643 @@
+<div class="patient-information-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <button class="btn btn-secondary back-button" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      <h1 class="page-title">Patient Information</h1>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading patient information...</p>
+    <small>Please wait while we retrieve the patient details</small>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <i class="material-icons">error</i>
+    <h3>No Patient Data Available</h3>
+    <p>{{ error }}</p>
+    <div class="error-actions">
+      <button class="btn btn-primary" (click)="goToPatientManagement()">
+        <i class="material-icons">people</i>
+        Go to Patient Management
+      </button>
+      <button class="btn btn-secondary" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+        Go Back
+      </button>
+    </div>
+  </div>
+
+  <!-- Patient Details -->
+  <div *ngIf="patient && !isLoading" class="patient-details">
+    <!-- Personal Information -->
+    <div class="detail-section">
+      <h3>Personal Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Full Name:</label>
+          <span>{{ getPatientFullName(patient) }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Email:</label>
+          <span>{{ patient.email }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Gender:</label>
+          <span>{{ patient.patientInfo?.gender }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Date of Birth:</label>
+          <span>{{ patient.patientInfo?.dateOfBirth | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Age:</label>
+          <span>{{ calculateAge(patient.patientInfo?.dateOfBirth) }} years</span>
+        </div>
+        <div class="detail-item">
+          <label>Contact Number:</label>
+          <span>{{ patient.patientInfo?.contactNumber }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Address:</label>
+          <span>{{ patient.patientInfo?.address }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Physical Information -->
+    <div class="detail-section">
+      <h3>Physical Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Weight:</label>
+          <span>{{ patient.patientInfo?.weight }} kg</span>
+        </div>
+        <div class="detail-item">
+          <label>Height:</label>
+          <span>{{ patient.patientInfo?.height }} cm</span>
+        </div>
+        <div class="detail-item">
+          <label>Blood Type:</label>
+          <span class="blood-type-badge">{{ patient.patientInfo?.bloodType }}</span>
+        </div>
+        <div class="detail-item">
+          <label>BMI:</label>
+          <div class="bmi-info">
+            <span class="bmi-value">{{ getBMI(patient) }}</span>
+            <small *ngIf="getBMI(patient) !== 'N/A'" [class]="getBMIStatusClass(getBMI(patient))">
+              {{ getBMIStatus(getBMI(patient)) }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Medical Information -->
+    <div class="detail-section">
+      <h3>Medical Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Medical History:</label>
+          <span>{{ patient.patientInfo?.medicalHistory || 'None' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Allergies:</label>
+          <span>{{ patient.patientInfo?.allergies || 'None known' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Current Medications:</label>
+          <span>{{ patient.patientInfo?.medications || 'None' }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Emergency Contact -->
+    <div class="detail-section">
+      <h3>Emergency Contact</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Contact Name:</label>
+          <span>{{ patient.emergencyContact?.contactName }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Relationship:</label>
+          <span>{{ patient.emergencyContact?.relationship }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Contact Number:</label>
+          <span>{{ patient.emergencyContact?.contactNumber }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Contact Address:</label>
+          <span>{{ patient.emergencyContact?.contactAddress || 'Not provided' }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Insurance Information -->
+    <div class="detail-section">
+      <h3>Insurance Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Provider:</label>
+          <span>{{ patient.insuranceInfo?.providerName }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Policy Number:</label>
+          <span>{{ patient.insuranceInfo?.policyNumber }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Insurance Contact:</label>
+          <span>{{ patient.insuranceInfo?.insuranceContact }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- System Information -->
+    <div class="detail-section">
+      <h3>System Information</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Created:</label>
+          <span>{{ patient.createdAt | date:'medium' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Last Updated:</label>
+          <span>{{ patient.updatedAt | date:'medium' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consultation History -->
+    <div class="detail-section">
+      <h3>Consultation History</h3>
+      <div *ngIf="consultations.length > 0; else noConsultations" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Doctor</th>
+              <th>Specialization</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let consultation of consultations">
+              <td>
+                <div class="date-time">
+                  <div class="date">{{ formatDate(consultation.startTime) }}</div>
+                  <div class="time">{{ formatTime(consultation.startTime) }}</div>
+                </div>
+              </td>
+              <td>
+                <div class="doctor-info">
+                  <div class="doctor-name">Dr. {{ getDoctorFullName(consultation.doctor!) }}</div>
+                  <div class="doctor-qualifications">{{ consultation.doctor?.qualifications }}</div>
+                </div>
+              </td>
+              <td>{{ consultation.doctor?.specialization }}</td>
+              <td>{{ getConsultationDuration(consultation.startTime, consultation.endTime) }}</td>
+              <td>
+                <span class="status-badge completed">Completed</span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-primary" (click)="openConsultationModal(consultation)">
+                    <i class="material-icons">visibility</i>
+                    View Details
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noConsultations>
+        <div class="empty-state">
+          <i class="material-icons">event_note</i>
+          <p>No consultation history available</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Face-Scan Results -->
+    <div class="detail-section">
+      <h3>Face-Scan Results</h3>
+      <div *ngIf="healthScans.length > 0; else noHealthScans" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Scan ID</th>
+              <th>Consultation</th>
+              <th>Vital Signs</th>
+              <th>Wellness Score</th>
+              <th>Risk Level</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let scan of healthScans">
+              <td>#{{ scan.id }}</td>
+              <td>#{{ scan.consultationId }}</td>
+              <td>
+                <div class="vital-summary">
+                  <div>BP: {{ scan.bloodPressure || 'N/A' }}</div>
+                  <div>HR: {{ scan.heartRate || 'N/A' }} bpm</div>
+                  <div>SpO2: {{ scan.spO2 || 'N/A' }}%</div>
+                </div>
+              </td>
+              <td>
+                <div class="wellness-score">
+                  <span class="score">{{ scan.generalWellness || 'N/A' }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="risk-badge" [class]="getHealthRiskClass(scan.generalRisk)">
+                  {{ getHealthRiskLevel(scan.generalRisk) }}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-primary" (click)="openHealthScanModal(scan)">
+                    <i class="material-icons">visibility</i>
+                    View Details
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noHealthScans>
+        <div class="empty-state">
+          <i class="material-icons">monitor_heart</i>
+          <p>No face-scan results available</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Schedules -->
+    <div class="detail-section">
+      <h3>Upcoming Schedules</h3>
+      <div *ngIf="schedules.length > 0; else noSchedules" class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Doctor</th>
+              <th>Specialization</th>
+              <th>Time</th>
+              <th>Location</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let schedule of schedules">
+              <td>{{ schedule.dayOfWeek }}</td>
+              <td>
+                <div class="doctor-info">
+                  <div class="doctor-name">Dr. {{ getDoctorFullName(schedule.doctor!) }}</div>
+                  <div class="doctor-qualifications">{{ schedule.doctor?.qualifications }}</div>
+                </div>
+              </td>
+              <td>{{ schedule.doctor?.specialization }}</td>
+              <td>
+                <div class="time-range">
+                  {{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}
+                </div>
+              </td>
+              <td>{{ schedule.doctor?.address }}</td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-primary" (click)="openScheduleModal(schedule)">
+                    <i class="material-icons">visibility</i>
+                    View Details
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noSchedules>
+        <div class="empty-state">
+          <i class="material-icons">schedule</i>
+          <p>No upcoming schedules available</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+  <!-- Consultation Detail Modal -->
+  <div *ngIf="isConsultationModalOpen" class="modal-overlay" (click)="closeConsultationModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Consultation Details</h3>
+        <button class="modal-close" (click)="closeConsultationModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedConsultation">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Consultation ID:</label>
+            <span>#{{ selectedConsultation.id }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Date:</label>
+            <span>{{ formatDate(selectedConsultation.startTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Start Time:</label>
+            <span>{{ formatTime(selectedConsultation.startTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>End Time:</label>
+            <span>{{ formatTime(selectedConsultation.endTime!) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Duration:</label>
+            <span>{{ getConsultationDuration(selectedConsultation.startTime, selectedConsultation.endTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Meeting Link:</label>
+            <a [href]="selectedConsultation.consultationLink" target="_blank" class="meeting-link">
+              <i class="material-icons">video_call</i>
+              Join Meeting
+            </a>
+          </div>
+        </div>
+
+        <div class="doctor-details">
+          <h4>Doctor Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Name:</label>
+              <span>Dr. {{ getDoctorFullName(selectedConsultation.doctor!) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Specialization:</label>
+              <span>{{ selectedConsultation.doctor?.specialization }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Qualifications:</label>
+              <span>{{ selectedConsultation.doctor?.qualifications }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Experience:</label>
+              <span>{{ selectedConsultation.doctor?.experience }} years</span>
+            </div>
+            <div class="detail-item">
+              <label>Contact:</label>
+              <span>{{ selectedConsultation.doctor?.contactNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Address:</label>
+              <span>{{ selectedConsultation.doctor?.address }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Health Scan Detail Modal -->
+  <div *ngIf="isHealthScanModalOpen" class="modal-overlay" (click)="closeHealthScanModal()">
+    <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Health Scan Details</h3>
+        <button class="modal-close" (click)="closeHealthScanModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedHealthScan">
+        <div class="scan-sections">
+          <!-- Vital Signs -->
+          <div class="scan-section">
+            <h4>Vital Signs</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Blood Pressure:</label>
+                <span>{{ selectedHealthScan.bloodPressure || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Heart Rate:</label>
+                <span>{{ selectedHealthScan.heartRate || 'N/A' }} bpm</span>
+              </div>
+              <div class="detail-item">
+                <label>SpO2:</label>
+                <span>{{ selectedHealthScan.spO2 || 'N/A' }}%</span>
+              </div>
+              <div class="detail-item">
+                <label>Respiratory Rate:</label>
+                <span>{{ selectedHealthScan.respiratoryRate || 'N/A' }} breaths/min</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stress & Wellness -->
+          <div class="scan-section">
+            <h4>Stress & Wellness</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Stress Level:</label>
+                <span>{{ selectedHealthScan.stressLevel || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Stress Score:</label>
+                <span>{{ selectedHealthScan.stressScore || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>General Wellness:</label>
+                <span>{{ selectedHealthScan.generalWellness || 'N/A' }}%</span>
+              </div>
+              <div class="detail-item">
+                <label>HRV SDNN:</label>
+                <span>{{ selectedHealthScan.hrvSdnn || 'N/A' }} ms</span>
+              </div>
+              <div class="detail-item">
+                <label>HRV RMSSD:</label>
+                <span>{{ selectedHealthScan.hrvRmsdd || 'N/A' }} ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Health Risk Assessment -->
+          <div class="scan-section">
+            <h4>Health Risk Assessment</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>General Risk:</label>
+                <span class="risk-value" [class]="getHealthRiskClass(selectedHealthScan.generalRisk)">
+                  {{ selectedHealthScan.generalRisk || 'N/A' }}%
+                </span>
+                <small class="risk-level">{{ getHealthRiskLevel(selectedHealthScan.generalRisk) }}</small>
+              </div>
+              <div class="detail-item">
+                <label>Coronary Heart Disease:</label>
+                <span class="risk-value" [class]="getHealthRiskClass(selectedHealthScan.coronaryHeartDisease)">
+                  {{ selectedHealthScan.coronaryHeartDisease || 'N/A' }}%
+                </span>
+                <small class="risk-level">{{ getHealthRiskLevel(selectedHealthScan.coronaryHeartDisease) }}</small>
+              </div>
+              <div class="detail-item">
+                <label>Stroke Risk:</label>
+                <span class="risk-value" [class]="getHealthRiskClass(selectedHealthScan.strokeRisk)">
+                  {{ selectedHealthScan.strokeRisk || 'N/A' }}%
+                </span>
+                <small class="risk-level">{{ getHealthRiskLevel(selectedHealthScan.strokeRisk) }}</small>
+              </div>
+              <div class="detail-item">
+                <label>COVID-19 Risk:</label>
+                <span class="risk-value" [class]="getHealthRiskClass(selectedHealthScan.covidRisk)">
+                  {{ selectedHealthScan.covidRisk || 'N/A' }}%
+                </span>
+                <small class="risk-level">{{ getHealthRiskLevel(selectedHealthScan.covidRisk) }}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Health Parameters -->
+          <div class="scan-section">
+            <h4>Health Parameters</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Height:</label>
+                <span>{{ selectedHealthScan.height || 'N/A' }} cm</span>
+              </div>
+              <div class="detail-item">
+                <label>Weight:</label>
+                <span>{{ selectedHealthScan.weight || 'N/A' }} kg</span>
+              </div>
+              <div class="detail-item">
+                <label>Waist Circumference:</label>
+                <span>{{ selectedHealthScan.waistCircumference || 'N/A' }} cm</span>
+              </div>
+              <div class="detail-item">
+                <label>Total Cholesterol:</label>
+                <span>{{ selectedHealthScan.totalCholesterol || 'N/A' }} mg/dL</span>
+              </div>
+              <div class="detail-item">
+                <label>HDL:</label>
+                <span>{{ selectedHealthScan.hdl || 'N/A' }} mg/dL</span>
+              </div>
+              <div class="detail-item">
+                <label>Diabetes Status:</label>
+                <span>{{ selectedHealthScan.diabetic === 0 ? 'No Diabetes' : selectedHealthScan.diabetic === 1 ? 'Prediabetes' : 'Diabetic' }}</span>
+              </div>
+            </div>
+
+            <!-- Lifestyle Factors -->
+            <div class="lifestyle-factors">
+              <h5>Lifestyle Factors</h5>
+              <div class="factors-grid">
+                <div class="factor-item">
+                  <i class="material-icons" [class]="selectedHealthScan.smoker ? 'text-danger' : 'text-success'">
+                    {{ selectedHealthScan.smoker ? 'smoking_rooms' : 'smoke_free' }}
+                  </i>
+                  <span>Smoker: {{ selectedHealthScan.smoker ? 'Yes' : 'No' }}</span>
+                </div>
+                <div class="factor-item">
+                  <i class="material-icons" [class]="selectedHealthScan.hypertension ? 'text-warning' : 'text-success'">
+                    {{ selectedHealthScan.hypertension ? 'warning' : 'check_circle' }}
+                  </i>
+                  <span>Hypertension: {{ selectedHealthScan.hypertension ? 'Yes' : 'No' }}</span>
+                </div>
+                <div class="factor-item">
+                  <i class="material-icons" [class]="selectedHealthScan.physicalActivity ? 'text-success' : 'text-warning'">
+                    {{ selectedHealthScan.physicalActivity ? 'directions_run' : 'weekend' }}
+                  </i>
+                  <span>Physical Activity: {{ selectedHealthScan.physicalActivity ? 'Yes' : 'No' }}</span>
+                </div>
+                <div class="factor-item">
+                  <i class="material-icons" [class]="selectedHealthScan.healthyDiet ? 'text-success' : 'text-warning'">
+                    {{ selectedHealthScan.healthyDiet ? 'restaurant' : 'fastfood' }}
+                  </i>
+                  <span>Healthy Diet: {{ selectedHealthScan.healthyDiet ? 'Yes' : 'No' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Detail Modal -->
+  <div *ngIf="isScheduleModalOpen" class="modal-overlay" (click)="closeScheduleModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Schedule Details</h3>
+        <button class="modal-close" (click)="closeScheduleModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedSchedule">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Schedule ID:</label>
+            <span>#{{ selectedSchedule.id }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Day:</label>
+            <span>{{ selectedSchedule.dayOfWeek }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Date:</label>
+            <span>{{ formatDate(selectedSchedule.startTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Start Time:</label>
+            <span>{{ formatTime(selectedSchedule.startTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>End Time:</label>
+            <span>{{ formatTime(selectedSchedule.endTime) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Duration:</label>
+            <span>8 hours</span>
+          </div>
+        </div>
+
+        <div class="doctor-details">
+          <h4>Doctor Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Name:</label>
+              <span>Dr. {{ getDoctorFullName(selectedSchedule.doctor!) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Specialization:</label>
+              <span>{{ selectedSchedule.doctor?.specialization }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Qualifications:</label>
+              <span>{{ selectedSchedule.doctor?.qualifications }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Experience:</label>
+              <span>{{ selectedSchedule.doctor?.experience }} years</span>
+            </div>
+            <div class="detail-item">
+              <label>Contact:</label>
+              <span>{{ selectedSchedule.doctor?.contactNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Address:</label>
+              <span>{{ selectedSchedule.doctor?.address }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

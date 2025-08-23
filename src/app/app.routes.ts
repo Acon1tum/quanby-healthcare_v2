@@ -11,6 +11,7 @@ import { SystemAdmininstrationComponent } from './pages/admin/system-admininstra
 import { AuditLogsComponent } from './pages/admin/system-admininstration/audit-logs/audit-logs.component';
 import { DoctorManagementComponent } from './pages/admin/system-admininstration/doctor-management/doctor-management.component';
 import { PatientManagementComponent } from './pages/admin/system-admininstration/patient-management/patient-management.component';
+import { PatientInformationComponent } from './pages/admin/system-admininstration/patient-management/patient-information/patient-information.component';
 import { ReportsComponent } from './pages/admin/system-admininstration/reports/reports.component';
 import { AdminMyProfileComponent } from './pages/admin/admin-my-profile/admin-my-profile.component';
 
@@ -62,6 +63,7 @@ export const appRoutes: Routes = [
               { path: 'audit-logs', component: AuditLogsComponent },
               { path: 'doctor-management', component: DoctorManagementComponent },
               { path: 'patient-management', component: PatientManagementComponent },
+              { path: 'patient-management/patient-information', component: PatientInformationComponent },
               { path: 'reports', component: ReportsComponent }
             ]
           }

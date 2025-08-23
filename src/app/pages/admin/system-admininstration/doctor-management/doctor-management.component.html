@@ -1,1 +1,406 @@
-<p>doctor-management works!</p>
+<div class="doctor-management-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Doctor Management</h1>
+      <p class="page-description">Manage all doctors in the QHealth system</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddDialog()">
+      <i class="material-icons">add</i>
+      Add New Doctor
+    </button>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-section">
+    <form [formGroup]="searchForm" class="search-form">
+      <div class="search-row">
+        <div class="form-group">
+          <label for="searchTerm">Search</label>
+          <input 
+            type="text" 
+            id="searchTerm" 
+            formControlName="searchTerm" 
+            placeholder="Search by name or email..."
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="specialization">Specialization</label>
+          <input 
+            type="text" 
+            id="specialization" 
+            formControlName="specialization" 
+            placeholder="Filter by specialization..."
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" formControlName="category" class="form-control">
+            <option value="">All Categories</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="search-row">
+        <div class="form-group">
+          <label for="experienceMin">Min Experience (years)</label>
+          <input 
+            type="number" 
+            id="experienceMin" 
+            formControlName="experienceMin" 
+            placeholder="0"
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="experienceMax">Max Experience (years)</label>
+          <input 
+            type="number" 
+            id="experienceMax" 
+            formControlName="experienceMax" 
+            placeholder="50"
+            class="form-control"
+          >
+        </div>
+        
+        <div class="form-group">
+          <button type="button" class="btn btn-secondary" (click)="searchForm.reset()">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <p>Showing {{ filteredDoctors.length }} of {{ doctors.length }} doctors</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading doctors...</p>
+  </div>
+
+  <!-- Doctors Table -->
+  <div *ngIf="!isLoading" class="table-container">
+    <table class="doctors-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Specialization</th>
+          <th>Experience</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doctor of getPaginatedDoctors()" class="doctor-row">
+          <td class="doctor-name">
+            <div class="name-info">
+              <strong>{{ getDoctorFullName(doctor) }}</strong>
+              <small *ngIf="doctor.doctorInfo?.qualifications">{{ doctor.doctorInfo?.qualifications }}</small>
+            </div>
+          </td>
+          <td>{{ doctor.email }}</td>
+          <td>
+            <span class="specialization-badge">{{ doctor.doctorInfo?.specialization }}</span>
+          </td>
+          <td>{{ doctor.doctorInfo?.experience }} years</td>
+          <td>{{ doctor.doctorInfo?.contactNumber }}</td>
+          <td>
+            <span class="status-badge status-active">{{ getDoctorStatus(doctor) }}</span>
+          </td>
+          <td class="actions">
+            <button class="btn btn-icon btn-info" (click)="openViewDialog(doctor)" title="View Details">
+              <i class="material-icons">visibility</i>
+            </button>
+            <button class="btn btn-icon btn-warning" (click)="openEditDialog(doctor)" title="Edit Doctor">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="btn btn-icon btn-danger" (click)="deleteDoctor(doctor)" title="Delete Doctor">
+              <i class="material-icons">delete</i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredDoctors.length === 0" class="empty-state">
+      <i class="material-icons">search_off</i>
+      <h3>No doctors found</h3>
+      <p>Try adjusting your search criteria or add a new doctor.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="filteredDoctors.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage * pageSize) + 1 }} to {{ Math.min((currentPage + 1) * pageSize, totalItems) }} of {{ totalItems }} results
+    </div>
+    
+    <div class="pagination-controls">
+      <button 
+        class="btn btn-secondary" 
+        [disabled]="currentPage === 0"
+        (click)="currentPage = currentPage - 1"
+      >
+        Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()" 
+          class="btn btn-page" 
+          [class.active]="page === currentPage"
+          (click)="currentPage = page"
+        >
+          {{ page + 1 }}
+        </button>
+      </div>
+      
+      <button 
+        class="btn btn-secondary" 
+        [disabled]="currentPage >= getTotalPages() - 1"
+        (click)="currentPage = currentPage + 1"
+      >
+        Next
+      </button>
+    </div>
+    
+    <div class="page-size-selector">
+      <label for="pageSize">Show:</label>
+      <select id="pageSize" [ngModel]="pageSize" (ngModelChange)="pageSize = $event" class="form-control">
+        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+      </select>
+      <span>per page</span>
+    </div>
+  </div>
+
+  <!-- Add/Edit Doctor Dialog -->
+  <div *ngIf="isAddDialogOpen || isEditDialogOpen" class="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-header">
+        <h2>{{ isEditDialogOpen ? 'Edit Doctor' : 'Add New Doctor' }}</h2>
+        <button class="btn btn-icon" (click)="closeDialog()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <form [formGroup]="doctorForm" (ngSubmit)="saveDoctor()" class="dialog-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" formControlName="email" class="form-control" required>
+            <div *ngIf="doctorForm.get('email')?.invalid && doctorForm.get('email')?.touched" class="error-message">
+              Please enter a valid email address
+            </div>
+          </div>
+          
+          <div class="form-group" *ngIf="!isEditDialogOpen">
+            <label for="password">Password *</label>
+            <input type="password" id="password" formControlName="password" class="form-control" required>
+            <div *ngIf="doctorForm.get('password')?.invalid && doctorForm.get('password')?.touched" class="error-message">
+              Password must be at least 8 characters long
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name *</label>
+            <input type="text" id="firstName" formControlName="firstName" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="middleName">Middle Name</label>
+            <input type="text" id="middleName" formControlName="middleName" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="lastName">Last Name *</label>
+            <input type="text" id="lastName" formControlName="lastName" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gender">Gender *</label>
+            <select id="gender" formControlName="gender" class="form-control" required>
+              <option value="">Select Gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth *</label>
+            <input type="date" id="dateOfBirth" formControlName="dateOfBirth" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="contactNumber">Contact Number *</label>
+            <input type="tel" id="contactNumber" formControlName="contactNumber" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="address">Address *</label>
+          <textarea id="address" formControlName="address" class="form-control" rows="2" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="bio">Bio *</label>
+          <textarea id="bio" formControlName="bio" class="form-control" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="specialization">Specialization *</label>
+            <input type="text" id="specialization" formControlName="specialization" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="qualifications">Qualifications *</label>
+            <input type="text" id="qualifications" formControlName="qualifications" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="experience">Experience (years) *</label>
+            <input type="number" id="experience" formControlName="experience" class="form-control" min="0" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Categories</label>
+          <div class="categories-grid">
+            <label *ngFor="let category of categories" class="category-checkbox">
+              <input 
+                type="checkbox" 
+                [value]="category.id" 
+                (change)="onCategoryChange(category.id, $event)"
+                [checked]="isCategorySelected(category.id)"
+              >
+              {{ category.name }}
+            </label>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeDialog()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving || doctorForm.invalid">
+            <span *ngIf="isSaving">Saving...</span>
+            <span *ngIf="!isSaving">{{ isEditDialogOpen ? 'Update' : 'Add' }} Doctor</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Doctor Dialog -->
+  <div *ngIf="isViewDialogOpen" class="dialog-overlay">
+    <div class="dialog dialog-large">
+      <div class="dialog-header">
+        <h2>Doctor Details</h2>
+        <button class="btn btn-icon" (click)="closeDialog()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <div *ngIf="selectedDoctor" class="doctor-details">
+        <div class="detail-section">
+          <h3>Personal Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Full Name:</label>
+              <span>{{ getDoctorFullName(selectedDoctor) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Email:</label>
+              <span>{{ selectedDoctor.email }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Gender:</label>
+              <span>{{ selectedDoctor.doctorInfo?.gender }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Date of Birth:</label>
+              <span>{{ selectedDoctor.doctorInfo?.dateOfBirth | date:'mediumDate' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Contact Number:</label>
+              <span>{{ selectedDoctor.doctorInfo?.contactNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Address:</label>
+              <span>{{ selectedDoctor.doctorInfo?.address }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>Professional Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Specialization:</label>
+              <span>{{ selectedDoctor.doctorInfo?.specialization }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Qualifications:</label>
+              <span>{{ selectedDoctor.doctorInfo?.qualifications }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Experience:</label>
+              <span>{{ selectedDoctor.doctorInfo?.experience }} years</span>
+            </div>
+            <div class="detail-item">
+              <label>Categories:</label>
+              <div class="category-chips">
+                <span *ngFor="let category of selectedDoctor.doctorCategories" class="category-chip">
+                  {{ category.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>Bio</h3>
+          <p class="bio-text">{{ selectedDoctor.doctorInfo?.bio }}</p>
+        </div>
+        
+        <div class="detail-section">
+          <h3>System Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Created:</label>
+              <span>{{ selectedDoctor.createdAt | date:'medium' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Last Updated:</label>
+              <span>{{ selectedDoctor.updatedAt | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeDialog()">Close</button>
+          <button type="button" class="btn btn-primary" (click)="openEditDialog(selectedDoctor)">Edit Doctor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
