@@ -1,11 +1,37 @@
 // Admin Dashboard Component Styles
+
+// Header spacer for fixed header
+.header-spacer {
+  height: 80px; /* Match header height */
+  
+  @media (max-width: 640px) {
+    height: 72px; /* Smaller for mobile */
+  }
+}
+
 .admin-dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f8fafc;
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* Account for header height */
+  position: relative; /* Ensure proper positioning context */
+  
+  @media (max-width: 640px) {
+    min-height: calc(100vh - 72px); /* Smaller for mobile */
+  }
+}
+
+// Ensure proper scrolling behavior
+.admin-dashboard-container {
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-y: auto; /* Allow vertical scroll */
+}
+
+// Remove the old min-height since we're using main-content class now
+.admin-dashboard-container.main-content {
+  min-height: auto; /* Let main-content handle the height */
 }
 
 // Header Section
@@ -679,5 +705,38 @@
   
   .quick-actions-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+// Test Section for Scrolling
+.test-scroll-section {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  
+  .section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  p {
+    margin: 0 0 1rem 0;
+    color: #6b7280;
+    line-height: 1.6;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .test-content {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
   }
 }

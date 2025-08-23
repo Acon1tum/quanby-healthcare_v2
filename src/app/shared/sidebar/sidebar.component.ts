@@ -1,13 +1,13 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 
-interface MenuItem {
+interface NavigationItem {
   label: string;
   icon: string;
   route: string;
-  children?: MenuItem[];
+  children?: NavigationItem[];
   expanded?: boolean;
 }
 
@@ -19,23 +19,27 @@ interface MenuItem {
   styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent implements OnInit {
-  @Input() userRole: 'admin' | 'doctor' | 'patient' = 'patient';
-  
-  menuItems: MenuItem[] = [];
-  
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-  
-  ngOnInit() {
-    this.setMenuItems();
+  userRole: string = '';
+  currentUser: any = null;
+  navigationItems: NavigationItem[] = [];
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    // Get user role from auth service
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUser = user;
+        this.userRole = user.role;
+        this.navigationItems = this.getNavigationItems(user.role);
+      }
+    });
   }
-  
-  setMenuItems() {
-    switch (this.userRole) {
+
+  getNavigationItems(role: string): NavigationItem[] {
+    switch (role.toLowerCase()) {
       case 'admin':
-        this.menuItems = [
+        return [
           {
             label: 'Dashboard',
             icon: 'dashboard',
@@ -43,13 +47,14 @@ export class SidebarComponent implements OnInit {
           },
           {
             label: 'Schedule Management',
-            icon: 'event',
+            icon: 'schedule',
             route: '/admin/schedule-management'
           },
           {
             label: 'System Administration',
             icon: 'settings',
             route: '/admin/system-administration',
+            expanded: true,
             children: [
               {
                 label: 'Audit Logs',
@@ -68,7 +73,7 @@ export class SidebarComponent implements OnInit {
               },
               {
                 label: 'Reports',
-                icon: 'assessment',
+                icon: 'bar_chart',
                 route: '/admin/system-administration/reports'
               }
             ]
@@ -79,10 +84,9 @@ export class SidebarComponent implements OnInit {
             route: '/admin/my-profile'
           }
         ];
-        break;
-        
+
       case 'doctor':
-        this.menuItems = [
+        return [
           {
             label: 'Dashboard',
             icon: 'dashboard',
@@ -94,20 +98,24 @@ export class SidebarComponent implements OnInit {
             route: '/doctor/meet'
           },
           {
+            label: 'My Schedule',
+            icon: 'schedule',
+            route: '/doctor/schedule'
+          },
+          {
+            label: 'Patient Records',
+            icon: 'folder',
+            route: '/doctor/patients'
+          },
+          {
             label: 'My Profile',
             icon: 'person',
             route: '/doctor/my-profile'
-          },
-          {
-            label: 'Schedule',
-            icon: 'event',
-            route: '/doctor/schedule'
           }
         ];
-        break;
-        
+
       case 'patient':
-        this.menuItems = [
+        return [
           {
             label: 'Dashboard',
             icon: 'dashboard',
@@ -119,27 +127,54 @@ export class SidebarComponent implements OnInit {
             route: '/patient/meet'
           },
           {
+            label: 'My Appointments',
+            icon: 'event',
+            route: '/patient/appointments'
+          },
+          {
+            label: 'Medical Records',
+            icon: 'folder',
+            route: '/patient/records'
+          },
+          {
             label: 'My Profile',
             icon: 'person',
             route: '/patient/my-profile'
-          },
-          {
-            label: 'Schedule',
-            icon: 'event',
-            route: '/patient/schedule'
           }
         ];
-        break;
+
+      default:
+        return [
+          {
+            label: 'Dashboard',
+            icon: 'dashboard',
+            route: '/dashboard'
+          }
+        ];
     }
   }
-  
-  toggleSubmenu(item: MenuItem) {
+
+  getRoleDisplayName(role: string): string {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'Admin';
+      case 'doctor':
+        return 'Doctor';
+      case 'patient':
+        return 'Patient';
+      default:
+        return 'User';
+    }
+  }
+
+  toggleSection(item: NavigationItem): void {
     if (item.children) {
       item.expanded = !item.expanded;
     }
   }
-  
+
   logout(): void {
+    // Implement logout logic
     this.authService.logout();
   }
 }

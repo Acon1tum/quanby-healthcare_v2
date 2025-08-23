@@ -1,60 +1,57 @@
 <div class="sidebar">
-  <div class="sidebar-header">
-    <h3>QHealth</h3>
-    <p class="role-badge">{{ userRole | titlecase }}</p>
+  <!-- Logo Section -->
+  <div class="logo-section">
+    <div class="logo-container">
+      <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="logo-image">
+      <h1 class="logo-text">Quanby Health</h1>
+    </div>
+    <div class="role-badge">
+      <span>{{ getRoleDisplayName(userRole) }}</span>
+    </div>
   </div>
-  
+
+  <!-- Navigation Menu -->
   <nav class="sidebar-nav">
     <ul class="nav-list">
-      <li *ngFor="let item of menuItems" class="nav-item">
-        <!-- Main menu item -->
-        <a 
-          [routerLink]="item.route" 
-          routerLinkActive="active"
-          class="nav-link"
-          [class.has-children]="item.children"
-          (click)="toggleSubmenu(item)"
-        >
-          <i class="material-icons icon" [title]="item.label">{{ item.icon }}</i>
-          <span class="label">{{ item.label }}</span>
-          <span 
-            *ngIf="item.children" 
-            class="expand-icon"
-            [class.expanded]="item['expanded']"
-          >
-            ▼
-          </span>
-        </a>
+      <ng-container *ngFor="let item of navigationItems">
+        <!-- Regular navigation item -->
+        <li *ngIf="!item.children" class="nav-item">
+          <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
+            <i class="material-icons">{{ item.icon }}</i>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
         
-        <!-- Submenu items -->
-        <ul 
-          *ngIf="item.children" 
-          class="submenu"
-          [class.expanded]="item['expanded']"
-        >
-          <li *ngFor="let child of item.children" class="submenu-item">
-            <a 
-              [routerLink]="child.route" 
-              routerLinkActive="active"
-              class="submenu-link"
-            >
-              <i class="material-icons icon" [title]="child.label">{{ child.icon }}</i>
-              <span class="label">{{ child.label }}</span>
-            </a>
-          </li>
-        </ul>
-      </li>
+        <!-- Navigation item with children (like System Administration) -->
+        <li *ngIf="item.children" class="nav-item">
+          <div class="nav-group">
+            <button class="nav-group-toggle" (click)="toggleSection(item)">
+              <i class="material-icons">{{ item.icon }}</i>
+              <span>{{ item.label }}</span>
+              <i class="material-icons toggle-icon" [class.rotated]="item.expanded">
+                {{ item.expanded ? 'expand_less' : 'expand_more' }}
+              </i>
+            </button>
+            
+            <ul class="nav-submenu" [class.open]="item.expanded">
+              <li *ngFor="let child of item.children" class="nav-item">
+                <a [routerLink]="child.route" routerLinkActive="active" class="nav-link">
+                  <i class="material-icons">{{ child.icon }}</i>
+                  <span>{{ child.label }}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ng-container>
     </ul>
   </nav>
-  
-  <!-- Logout section at bottom -->
-  <div class="sidebar-footer">
-    <button 
-      (click)="logout()"
-      class="logout-button"
-    >
-      <i class="material-icons icon">logout</i>
-      <span class="label">Logout</span>
+
+  <!-- Logout Section -->
+  <div class="logout-section">
+    <button class="logout-btn" (click)="logout()">
+      <i class="material-icons">logout</i>
+      <span>Logout</span>
     </button>
   </div>
 </div>

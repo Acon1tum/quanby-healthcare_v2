@@ -1,5 +1,59 @@
 /* Header component styles */
 
+/* Fixed header positioning */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999; /* Ensure highest z-index */
+  width: 100%;
+  box-sizing: border-box;
+  /* Ensure header stays on top during scroll */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Header with sidebar - adjust width and position */
+header.with-sidebar {
+  left: 280px; /* Adjust for sidebar width */
+  width: calc(100% - 280px); /* Subtract sidebar width */
+  
+  @media (max-width: 1024px) {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* Header spacer for content below fixed header */
+.header-spacer {
+  height: 80px; /* Adjust based on header height */
+  
+  @media (max-width: 640px) {
+    height: 72px; /* Smaller for mobile */
+  }
+}
+
+/* Ensure header has proper background */
+header {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+  /* Add shadow for better separation */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust header layout when logged in (no logo) */
+header.logged-in {
+  justify-content: flex-end;
+}
+
+/* Ensure proper spacing when logo is hidden */
+header.logged-in .hidden.lg\:flex {
+  margin-left: auto;
+}
+
 /* Smooth transitions for mobile menu */
 .mobile-menu-overlay {
   transition: all 0.3s ease-in-out;
@@ -56,6 +110,10 @@
   .mobile-nav-link {
     font-size: 1.1rem;
     padding: 0.75rem 0;
+  }
+  
+  .header-spacer {
+    height: 72px; /* Smaller for mobile */
   }
 }
 

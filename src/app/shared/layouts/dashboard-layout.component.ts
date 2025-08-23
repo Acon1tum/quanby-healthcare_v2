@@ -16,7 +16,7 @@ import { AuthService, User } from '../../auth/auth.service';
       
       <div class="dashboard-content">
         <!-- Sidebar -->
-        <app-sidebar [userRole]="currentUser?.role || 'patient'"></app-sidebar>
+        <app-sidebar></app-sidebar>
         
         <!-- Main Content Area -->
         <main class="main-content">

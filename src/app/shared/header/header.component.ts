@@ -14,6 +14,7 @@ export class HeaderComponent implements OnInit {
   isMobileMenuOpen = false;
   currentUser: User | null = null;
   isLoggedIn = false;
+  hasSidebar = false; // Detect if sidebar is present
 
   constructor(
     private router: Router,
@@ -25,6 +26,17 @@ export class HeaderComponent implements OnInit {
       this.currentUser = user;
       this.isLoggedIn = !!user;
     });
+    
+    // Check if we're on a page with sidebar (admin pages)
+    this.checkForSidebar();
+  }
+
+  private checkForSidebar(): void {
+    // Check if current route contains admin paths that typically have sidebars
+    const currentRoute = this.router.url;
+    this.hasSidebar = currentRoute.includes('/admin') || 
+                     currentRoute.includes('/doctor') || 
+                     currentRoute.includes('/patient');
   }
 
   navigateToFaceScan(): void {

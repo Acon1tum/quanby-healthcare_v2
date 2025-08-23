@@ -2,4 +2,88 @@
 
 body {
   font-family: Lexend, "Noto Sans", sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+html {
+  scroll-behavior: smooth; /* Smooth scrolling */
+  scroll-padding-top: 80px; /* Account for fixed header */
+}
+
+/* Ensure proper fixed header behavior */
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+/* Responsive scroll padding for mobile */
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 72px; /* Smaller for mobile */
+  }
+}
+
+/* Header spacer for fixed header */
+.header-spacer {
+  height: 80px; /* Match header height */
+  
+  @media (max-width: 640px) {
+    height: 72px; /* Smaller for mobile */
+  }
+}
+
+/* Layout classes for pages with sidebars */
+.page-with-sidebar {
+  padding-left: 280px; /* Account for sidebar width */
+  
+  @media (max-width: 1024px) {
+    padding-left: 0;
+  }
+}
+
+/* Main content area adjustments */
+.main-content {
+  margin-top: 80px; /* Account for fixed header */
+  min-height: calc(100vh - 80px);
+  
+  @media (max-width: 640px) {
+    margin-top: 72px;
+    min-height: calc(100vh - 72px);
+  }
+}
+
+/* Sidebar layout adjustments */
+.sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 280px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  
+  @media (max-width: 1024px) {
+    display: none; /* Hide sidebar on mobile */
+  }
+}
+
+.content-area {
+  flex: 1;
+  margin-left: 280px; /* Account for sidebar */
+  
+  @media (max-width: 1024px) {
+    margin-left: 0;
+  }
 }
