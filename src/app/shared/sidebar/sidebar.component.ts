@@ -46,6 +46,11 @@ export class SidebarComponent implements OnInit {
             route: '/admin/dashboard'
           },
           {
+            label: 'My Profile',
+            icon: 'person',
+            route: '/admin/my-profile'
+          },
+          {
             label: 'Schedule Management',
             icon: 'schedule',
             route: '/admin/schedule-management'
@@ -56,11 +61,6 @@ export class SidebarComponent implements OnInit {
             route: '/admin/system-administration',
             expanded: true,
             children: [
-              {
-                label: 'Audit Logs',
-                icon: 'history',
-                route: '/admin/system-administration/audit-logs'
-              },
               {
                 label: 'Doctor Management',
                 icon: 'medical_services',
@@ -75,14 +75,14 @@ export class SidebarComponent implements OnInit {
                 label: 'Reports',
                 icon: 'bar_chart',
                 route: '/admin/system-administration/reports'
+              },
+              {
+                label: 'Audit Logs',
+                icon: 'history',
+                route: '/admin/system-administration/audit-logs'
               }
             ]
           },
-          {
-            label: 'My Profile',
-            icon: 'person',
-            route: '/admin/my-profile'
-          }
         ];
 
       case 'doctor':
@@ -91,6 +91,11 @@ export class SidebarComponent implements OnInit {
             label: 'Dashboard',
             icon: 'dashboard',
             route: '/doctor/dashboard'
+          },
+          {
+            label: 'My Profile',
+            icon: 'person',
+            route: '/doctor/my-profile'
           },
           {
             label: 'Meet Patients',
@@ -107,11 +112,6 @@ export class SidebarComponent implements OnInit {
             icon: 'folder',
             route: '/doctor/patients'
           },
-          {
-            label: 'My Profile',
-            icon: 'person',
-            route: '/doctor/my-profile'
-          }
         ];
 
       case 'patient':
@@ -122,25 +122,25 @@ export class SidebarComponent implements OnInit {
             route: '/patient/dashboard'
           },
           {
+            label: 'My Profile',
+            icon: 'person',
+            route: '/patient/my-profile'
+          },
+          {
             label: 'Meet Doctor',
             icon: 'video_call',
             route: '/patient/meet'
           },
           {
-            label: 'My Appointments',
+            label: 'Schedule',
             icon: 'event',
-            route: '/patient/appointments'
+            route: '/patient/schedule'
           },
           {
             label: 'Medical Records',
             icon: 'folder',
             route: '/patient/records'
           },
-          {
-            label: 'My Profile',
-            icon: 'person',
-            route: '/patient/my-profile'
-          }
         ];
 
       default:

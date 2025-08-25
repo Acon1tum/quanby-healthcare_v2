@@ -1,1 +1,689 @@
-<p>doctor-my-profile works!</p>
+<div class="header-spacer"></div>
+
+<div class="doctor-profile-container main-content">
+  <!-- Header Section -->
+  <div class="profile-header">
+    <div class="header-content">
+      <div class="back-section">
+        <button class="back-btn" (click)="onBack()">
+          <i class="material-icons">arrow_back</i>
+        </button>
+        <div class="header-text">
+          <h1>My Profile</h1>
+          <p>Manage your personal and professional information</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button *ngIf="!isEditing" class="edit-btn" (click)="onEdit()">
+          <i class="material-icons">edit</i>
+          Edit Profile
+        </button>
+        <div *ngIf="isEditing" class="edit-actions">
+          <button class="cancel-btn" (click)="onCancel()">
+            <i class="material-icons">close</i>
+            Cancel
+          </button>
+          <button class="save-btn" (click)="onSave()">
+            <i class="material-icons">save</i>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="profile-content">
+    <!-- Personal Information Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Personal Information</h2>
+        <p>Your basic personal details and contact information</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="profile-image-section">
+          <div class="profile-image-container">
+            <img 
+              [src]="profile.personalInfo.profileImage || '/assets/default-avatar.jpg'" 
+              [alt]="fullName"
+              class="profile-image"
+            >
+            <div class="image-overlay" *ngIf="isEditing">
+              <input 
+                type="file" 
+                #imageInput 
+                (change)="onImageSelect($event)" 
+                accept="image/*"
+                class="image-input"
+              >
+              <button class="upload-btn" (click)="imageInput.click()">
+                <i class="material-icons">photo_camera</i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="image-actions" *ngIf="isEditing">
+            <button 
+              *ngIf="selectedImage" 
+              class="upload-confirm-btn" 
+              (click)="onUploadImage()"
+            >
+              <i class="material-icons">cloud_upload</i>
+              Upload
+            </button>
+            <button 
+              *ngIf="profile.personalInfo.profileImage" 
+              class="remove-image-btn" 
+              (click)="onRemoveImage()"
+            >
+              <i class="material-icons">delete</i>
+              Remove
+            </button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+                     <div class="form-group">
+             <label>First Name</label>
+             <input 
+               *ngIf="isEditing"
+               type="text" 
+               [formControlName]="'firstName'"
+               class="form-control"
+               [class.error]="getFieldError('personalInfo', 'firstName')"
+             >
+             <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.firstName }}</p>
+             <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'firstName') }}</span>
+           </div>
+
+           <div class="form-group">
+             <label>Middle Name</label>
+             <input 
+               *ngIf="isEditing"
+               type="text" 
+               [formControlName]="'middleName'"
+               class="form-control"
+               [class.error]="getFieldError('personalInfo', 'middleName')"
+             >
+             <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.middleName || 'N/A' }}</p>
+             <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'middleName') }}</span>
+           </div>
+
+           <div class="form-group">
+             <label>Last Name</label>
+             <input 
+               *ngIf="isEditing"
+               type="text" 
+               [formControlName]="'lastName'"
+               class="form-control"
+               [class.error]="getFieldError('personalInfo', 'lastName')"
+             >
+             <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.lastName }}</p>
+             <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'lastName') }}</span>
+           </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input 
+              *ngIf="isEditing"
+              type="email" 
+              [formControlName]="'email'"
+              class="form-control"
+              [class.error]="getFieldError('personalInfo', 'email')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.email }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'email') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Phone</label>
+            <input 
+              *ngIf="isEditing"
+              type="tel" 
+              [formControlName]="'phone'"
+              class="form-control"
+              [class.error]="getFieldError('personalInfo', 'phone')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.phone }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'phone') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input 
+              *ngIf="isEditing"
+              type="date" 
+              [formControlName]="'dateOfBirth'"
+              class="form-control"
+              [class.error]="getFieldError('personalInfo', 'dateOfBirth')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.dateOfBirth | date:'mediumDate' }} ({{ age }} years old)</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'dateOfBirth') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Gender</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'gender'"
+              class="form-control"
+              [class.error]="getFieldError('personalInfo', 'gender')"
+            >
+              <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.gender }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'gender') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Professional Information Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Professional Information</h2>
+        <p>Your medical credentials, experience, and qualifications</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>License Number</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'licenseNumber'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'licenseNumber')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.licenseNumber }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'licenseNumber') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Specialization</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'specialization'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'specialization')"
+            >
+              <option *ngFor="let spec of specializationOptions" [value]="spec">{{ spec }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.specialization }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'specialization') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Years of Experience</label>
+            <input 
+              *ngIf="isEditing"
+              type="number" 
+              [formControlName]="'experience'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'experience')"
+              min="0" max="50"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ experienceLabel }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'experience') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Primary Language</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'language'"
+              class="form-control"
+              [class.error]="getFieldError('preferences', 'language')"
+            >
+              <option *ngFor="let lang of languageOptions" [value]="lang">{{ lang }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">{{ profile.preferences.language }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'language') }}</span>
+          </div>
+        </div>
+
+                 <!-- Qualifications -->
+         <div class="form-group full-width">
+           <label>Qualifications</label>
+           <input 
+             *ngIf="isEditing"
+             type="text" 
+             [formControlName]="'qualifications'"
+             class="form-control"
+             [class.error]="getFieldError('professionalInfo', 'qualifications')"
+             placeholder="e.g., MBBS, MD (Cardiology), FACC"
+           >
+           <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.qualifications }}</p>
+           <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'qualifications') }}</span>
+         </div>
+
+        <!-- Languages -->
+        <div class="list-section">
+          <label>Languages Spoken</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let lang of profile.professionalInfo.languages" class="info-tag">{{ lang }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let lang of profile.professionalInfo.languages; let i = index" class="list-item">
+              <select (change)="onSelectChange(profile.professionalInfo.languages, i, $event)" class="form-control">
+                <option *ngFor="let langOption of languageOptions" [value]="langOption" [selected]="langOption === lang">{{ langOption }}</option>
+              </select>
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.professionalInfo.languages, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <select #newLang class="form-control">
+                <option value="">Select language</option>
+                <option *ngFor="let langOption of languageOptions" [value]="langOption">{{ langOption }}</option>
+              </select>
+              <button class="add-item-btn" (click)="onAddItem(profile.professionalInfo.languages, newLang.value || ''); newLang.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certifications -->
+        <div class="list-section">
+          <label>Certifications</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let cert of profile.professionalInfo.certifications" class="info-tag">{{ cert }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let cert of profile.professionalInfo.certifications; let i = index" class="list-item">
+              <input type="text" [value]="cert" (blur)="onInputChange(profile.professionalInfo.certifications, i, $event)" class="form-control">
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.professionalInfo.certifications, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <input type="text" #newCert placeholder="Add new certification" class="form-control">
+              <button class="add-item-btn" (click)="onAddItem(profile.professionalInfo.certifications, newCert.value || ''); newCert.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hospital Affiliations -->
+        <div class="list-section">
+          <label>Hospital Affiliations</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let hospital of profile.professionalInfo.hospitalAffiliations" class="info-tag">{{ hospital }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let hospital of profile.professionalInfo.hospitalAffiliations; let i = index" class="list-item">
+              <input type="text" [value]="hospital" (blur)="onInputChange(profile.professionalInfo.hospitalAffiliations, i, $event)" class="form-control">
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.professionalInfo.hospitalAffiliations, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <input type="text" #newHospital placeholder="Add new hospital" class="form-control">
+              <button class="add-item-btn" (click)="onAddItem(profile.professionalInfo.hospitalAffiliations, newHospital.value || ''); newHospital.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Contact Information</h2>
+        <p>Your address and emergency contact details</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Address</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'address'"
+              class="form-control"
+              [class.error]="getFieldError('contactInfo', 'address')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.address }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo', 'address') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>City</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'city'"
+              class="form-control"
+              [class.error]="getFieldError('contactInfo', 'city')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.city }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo', 'city') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>State</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'state'"
+              class="form-control"
+              [class.error]="getFieldError('contactInfo', 'state')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.state }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo', 'state') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>ZIP Code</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'zipCode'"
+              class="form-control"
+              [class.error]="getFieldError('contactInfo', 'zipCode')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.zipCode }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo', 'zipCode') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Country</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'country'"
+              class="form-control"
+              [class.error]="getFieldError('contactInfo', 'country')"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.country }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo', 'country') }}</span>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="emergency-contact">
+          <h3>Emergency Contact</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name</label>
+              <input 
+                *ngIf="isEditing"
+                type="text" 
+                [formControlName]="'emergencyContact.name'"
+                class="form-control"
+                [class.error]="getFieldError('contactInfo.emergencyContact', 'name')"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.emergencyContact.name }}</p>
+              <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo.emergencyContact', 'name') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Relationship</label>
+              <input 
+                *ngIf="isEditing"
+                type="text" 
+                [formControlName]="'emergencyContact.relationship'"
+                class="form-control"
+                [class.error]="getFieldError('contactInfo.emergencyContact', 'relationship')"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.emergencyContact.relationship }}</p>
+              <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo.emergencyContact', 'relationship') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Phone</label>
+              <input 
+                *ngIf="isEditing"
+                type="tel" 
+                [formControlName]="'emergencyContact.phone'"
+                class="form-control"
+                [class.error]="getFieldError('contactInfo.emergencyContact', 'phone')"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.emergencyContact.phone }}</p>
+              <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo.emergencyContact', 'phone') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input 
+                *ngIf="isEditing"
+                type="email" 
+                [formControlName]="'emergencyContact.email'"
+                class="form-control"
+                [class.error]="getFieldError('contactInfo.emergencyContact', 'email')"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.contactInfo.emergencyContact.email }}</p>
+              <span *ngIf="isEditing" class="error-message">{{ getFieldError('contactInfo.emergencyContact', 'email') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bio Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Professional Bio</h2>
+        <p>Your professional summary, expertise, and achievements</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-group full-width">
+          <label>Professional Summary</label>
+          <textarea 
+            *ngIf="isEditing"
+            [formControlName]="'summary'"
+            class="form-control textarea"
+            rows="4"
+            [class.error]="getFieldError('bio', 'summary')"
+            placeholder="Describe your professional background and expertise..."
+          ></textarea>
+          <p *ngIf="!isEditing" class="info-value">{{ profile.bio.summary }}</p>
+          <span *ngIf="isEditing" class="error-message">{{ getFieldError('bio', 'summary') }}</span>
+        </div>
+
+        <!-- Expertise -->
+        <div class="list-section">
+          <label>Areas of Expertise</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let expertise of profile.bio.expertise" class="info-tag">{{ expertise }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let expertise of profile.bio.expertise; let i = index" class="list-item">
+              <input type="text" [value]="expertise" (blur)="onInputChange(profile.bio.expertise, i, $event)" class="form-control">
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.bio.expertise, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <input type="text" #newExpertise placeholder="Add new expertise area" class="form-control">
+              <button class="add-item-btn" (click)="onAddItem(profile.bio.expertise, newExpertise.value || ''); newExpertise.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="list-section">
+          <label>Professional Achievements</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let achievement of profile.bio.achievements" class="info-tag">{{ achievement }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let achievement of profile.bio.achievements; let i = index" class="list-item">
+              <input type="text" [value]="achievement" (blur)="onInputChange(profile.bio.achievements, i, $event)" class="form-control">
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.bio.achievements, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <input type="text" #newAchievement placeholder="Add new achievement" class="form-control">
+              <button class="add-item-btn" (click)="onAddItem(profile.bio.achievements, newAchievement.value || ''); newAchievement.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Research Interests -->
+        <div class="list-section">
+          <label>Research Interests</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let interest of profile.bio.researchInterests" class="info-tag">{{ interest }}</span>
+          </div>
+          <div *ngIf="isEditing" class="editable-list">
+            <div *ngFor="let interest of profile.bio.researchInterests; let i = index" class="list-item">
+              <input type="text" [value]="interest" (blur)="onInputChange(profile.bio.researchInterests, i, $event)" class="form-control">
+              <button class="remove-item-btn" (click)="onRemoveItem(profile.bio.researchInterests, i)">
+                <i class="material-icons">remove_circle</i>
+              </button>
+            </div>
+            <div class="add-item">
+              <input type="text" #newInterest placeholder="Add new research interest" class="form-control">
+              <button class="add-item-btn" (click)="onAddItem(profile.bio.researchInterests, newInterest.value || ''); newInterest.value = ''">
+                <i class="material-icons">add_circle</i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preferences Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Professional Preferences</h2>
+        <p>Your consultation settings and availability preferences</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Consultation Fee (USD)</label>
+            <input 
+              *ngIf="isEditing"
+              type="number" 
+              [formControlName]="'consultationFee'"
+              class="form-control"
+              [class.error]="getFieldError('preferences', 'consultationFee')"
+              min="0"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ consultationFeeLabel }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'consultationFee') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Timezone</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'timezone'"
+              class="form-control"
+              [class.error]="getFieldError('preferences', 'timezone')"
+            >
+              <option *ngFor="let tz of timezoneOptions" [value]="tz">{{ tz }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">{{ profile.preferences.timezone }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'timezone') }}</span>
+          </div>
+        </div>
+
+        <!-- Availability -->
+        <div class="availability-section">
+          <label>Available Days</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let day of profile.preferences.availability" class="info-tag">{{ day }}</span>
+          </div>
+          <div *ngIf="isEditing" class="checkbox-group">
+            <label *ngFor="let day of availabilityOptions" class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [value]="day"
+                [checked]="profile.preferences.availability.includes(day)"
+                (change)="profile.preferences.availability.includes(day) ? 
+                  onRemoveItem(profile.preferences.availability, profile.preferences.availability.indexOf(day)) : 
+                  onAddItem(profile.preferences.availability, day)"
+              >
+              <span class="checkmark"></span>
+              {{ day }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="notification-section">
+          <label>Notification Preferences</label>
+          <div *ngIf="!isEditing" class="info-list">
+            <span *ngFor="let label of notificationLabels" class="info-tag">{{ label }}</span>
+          </div>
+          <div *ngIf="isEditing" class="checkbox-group">
+            <label class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [formControlName]="'notificationSettings.email'"
+              >
+              <span class="checkmark"></span>
+              Email Notifications
+            </label>
+            <label class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [formControlName]="'notificationSettings.sms'"
+              >
+              <span class="checkmark"></span>
+              SMS Notifications
+            </label>
+            <label class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [formControlName]="'notificationSettings.push'"
+              >
+              <span class="checkmark"></span>
+              Push Notifications
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Information Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>System Information</h2>
+        <p>Your account status and system details</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Account Status</label>
+            <span class="status-badge active">{{ profile.systemInfo.status }}</span>
+          </div>
+          
+          <div class="info-item">
+            <label>Verification Status</label>
+            <span class="status-badge verified">{{ profile.systemInfo.verificationStatus }}</span>
+          </div>
+          
+          <div class="info-item">
+            <label>Last Login</label>
+            <span class="info-value">{{ profile.systemInfo.lastLogin | date:'medium' }}</span>
+          </div>
+          
+          <div class="info-item">
+            <label>Account Created</label>
+            <span class="info-value">{{ profile.systemInfo.accountCreated | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
