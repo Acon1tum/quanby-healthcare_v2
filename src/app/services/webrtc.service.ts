@@ -129,14 +129,7 @@ export class WebRTCService {
 
     this.socket.on('webrtc:peer-joined', async (data: { socketId: string; role: string }) => {
       console.log('👥 Peer joined:', data);
-      
-      // If we already have a peer connection, this might be a reconnection
-      if (this.peer) {
-        await this.handlePeerRejoin();
-      } else {
-        await this.initPeer();
-      }
-      
+      if (!this.peer) await this.initPeer();
       // Wait a bit for the peer to be ready, then create and send offer
       setTimeout(async () => {
         console.log('📤 Creating and sending offer...');
@@ -169,8 +162,8 @@ export class WebRTCService {
     });
 
     this.socket.on('webrtc:peer-left', () => {
-      console.log('👋 Peer left, cleaning up remote stream only...');
-      this.cleanupRemoteStreamOnly();
+      console.log('👋 Peer left, cleaning up...');
+      this.cleanupPeer(false);
     });
   }
 
@@ -191,50 +184,19 @@ export class WebRTCService {
   }
 
   private cleanupPeer(closeSocketRoom: boolean): void {
-    // Only close the peer connection, don't stop local tracks
     this.peer?.getSenders().forEach((s) => {
       try { s.track?.stop(); } catch {}
     });
     this.peer?.close();
     this.peer = undefined;
-    
-    // Only stop local stream if we're completely leaving
-    if (closeSocketRoom) {
-      this.localStream?.getTracks().forEach((t) => t.stop());
-      this.localStream = undefined;
-    }
-    
-    // Always clean up remote stream
+    this.localStream?.getTracks().forEach((t) => t.stop());
+    this.localStream = undefined;
     this.remoteStream = undefined;
+    // Reset remote stream subject
     this.remoteStreamSubject.next(undefined);
-    
     if (closeSocketRoom) {
       this.currentRoomId = undefined;
       this.currentRole = undefined;
     }
-  }
-
-  private cleanupRemoteStreamOnly(): void {
-    // Stop remote stream tracks
-    this.remoteStream?.getTracks().forEach((track) => {
-      try { track.stop(); } catch {}
-    });
-    this.remoteStream = undefined;
-    this.remoteStreamSubject.next(undefined);
-    
-    // Reset peer connection for new peer
-    if (this.peer) {
-      this.peer.close();
-      this.peer = undefined;
-    }
-  }
-
-  private async handlePeerRejoin(): Promise<void> {
-    console.log('🔄 Peer rejoined, reinitializing connection...');
-    if (this.peer) {
-      this.peer.close();
-      this.peer = undefined;
-    }
-    await this.initPeer();
   }
 }
