@@ -1,1 +1,27 @@
-<p>patient-meet works!</p>
+<div class="meet">
+  <div class="controls">
+    <input type="text" placeholder="Room ID" [(ngModel)]="roomId" />
+    <button (click)="join()" [disabled]="isJoined()">Join</button>
+    <button (click)="leave()" [disabled]="!isJoined()">Leave</button>
+  </div>
+  
+  <!-- Room Status -->
+  <div class="room-status" *ngIf="isJoined()">
+    <p>✅ Joined Room: {{ roomId }}</p>
+    <p>👤 Role: {{ currentRole() }}</p>
+    <p>👥 Participants: {{ participants() }}/2</p>
+    <button (click)="refreshRemoteStream()" class="refresh-btn">🔄 Refresh Remote Stream</button>
+  </div>
+  
+  <div class="videos">
+    <div class="video-container">
+      <h4>Local Video (You)</h4>
+      <video [srcObject]="localStream" autoplay playsinline muted></video>
+    </div>
+    <div class="video-container">
+      <h4>Remote Video (Doctor)</h4>
+      <video [srcObject]="remoteStream" autoplay playsinline></video>
+      <p *ngIf="!remoteStream" class="waiting">Waiting for doctor to join...</p>
+    </div>
+  </div>
+</div>
