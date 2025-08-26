@@ -29,7 +29,7 @@
     <div class="video-grid">
       <!-- Local Video -->
       <div class="video-container local-video">
-        <video #localVideo autoplay muted playsinline></video>
+        <video [srcObject]="localStream" autoplay muted playsinline></video>
         <div class="video-overlay">
           <div class="video-label">
             <i class="fas fa-user-md"></i>
@@ -44,7 +44,7 @@
 
       <!-- Remote Video -->
       <div class="video-container remote-video" *ngIf="remoteStream; else waitingMessage">
-        <video #remoteVideo autoplay playsinline></video>
+        <video [srcObject]="remoteStream" autoplay playsinline></video>
         <div class="video-overlay">
           <div class="video-label">
             <i class="fas fa-user"></i>
