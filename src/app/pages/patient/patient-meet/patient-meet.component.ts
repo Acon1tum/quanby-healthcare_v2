@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebRTCService } from '../../../services/webrtc.service';
@@ -11,7 +11,10 @@ import { Subscription } from 'rxjs';
   templateUrl: './patient-meet.component.html',
   styleUrl: './patient-meet.component.scss'
 })
-export class PatientMeetComponent implements OnInit, OnDestroy {
+export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('localVideo', { static: false }) localVideoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('remoteVideo', { static: false }) remoteVideoRef!: ElementRef<HTMLVideoElement>;
+  
   roomId = '';
   isJoined = signal(false);
   localStream?: MediaStream;
@@ -24,6 +27,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
   set remoteStream(value: MediaStream | undefined) {
     console.log('🎥 Patient: Setting remote stream:', value ? `MediaStream(${value.id})` : 'undefined');
     this._remoteStream = value;
+    this.updateRemoteVideo();
   }
   
   participants = signal(0);
@@ -49,6 +53,22 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
       console.log('👥 Patient: Participant count updated via observable:', count);
       this.participants.set(count);
     });
+  }
+
+  ngAfterViewInit() {
+    this.updateLocalVideo();
+  }
+
+  private updateLocalVideo() {
+    if (this.localVideoRef && this.localStream) {
+      this.localVideoRef.nativeElement.srcObject = this.localStream;
+    }
+  }
+
+  private updateRemoteVideo() {
+    if (this.remoteVideoRef && this._remoteStream) {
+      this.remoteVideoRef.nativeElement.srcObject = this._remoteStream;
+    }
   }
 
   async join() {

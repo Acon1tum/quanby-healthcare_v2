@@ -1,27 +1,129 @@
-<div class="meet">
-  <div class="controls">
-    <input type="text" placeholder="Room ID" [(ngModel)]="roomId" />
-    <button (click)="join()" [disabled]="isJoined()">Join</button>
-    <button (click)="leave()" [disabled]="!isJoined()">Leave</button>
-  </div>
-  
-  <!-- Room Status -->
-  <div class="room-status" *ngIf="isJoined()">
-    <p>✅ Joined Room: {{ roomId }}</p>
-    <p>👤 Role: {{ currentRole() }}</p>
-    <p>👥 Participants: {{ participants() }}/2</p>
-    <button (click)="refreshRemoteStream()" class="refresh-btn">🔄 Refresh Remote Stream</button>
-  </div>
-  
-  <div class="videos">
-    <div class="video-container">
-      <h4>Local Video (You)</h4>
-      <video [srcObject]="localStream" autoplay playsinline muted></video>
+<div class="meet-container">
+  <!-- Header Section -->
+  <div class="meet-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img src="/qb-logo-2.png" alt="QHealth Logo" class="logo">
+        <h1 class="title">Doctor Consultation</h1>
+      </div>
+      <div class="room-info">
+        <div class="room-id">
+          <span class="label">Room ID:</span>
+          <span class="value">{{ roomId || 'Not Set' }}</span>
+        </div>
+        <div class="participants">
+          <span class="label">Participants:</span>
+          <span class="value">{{ participants() }}/2</span>
+        </div>
+        <div class="role">
+          <span class="label">Role:</span>
+          <span class="value role-badge">{{ currentRole() || 'Not Assigned' }}</span>
+        </div>
+      </div>
     </div>
-    <div class="video-container">
-      <h4>Remote Video (Patient)</h4>
-      <video [srcObject]="remoteStream" autoplay playsinline></video>
-      <p *ngIf="!remoteStream" class="waiting">Waiting for patient to join...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="meet-content">
+    <!-- Video Grid -->
+    <div class="video-grid">
+      <!-- Local Video -->
+      <div class="video-container local-video">
+        <video #localVideo autoplay muted playsinline></video>
+        <div class="video-overlay">
+          <div class="video-label">
+            <i class="fas fa-user-md"></i>
+            <span>You (Doctor)</span>
+          </div>
+          <div class="video-status">
+            <div class="status-indicator active"></div>
+            <span>Live</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remote Video -->
+      <div class="video-container remote-video" *ngIf="remoteStream; else waitingMessage">
+        <video #remoteVideo autoplay playsinline></video>
+        <div class="video-overlay">
+          <div class="video-label">
+            <i class="fas fa-user"></i>
+            <span>Patient</span>
+          </div>
+          <div class="video-status">
+            <div class="status-indicator active"></div>
+            <span>Connected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waiting Message -->
+      <ng-template #waitingMessage>
+        <div class="waiting-container">
+          <div class="waiting-content">
+            <div class="waiting-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <h3>Waiting for Patient</h3>
+            <p>Please wait while the patient joins the consultation room.</p>
+            <div class="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+      <div class="room-controls">
+        <div class="input-group">
+          <input 
+            type="text" 
+            [(ngModel)]="roomId" 
+            placeholder="Enter Room ID" 
+            class="room-input"
+            [disabled]="isJoined()"
+          >
+          <button 
+            (click)="join()" 
+            class="btn btn-primary"
+            [disabled]="!roomId || isJoined()"
+          >
+            <i class="fas fa-sign-in-alt"></i>
+            Join Room
+          </button>
+        </div>
+      </div>
+
+      <div class="call-controls" *ngIf="isJoined()">
+        <button class="control-btn refresh-btn" (click)="refreshRemoteStream()" title="Refresh Stream">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+        <button class="control-btn leave-btn" (click)="leave()" title="Leave Call">
+          <i class="fas fa-phone-slash"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="connection-status">
+        <div class="status-item">
+          <i class="fas fa-wifi"></i>
+          <span>WebRTC Connected</span>
+        </div>
+        <div class="status-item">
+          <i class="fas fa-video"></i>
+          <span>Local Camera Active</span>
+        </div>
+        <div class="status-item" *ngIf="remoteStream">
+          <i class="fas fa-user-check"></i>
+          <span>Patient Connected</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
