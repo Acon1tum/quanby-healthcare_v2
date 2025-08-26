@@ -28,8 +28,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
   
   participants = signal(0);
   currentRole = signal<string>('');
-  private remoteStreamSubscription?: Subscription; // Subscription for cleanup
-  private participantCountSubscription?: Subscription; // Subscription for participant count
+  private remoteStreamSubscription?: Subscription;
 
   constructor(private webrtc: WebRTCService) {}
 
@@ -43,12 +42,6 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
       console.log('🔄 Patient: Remote stream updated via observable:', stream);
       this.remoteStream = stream;
     });
-    
-    // Subscribe to participant count changes
-    this.participantCountSubscription = this.webrtc.participantCount$.subscribe(count => {
-      console.log('👥 Patient: Participant count updated via observable:', count);
-      this.participants.set(count);
-    });
   }
 
   async join() {
@@ -56,8 +49,9 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
     const resp = await this.webrtc.join(this.roomId);
     if (resp.ok) {
       this.isJoined.set(true);
+      this.participants.set(resp.participants || 0);
       this.currentRole.set(resp.role || '');
-      console.log('🎯 Patient joined room:', this.roomId, 'role:', this.currentRole());
+      console.log('🎯 Patient joined room:', this.roomId, 'participants:', this.participants());
     } else {
       alert(resp.error || 'Failed to join');
     }
@@ -66,6 +60,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
   async leave() {
     await this.webrtc.leave();
     this.isJoined.set(false);
+    this.participants.set(0);
     this.currentRole.set('');
     this.remoteStream = undefined;
   }
@@ -76,8 +71,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.remoteStreamSubscription?.unsubscribe(); // Unsubscribe on destroy
-    this.participantCountSubscription?.unsubscribe(); // Unsubscribe on destroy
+    this.remoteStreamSubscription?.unsubscribe();
     this.webrtc.leave().catch(() => {});
   }
 }

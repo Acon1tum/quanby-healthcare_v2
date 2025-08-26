@@ -21,10 +21,6 @@ export class WebRTCService {
   // Observable for remote stream changes
   private remoteStreamSubject = new BehaviorSubject<MediaStream | undefined>(undefined);
   public remoteStream$ = this.remoteStreamSubject.asObservable();
-  
-  // Observable for participant count changes
-  private participantCountSubject = new BehaviorSubject<number>(0);
-  public participantCount$ = this.participantCountSubject.asObservable();
 
   constructor(private zone: NgZone) {}
 
@@ -113,14 +109,6 @@ export class WebRTCService {
   }
   getCurrentRoomId(): string | undefined { return this.currentRoomId; }
   getCurrentRole(): 'doctor' | 'patient' | undefined { return this.currentRole; }
-  
-  // Method to update participant count
-  private updateParticipantCount(count: number): void {
-    this.zone.run(() => {
-      this.participantCountSubject.next(count);
-      console.log('👥 Participant count updated:', count);
-    });
-  }
 
   join(roomId: string): Promise<JoinResponse> {
     this.currentRoomId = roomId;
@@ -130,10 +118,6 @@ export class WebRTCService {
       this.socket?.emit('webrtc:join', { roomId }, (resp: JoinResponse) => {
         console.log('📨 Join response received:', resp);
         if (resp?.ok && resp.role) this.currentRole = resp.role;
-        // Update participant count
-        if (resp?.participants !== undefined) {
-          this.updateParticipantCount(resp.participants);
-        }
         console.log('✅ Joined room successfully:', { roomId, role: this.currentRole, participants: resp.participants });
         resolve(resp);
       });
@@ -152,10 +136,6 @@ export class WebRTCService {
       } else {
         await this.initPeer();
       }
-      
-      // Increment participant count
-      const currentCount = this.participantCountSubject.value;
-      this.updateParticipantCount(currentCount + 1);
       
       // Wait a bit for the peer to be ready, then create and send offer
       setTimeout(async () => {
@@ -191,10 +171,6 @@ export class WebRTCService {
     this.socket.on('webrtc:peer-left', () => {
       console.log('👋 Peer left, cleaning up remote stream only...');
       this.cleanupRemoteStreamOnly();
-      
-      // Decrement participant count
-      const currentCount = this.participantCountSubject.value;
-      this.updateParticipantCount(Math.max(0, currentCount - 1));
     });
   }
 
@@ -212,8 +188,6 @@ export class WebRTCService {
       this.socket?.emit('webrtc:leave', { roomId: this.currentRoomId });
     }
     this.cleanupPeer(true);
-    // Reset participant count
-    this.updateParticipantCount(0);
   }
 
   private cleanupPeer(closeSocketRoom: boolean): void {
@@ -237,8 +211,6 @@ export class WebRTCService {
     if (closeSocketRoom) {
       this.currentRoomId = undefined;
       this.currentRole = undefined;
-      // Reset participant count when completely leaving
-      this.updateParticipantCount(0);
     }
   }
 
