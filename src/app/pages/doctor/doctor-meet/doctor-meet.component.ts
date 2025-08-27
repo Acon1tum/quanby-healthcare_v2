@@ -23,12 +23,16 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isJoining: boolean = false;
   errorMessage: string = '';
   isCameraOn: boolean = true;
+  copySuccessMessage: string = '';
   
   private remoteStreamSubscription: any;
 
   constructor(public webrtc: WebRTCService) {}
 
   ngOnInit() {
+    // Generate a random room ID for the doctor
+    this.generateRoomId();
+    
     // Initialize WebRTC service
     this.webrtc.initSocket();
     this.webrtc.initPeer();
@@ -49,6 +53,67 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log('❌ Remote stream cleared');
       }
     });
+  }
+
+  private generateRoomId(): void {
+    // Generate a random 6-character alphanumeric room ID
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    this.roomId = result;
+    console.log('🏠 Generated room ID:', this.roomId);
+  }
+
+  generateNewRoomId(): void {
+    this.generateRoomId();
+    console.log('🔄 New room ID generated:', this.roomId);
+  }
+
+  copyRoomIdToClipboard(): void {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(this.roomId).then(() => {
+        console.log('📋 Room ID copied to clipboard:', this.roomId);
+        this.showCopySuccessMessage();
+      }).catch(err => {
+        console.error('❌ Failed to copy room ID:', err);
+        // Fallback for older browsers
+        this.fallbackCopyRoomId();
+      });
+    } else {
+      // Fallback for browsers without clipboard API
+      this.fallbackCopyRoomId();
+    }
+  }
+
+  private showCopySuccessMessage(): void {
+    this.copySuccessMessage = 'Room code copied to clipboard!';
+    setTimeout(() => {
+      this.copySuccessMessage = '';
+    }, 3000);
+  }
+
+  private fallbackCopyRoomId(): void {
+    // Create a temporary input element
+    const textArea = document.createElement('textarea');
+    textArea.value = this.roomId;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      console.log('📋 Room ID copied to clipboard (fallback):', this.roomId);
+      this.showCopySuccessMessage();
+    } catch (err) {
+      console.error('❌ Fallback copy failed:', err);
+    }
+    
+    document.body.removeChild(textArea);
   }
 
   ngAfterViewInit() {

@@ -2,17 +2,35 @@
   <!-- Join Meeting Interface (shown when not joined) -->
   <div *ngIf="!isJoined" class="join-interface">
     <div class="join-card">
-      <h2>Join Doctor Meeting</h2>
-      <p>Enter a room ID to start or join a video consultation</p>
+      <h2>Create Doctor Meeting</h2>
+      <p>Share the room code below with your patient to start the consultation</p>
       
-      <div class="input-group">
-        <input 
-          type="text" 
-          [(ngModel)]="roomId" 
-          placeholder="Enter Room ID" 
-          class="room-input"
-          [disabled]="isJoining"
-        >
+      <div class="room-id-section">
+        <div class="room-id-display">
+          <label>Room Code:</label>
+          <div class="room-code">
+            <span class="room-code-text">{{ roomId }}</span>
+            <button 
+              (click)="copyRoomIdToClipboard()" 
+              class="btn btn-outline-primary btn-sm"
+              title="Copy room code to clipboard"
+            >
+              📋
+            </button>
+            <button 
+              (click)="generateNewRoomId()" 
+              class="btn btn-outline-secondary btn-sm"
+              title="Generate new room code"
+            >
+              🔄
+            </button>
+          </div>
+        </div>
+        <p class="room-instructions">Share this code with your patient to join the meeting</p>
+        
+        <div *ngIf="copySuccessMessage" class="success-message">
+          {{ copySuccessMessage }}
+        </div>
       </div>
       
       <div class="button-group">
@@ -21,8 +39,8 @@
           class="btn btn-primary"
           [disabled]="!roomId.trim() || isJoining"
         >
-          <span *ngIf="!isJoining">Join Meeting</span>
-          <span *ngIf="isJoining">Joining...</span>
+          <span *ngIf="!isJoining">Start Meeting</span>
+          <span *ngIf="isJoining">Starting...</span>
         </button>
       </div>
       
