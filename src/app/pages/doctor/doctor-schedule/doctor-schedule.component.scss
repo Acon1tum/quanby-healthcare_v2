@@ -1,0 +1,92 @@
+.schedule-page {
+  padding: 16px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.requests-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.requests-table th, .requests-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  font-size: 14px;
+}
+.requests-table th {
+  color: #374151;
+  font-weight: 600;
+}
+.requests-table td { color: #4b5563; }
+
+.row-actions { display: flex; gap: 8px; }
+
+.btn {
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn-accept { background: #16a34a; color: #ffffff; border-color: #16a34a; }
+.btn-reject { background: #dc2626; color: #ffffff; border-color: #dc2626; }
+.btn-ghost { background: #ffffff; color: #374151; border: 1px solid #e5e7eb; }
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+  border: 1px solid #e5e7eb;
+}
+.badge.pending { background: #fffbeb; color: #92400e; border-color: #fed7aa; }
+.badge.accepted { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+.badge.rejected { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px;
+}
+.calendar-header h3 { margin: 0; font-weight: 600; color: #111827; }
+.calendar-header .calendar-nav { display: flex; gap: 8px; }
+
+.calendar {
+  padding: 12px;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.calendar-grid .dow {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  padding: 6px 0;
+}
+.calendar-grid .day {
+  min-height: 80px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  position: relative;
+}
+.calendar-grid .day.out { background: #f9fafb; }
+.calendar-grid .day.appt { outline: 2px solid #2563eb; outline-offset: -2px; }
+.calendar-grid .day .num {
+  position: absolute;
+  top: 6px; left: 8px;
+  font-size: 12px; color: #6b7280;
+}
+

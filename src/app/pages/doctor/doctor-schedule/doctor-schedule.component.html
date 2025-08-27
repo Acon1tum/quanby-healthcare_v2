@@ -1,1 +1,57 @@
-<p>doctor-schedule works!</p>
+<div class="schedule-page">
+  <h2>Schedule Requests</h2>
+  <div class="card">
+    <table class="requests-table">
+      <thead>
+        <tr>
+          <th>Request ID</th>
+          <th>Patient</th>
+          <th>Reason</th>
+          <th>Requested</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of requests">
+          <td>{{ r.id }}</td>
+          <td>{{ r.patient }}</td>
+          <td>{{ r.reason }}</td>
+          <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ r.end | date:'MMM d, y, h:mm a' }}</td>
+          <td>
+            <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-accept" (click)="accept(r)" [disabled]="r.status!=='pending'">Accept</button>
+              <button class="btn btn-reject" (click)="reject(r)" [disabled]="r.status!=='pending'">Reject</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="calendar-header">
+    <h3>{{ current | date:'MMMM y' }}</h3>
+    <div class="calendar-nav">
+      <button class="btn btn-ghost" (click)="prevMonth()">‹</button>
+      <button class="btn btn-ghost" (click)="nextMonth()">›</button>
+    </div>
+  </div>
+
+  <div class="calendar card">
+    <div class="calendar-grid">
+      <div class="dow" *ngFor="let d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']">{{ d }}</div>
+      <ng-container *ngFor="let week of weeks">
+        <div class="day" *ngFor="let c of week" [class.out]="!c.inMonth" [class.appt]="c.hasAppt">
+          <span class="num">{{ c.date.getDate() }}</span>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

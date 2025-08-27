@@ -15,7 +15,7 @@
 
 .join-card {
   background: white;
-  padding: 40px;
+  padding: 40px 20px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -69,14 +69,6 @@
 
 .room-id-display {
   margin-bottom: 15px;
-  
-  label {
-    display: block;
-    color: #2c3e50;
-    font-weight: 600;
-    margin-bottom: 10px;
-    font-size: 16px;
-  }
 }
 
 .room-code {
@@ -89,22 +81,29 @@
   border-radius: 8px;
   padding: 15px;
   margin: 0 auto;
-  max-width: 220px;
+  max-width: 280px;
+  
+  // Debug: ensure buttons are visible
+  .btn-icon {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .room-code-text {
   font-family: 'Courier New', monospace;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #2c3e50;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   background: white;
   padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid #dee2e6;
-  min-width: 120px;
+  min-width: 100px;
   text-align: center;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .room-instructions {
@@ -114,15 +113,46 @@
   font-style: italic;
 }
 
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 2px solid #000000;
+  background: transparent;
+  min-width: 36px;
+  min-height: 36px;
+  
+  svg {
+    transition: all 0.2s ease;
+    color: #000000;
+    stroke: #000000;
+    fill: none;
+    width: 18px;
+    height: 18px;
+  }
+  
+  &:hover {
+    transform: translateY(-1px);
+    background: #000000;
+    
+    svg {
+      transform: scale(1.1);
+      color: #ffffff;
+      stroke: #ffffff;
+    }
+  }
+}
+
 .btn-outline-secondary {
   background: transparent;
   color: #000000;
   border: 2px solid #000000;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   
   &:hover {
     background: #000000;
@@ -146,14 +176,25 @@
   }
 }
 
+// Override for icon buttons to ensure proper styling
+.btn-icon.btn-outline-primary,
+.btn-icon.btn-outline-secondary {
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .btn-sm {
-  padding: 6px 10px;
-  font-size: 11px;
-  min-width: 50px;
-  height: 32px;
+  padding: 6px 8px;
+  font-size: 10px;
+  min-width: 45px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .btn {
@@ -204,6 +245,37 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+// Responsive design for room code section
+@media (max-width: 480px) {
+  .room-code {
+    max-width: 100%;
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .room-code-text {
+    font-size: 18px;
+    min-width: 80px;
+    padding: 6px 8px;
+  }
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+  
+  .join-card {
+    padding: 30px 15px;
+  }
 }
 
 // Meeting Interface Styles
@@ -483,7 +555,6 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
