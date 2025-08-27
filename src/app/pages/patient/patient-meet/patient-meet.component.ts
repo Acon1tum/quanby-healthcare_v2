@@ -38,7 +38,16 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.remoteStreamSubscription = this.webrtc.remoteStream$.subscribe(stream => {
       console.log('🔄 Remote stream updated in patient component:', stream);
       this.remoteStream = stream || null;
-      this.bindRemoteVideo();
+      
+      // Immediately try to bind remote video when stream changes
+      if (stream) {
+        console.log('🎥 Remote stream received, binding to video element...');
+        setTimeout(() => {
+          this.bindRemoteVideo();
+        }, 100);
+      } else {
+        console.log('❌ Remote stream cleared');
+      }
     });
   }
 
@@ -89,9 +98,37 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private bindRemoteVideo() {
+    console.log('🔗 Attempting to bind remote video...');
+    console.log('📹 Remote video ref:', this.remoteVideoRef);
+    console.log('🎥 Remote stream:', this.remoteStream);
+    
     if (this.remoteVideoRef && this.remoteVideoRef.nativeElement && this.remoteStream) {
-      this.remoteVideoRef.nativeElement.srcObject = this.remoteStream;
-      console.log('✅ Remote video bound for patient');
+      try {
+        const videoElement = this.remoteVideoRef.nativeElement;
+        videoElement.srcObject = this.remoteStream;
+        console.log('✅ Remote video bound successfully for patient');
+        
+        // Ensure video plays
+        videoElement.play().then(() => {
+          console.log('▶️ Remote video started playing successfully');
+        }).catch(e => {
+          console.warn('⚠️ Remote video autoplay failed:', e);
+          // Try to play without autoplay
+          videoElement.muted = true;
+          videoElement.play().catch(e2 => {
+            console.error('❌ Remote video play failed even with muted:', e2);
+          });
+        });
+      } catch (error) {
+        console.error('❌ Error binding remote video:', error);
+      }
+    } else {
+      console.warn('⚠️ Cannot bind remote video:', {
+        hasRef: !!this.remoteVideoRef,
+        hasElement: !!(this.remoteVideoRef && this.remoteVideoRef.nativeElement),
+        hasStream: !!this.remoteStream,
+        streamTracks: this.remoteStream?.getTracks().length || 0
+      });
     }
   }
 
@@ -190,9 +227,57 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   refreshRemoteStream() {
     console.log('🔄 Manual refresh of remote stream');
+    console.log('📊 Current remote stream status:', {
+      hasStream: !!this.remoteStream,
+      streamId: this.remoteStream?.id,
+      tracksCount: this.remoteStream?.getTracks().length || 0,
+      tracks: this.remoteStream?.getTracks().map(t => ({
+        kind: t.kind,
+        enabled: t.enabled,
+        readyState: t.readyState
+      }))
+    });
+    
     const stream = this.webrtc.getRemoteStream();
     this.remoteStream = stream || null;
-    this.bindRemoteVideo();
+    
+    if (this.remoteStream) {
+      console.log('✅ Remote stream refreshed, binding to video...');
+      this.bindRemoteVideo();
+    } else {
+      console.log('❌ No remote stream available for refresh');
+    }
+  }
+
+  debugRemoteStream() {
+    console.log('🔍 Debugging remote stream...');
+    console.log('📊 Remote stream details:', {
+      hasStream: !!this.remoteStream,
+      streamId: this.remoteStream?.id,
+      tracksCount: this.remoteStream?.getTracks().length || 0,
+      tracks: this.remoteStream?.getTracks().map(t => ({
+        id: t.id,
+        kind: t.kind,
+        enabled: t.enabled,
+        readyState: t.readyState
+      }))
+    });
+    
+    console.log('📹 Remote video element:', {
+      hasRef: !!this.remoteVideoRef,
+      hasElement: !!(this.remoteVideoRef && this.remoteVideoRef.nativeElement),
+      srcObject: this.remoteVideoRef?.nativeElement?.srcObject,
+      readyState: this.remoteVideoRef?.nativeElement?.readyState,
+      networkState: this.remoteVideoRef?.nativeElement?.networkState
+    });
+    
+    // Try to get stream from service
+    const serviceStream = this.webrtc.getRemoteStream();
+    console.log('🔧 Service remote stream:', {
+      hasStream: !!serviceStream,
+      streamId: serviceStream?.id,
+      tracksCount: serviceStream?.getTracks().length || 0
+    });
   }
 
   refreshLocalVideo() {

@@ -170,6 +170,15 @@
     }
   }
 
+  .btn-dark {
+    background: #2c3e50;
+    color: white;
+    
+    &:hover {
+      background: #34495e;
+    }
+  }
+
   .video-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
