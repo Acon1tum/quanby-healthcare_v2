@@ -3,7 +3,7 @@
   <div *ngIf="!isJoined" class="join-interface">
     <div class="join-card">
       <h2>Create Doctor Meeting</h2>
-      <p>Share the room code below with your patient to start the consultation</p>
+      <p>Generate a room ID to start a video consultation with a patient</p>
       
       <div class="room-id-section">
         <div class="room-id-display">
@@ -124,15 +124,27 @@
       <!-- Remote Video -->
       <div class="video-wrapper">
         <h3>Remote Video (Patient)</h3>
-        <video 
-          #remoteVideo 
-          autoplay 
-          playsinline
-          class="video-element"
-          *ngIf="remoteStream"
-        ></video>
-        <div *ngIf="!remoteStream" class="waiting-message">
-          <p>Waiting for patient to join...</p>
+        <div class="video-container-relative">
+          <video 
+            #remoteVideo 
+            autoplay 
+            playsinline
+            class="video-element"
+            *ngIf="remoteStream"
+          ></video>
+          <div *ngIf="!remoteStream" class="waiting-message">
+            <p>Waiting for patient to join...</p>
+            <!-- Debug connection status -->
+            <div class="connection-status-debug" *ngIf="!remoteStream">
+              <details>
+                <summary>🔧 Connection Debug (Click to expand)</summary>
+                <div class="debug-info">
+                  <p><strong>Room:</strong> {{ roomId }}</p>
+                  <p><strong>Status:</strong> {{ getConnectionStatus() }}</p>
+                </div>
+              </details>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -148,19 +160,20 @@
         <button (click)="refreshLocalVideo()" class="btn btn-ghost">Refresh Local</button>
         <button (click)="debugRemoteStream()" class="btn btn-ghost">Debug</button>
         
-        <span class="spacer"></span>
-        
-        <!-- Face Scan Button - Only visible when patient is connected -->
+        <!-- Face Scan Button in footer for mobile -->
         <button 
           *ngIf="remoteStream" 
           (click)="startFaceScan()" 
-          class="btn btn-primary"
+          class="btn btn-ghost btn-primary"
           [disabled]="isFaceScanning"
           title="Start face scan for patient health assessment"
         >
-          <span *ngIf="!isFaceScanning">🔍 Start Face Scan</span>
+          <span *ngIf="!isFaceScanning">🔍 Face Scan</span>
           <span *ngIf="isFaceScanning">⏳ Scanning...</span>
         </button>
+        
+        <span class="spacer"></span>
+        
         <button (click)="leave()" class="btn btn-danger">Leave</button>
       </div>
     </div>
@@ -170,25 +183,27 @@
   <div *ngIf="showFaceScanModal" class="face-scan-modal">
     <div class="face-scan-modal-content">
       <div class="face-scan-header">
-        <h3>{{ isFaceScanComplete ? 'Face Scan Complete!' : 'Patient Face Scan' }}</h3>
+        <h3>{{ isFaceScanComplete ? 'Face Scan Complete!' : 'Face Scan in Progress' }}</h3>
         <button (click)="closeFaceScanModal()" class="btn-close">&times;</button>
       </div>
       
-      <!-- Status and Instructions only shown during scanning, not when complete -->
-      <div *ngIf="!isFaceScanComplete" class="face-scan-status-display">
-        <div class="status-icon">🔍</div>
+      <!-- Status only shown during scanning, not when complete -->
+      <div *ngIf="!isFaceScanComplete" class="face-scan-status">
         <p>{{ faceScanStatus }}</p>
-        <div class="scan-instructions">
-          <p><strong>Instructions:</strong></p>
-          <ul>
-            <li>Patient will receive a face scan request</li>
-            <li>Patient will see the scanning interface</li>
-            <li>Results will be shared automatically when complete</li>
-          </ul>
-        </div>
       </div>
       
-      <!-- Scan Results -->
+      <!-- Face Scan iframe (only show when scanning, not when complete) -->
+      <div *ngIf="faceScanIframeUrl && !isFaceScanComplete" class="face-scan-iframe-container">
+        <iframe
+          #faceScanIframe
+          [src]="faceScanIframeUrl"
+          title="Face Scan Interface"
+          allow="camera; microphone"
+          class="face-scan-iframe"
+        ></iframe>
+      </div>
+      
+      <!-- Scan Results (only show when complete) -->
       <div *ngIf="isFaceScanComplete && faceScanResults" class="scan-results">
         <div class="results-header">
           <h4>✅ Face Scan Complete!</h4>
@@ -214,10 +229,10 @@
       <div class="face-scan-actions">
         <button 
           *ngIf="!isFaceScanComplete" 
-          (click)="resetFaceScan()" 
+          (click)="closeFaceScanModal()" 
           class="btn btn-secondary"
         >
-          Reset Scan
+          Cancel Scan
         </button>
         <button 
           (click)="closeFaceScanModal()" 

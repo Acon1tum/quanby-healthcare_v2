@@ -335,6 +335,22 @@
       gap: 12px;
       margin-top: 12px;
     }
+    
+    // Ensure equal video sizes
+    .video-wrapper {
+      display: flex;
+      flex-direction: column;
+      
+      &:first-child {
+        // Local video
+        justify-content: flex-start;
+      }
+      
+      &:last-child {
+        // Remote video (doctor)
+        justify-content: flex-start;
+      }
+    }
   }
 
   .video-wrapper {
@@ -389,6 +405,34 @@
     
     @media (max-width: 480px) {
       height: 200px;
+    }
+  }
+  
+  // Ensure remote video has consistent sizing
+  .video-wrapper:last-child .video-container-relative {
+    // Doctor video (remote) - ensure same dimensions as local
+    height: 300px;
+    
+    @media (max-width: 768px) {
+      height: 250px;
+    }
+    
+    @media (max-width: 480px) {
+      height: 200px;
+    }
+  }
+  
+  // Ensure both videos maintain aspect ratio
+  .video-container-relative {
+    aspect-ratio: 16/9;
+    min-height: 300px;
+    
+    @media (max-width: 768px) {
+      min-height: 250px;
+    }
+    
+    @media (max-width: 480px) {
+      min-height: 200px;
     }
   }
 

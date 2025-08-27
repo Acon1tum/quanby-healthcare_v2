@@ -87,15 +87,17 @@
       <!-- Remote Video -->
       <div class="video-wrapper">
         <h3>Remote Video (Doctor)</h3>
-        <video 
-          #remoteVideo 
-          autoplay 
-          playsinline
-          class="video-element"
-          *ngIf="remoteStream"
-        ></video>
-        <div *ngIf="!remoteStream" class="waiting-message">
-          <p>Waiting for doctor to join...</p>
+        <div class="video-container-relative">
+          <video 
+            #remoteVideo 
+            autoplay 
+            playsinline
+            class="video-element"
+            *ngIf="remoteStream"
+          ></video>
+          <div *ngIf="!remoteStream" class="waiting-message">
+            <p>Waiting for doctor to join...</p>
+          </div>
         </div>
       </div>
     </div>

@@ -240,6 +240,19 @@ export class WebRTCService {
   getCurrentRoomId(): string | undefined { return this.currentRoomId; }
   getCurrentRole(): 'doctor' | 'patient' | undefined { return this.currentRole; }
 
+  // Debug methods for connection status
+  getSocketStatus(): string {
+    return this.socket?.connected ? 'Connected' : 'Disconnected';
+  }
+
+  getPeerStatus(): string {
+    return this.peer?.connectionState || 'Not Ready';
+  }
+
+  getDataChannelStatus(): string {
+    return this.dataChannel?.readyState || 'Not Ready';
+  }
+
   // Send face scan results via data channel
   sendFaceScanResults(results: any, status: string): void {
     if (this.dataChannel && this.dataChannel.readyState === 'open') {

@@ -395,13 +395,37 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Face scanning methods
   startFaceScan(): void {
+    console.log('🔍 Starting face scan...');
+    console.log('🔍 Remote stream available:', !!this.remoteStream);
+    console.log('🔍 WebRTC service available:', !!this.webrtc);
+    
     if (!this.remoteStream) {
       this.errorMessage = 'Patient video stream is required to start face scan.';
+      console.error('❌ Face scan failed: No remote stream');
+      return;
+    }
+
+    if (!this.webrtc) {
+      this.errorMessage = 'WebRTC service not available.';
+      console.error('❌ Face scan failed: WebRTC service not available');
       return;
     }
 
     this.isFaceScanning = true;
     this.faceScanStatus = 'Requesting patient to start face scan...';
+    
+    // Check data channel status before sending
+    const dataChannelStatus = this.webrtc.getDataChannelStatus();
+    console.log('🔍 Data channel status:', dataChannelStatus);
+    
+    if (dataChannelStatus !== 'open') {
+      this.faceScanStatus = `Data channel not ready (${dataChannelStatus}). Waiting for connection...`;
+      console.warn('⚠️ Data channel not ready, waiting for connection...');
+      
+      // Wait for data channel to be ready
+      this.waitForDataChannel();
+      return;
+    }
     
     // Send face scan request to patient via WebRTC data channel
     this.webrtc.sendFaceScanRequest({
@@ -410,11 +434,16 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       timestamp: Date.now()
     });
     
+    console.log('✅ Face scan request sent successfully');
+    
     // Show a simple status modal for the doctor
     this.showFaceScanModal = true;
     
     // Start monitoring for patient response
     this.monitorPatientScanProgress();
+    
+    // Set timeout for face scan completion
+    this.setFaceScanTimeout();
   }
 
   private monitorPatientScanProgress(): void {
@@ -438,16 +467,21 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private setupFaceScanMessageListener(): void {
+    console.log('🔍 Setting up face scan message listener...');
     window.addEventListener('message', (event) => {
+      console.log('📨 Window message received:', event);
+      
       if (event.source === this.faceScanIframe?.nativeElement?.contentWindow) {
         const data = event.data;
-        console.log('Face scan message received:', data);
+        console.log('✅ Face scan message received from iframe:', data);
         
         switch (data.action) {
           case 'onAnalysisStart':
+            console.log('🔍 Face analysis started');
             this.faceScanStatus = 'Face analysis started...';
             break;
           case 'onHealthAnalysisFinished':
+            console.log('✅ Face scan completed with results:', data.analysisData);
             this.faceScanResults = data.analysisData;
             this.faceScanStatus = 'Face scan completed successfully!';
             this.isFaceScanComplete = true;
@@ -457,14 +491,21 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.webrtc.sendFaceScanResults(data.analysisData, 'Face scan completed successfully!');
             break;
           case 'failedToGetHealthAnalysisResult':
+            console.error('❌ Failed to get health analysis results');
             this.faceScanStatus = 'Failed to get scan results.';
             this.isFaceScanning = false;
             break;
           case 'failedToLoadPage':
+            console.error('❌ Failed to load face scan page');
             this.faceScanStatus = 'Failed to load face scan page.';
             this.isFaceScanning = false;
             break;
+          default:
+            console.log('⚠️ Unknown face scan action:', data.action, data);
+            break;
         }
+      } else {
+        console.log('📨 Message from unknown source:', event.source);
       }
     });
   }
@@ -498,5 +539,66 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   private handleFaceScanStatusUpdate(status: string): void {
     console.log('📊 Handling face scan status update in doctor component:', status);
     this.faceScanStatus = status;
+  }
+
+  // Get connection status for debugging
+  getConnectionStatus(): string {
+    if (!this.webrtc) return 'WebRTC service not initialized';
+    
+    const socketStatus = this.webrtc.getSocketStatus();
+    const peerStatus = this.webrtc.getPeerStatus();
+    const dataChannelStatus = this.webrtc.getDataChannelStatus();
+    
+    return `Socket: ${socketStatus}, Peer: ${peerStatus}, Data: ${dataChannelStatus}`;
+  }
+
+  // Wait for data channel to be ready
+  private waitForDataChannel(): void {
+    console.log('⏳ Waiting for data channel to be ready...');
+    const checkInterval = setInterval(() => {
+      const status = this.webrtc.getDataChannelStatus();
+      console.log('🔍 Data channel status check:', status);
+      
+      if (status === 'open') {
+        clearInterval(checkInterval);
+        console.log('✅ Data channel is now ready, proceeding with face scan...');
+        this.faceScanStatus = 'Data channel ready. Sending face scan request...';
+        
+        // Retry sending the face scan request
+        setTimeout(() => {
+          this.webrtc.sendFaceScanRequest({
+            type: 'face-scan-request',
+            roomId: this.roomId,
+            timestamp: Date.now()
+          });
+          this.monitorPatientScanProgress();
+        }, 1000);
+      }
+    }, 2000); // Check every 2 seconds
+    
+    // Set a maximum wait time
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      if (this.webrtc.getDataChannelStatus() !== 'open') {
+        this.faceScanStatus = 'Data channel failed to connect. Please check your connection.';
+        this.isFaceScanning = false;
+        console.error('❌ Data channel failed to connect within timeout');
+      }
+    }, 30000); // 30 second timeout
+  }
+
+  // Set timeout for face scan completion
+  private setFaceScanTimeout(): void {
+    console.log('⏰ Setting face scan timeout...');
+    setTimeout(() => {
+      if (this.isFaceScanning && !this.isFaceScanComplete) {
+        console.warn('⚠️ Face scan timeout reached');
+        this.faceScanStatus = 'Face scan timeout. Patient may not have responded.';
+        this.isFaceScanning = false;
+        
+        // Show error message to user
+        this.errorMessage = 'Face scan timed out. Please try again or check patient connection.';
+      }
+    }, 120000); // 2 minute timeout
   }
 }
