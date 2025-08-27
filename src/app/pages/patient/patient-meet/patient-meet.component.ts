@@ -1,18 +1,22 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { WebRTCService } from '../../../services/webrtc.service';
+import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { HealthReportDisplayComponent, HealthScanResults } from '../../../shared/components/health-report-display/health-report-display.component';
 
 @Component({
   selector: 'app-patient-meet',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HealthReportDisplayComponent],
   templateUrl: './patient-meet.component.html',
   styleUrls: ['./patient-meet.component.scss']
 })
 export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('faceScanIframe') faceScanIframe!: ElementRef<HTMLIFrameElement>;
   
   roomId: string = '';
   localStream: MediaStream | null = null;
@@ -24,9 +28,24 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   errorMessage: string = '';
   isCameraOn: boolean = true;
   
+  // Face scanning properties
+  showFaceScanRequest: boolean = false;
+  showFaceScanModal: boolean = false;
+  faceScanIframeUrl: SafeResourceUrl | null = null;
+  faceScanResults: HealthScanResults | null = null;
+  faceScanStatus: string = '';
+  isFaceScanning: boolean = false;
+  isFaceScanComplete: boolean = false;
+  showRawResults: boolean = false;
+  
   private remoteStreamSubscription: any;
+  private dataChannelSubscription: any;
 
-  constructor(public webrtc: WebRTCService) {}
+  constructor(
+    public webrtc: WebRTCService,
+    private faceScanService: FaceScanService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit() {
     // Initialize WebRTC service
@@ -49,6 +68,17 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log('❌ Remote stream cleared');
       }
     });
+
+    // Subscribe to data channel messages for face scan requests and results
+    this.dataChannelSubscription = this.webrtc.dataChannel$.subscribe(data => {
+      if (data && data.type === 'face-scan-request') {
+        console.log('📡 Face scan request received via data channel:', data);
+        this.handleFaceScanRequest(data);
+      } else if (data && data.type === 'face-scan-results') {
+        console.log('📡 Face scan results received via data channel:', data);
+        this.showFaceScanResultsModal(data.results, data.status);
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -58,6 +88,9 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy() {
     if (this.remoteStreamSubscription) {
       this.remoteStreamSubscription.unsubscribe();
+    }
+    if (this.dataChannelSubscription) {
+      this.dataChannelSubscription.unsubscribe();
     }
     this.leave();
   }
@@ -299,5 +332,139 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('🔄 Setting remote stream in patient component:', value);
     this.remoteStream = value;
     this.bindRemoteVideo();
+  }
+
+  // Face scan methods
+  handleFaceScanRequest(request: any): void {
+    console.log('📡 Handling face scan request:', request);
+    this.showFaceScanRequest = true;
+    this.faceScanStatus = 'Doctor has requested a face scan. Click "Start Scan" to begin.';
+  }
+
+  startFaceScan(): void {
+    this.showFaceScanRequest = false;
+    this.showFaceScanModal = true;
+    this.isFaceScanning = true;
+    this.faceScanStatus = 'Initializing face scan...';
+    
+    // Notify doctor that patient has started the scan
+    this.webrtc.sendFaceScanStatus({
+      type: 'face-scan-status',
+      status: 'Patient started face scan',
+      timestamp: Date.now()
+    });
+    
+    // Generate face scan token
+    const request: FaceScanRequest = {
+      clientId: `patient_${this.roomId}_${Date.now()}`,
+      showResults: 'display',
+      noDesign: true,
+      faceOutline: true,
+      buttonBgColor: '#007bff',
+      buttonTextColor: '#ffffff',
+      isVoiceAnalysisOn: false,
+      forceFrontCamera: true,
+      language: 'en',
+      showDisclaimer: false
+    };
+
+    this.faceScanService.generateVideoToken(request).subscribe({
+      next: (response) => {
+        if (response.success && response.videoIframeUrl) {
+          this.faceScanIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(response.videoIframeUrl);
+          this.faceScanStatus = 'Face scan ready. Please follow the on-screen instructions.';
+          this.setupFaceScanMessageListener();
+        } else {
+          this.faceScanStatus = 'Failed to initialize face scan.';
+          this.isFaceScanning = false;
+        }
+      },
+      error: (error) => {
+        console.error('Face scan initialization error:', error);
+        this.faceScanStatus = 'Error initializing face scan.';
+        this.isFaceScanning = false;
+        this.webrtc.sendFaceScanStatus({
+          type: 'face-scan-status',
+          status: 'Face scan failed to initialize',
+          timestamp: Date.now()
+        });
+      }
+    });
+  }
+
+  private setupFaceScanMessageListener(): void {
+    window.addEventListener('message', (event) => {
+      if (event.source === this.faceScanIframe?.nativeElement?.contentWindow) {
+        const data = event.data;
+        console.log('Face scan message received:', data);
+        
+        switch (data.action) {
+          case 'onAnalysisStart':
+            this.faceScanStatus = 'Face analysis started...';
+            // Notify doctor of progress
+            this.webrtc.sendFaceScanStatus({
+              type: 'face-scan-status',
+              status: 'Patient: Face analysis started...',
+              timestamp: Date.now()
+            });
+            break;
+          case 'onHealthAnalysisFinished':
+            this.faceScanResults = data.analysisData;
+            this.faceScanStatus = 'Face scan completed successfully!';
+            this.isFaceScanComplete = true;
+            this.isFaceScanning = false;
+            
+            // Automatically send results to doctor via WebRTC data channel
+            this.webrtc.sendFaceScanResults(data.analysisData, 'Face scan completed successfully!');
+            break;
+          case 'failedToGetHealthAnalysisResult':
+            this.faceScanStatus = 'Failed to get scan results.';
+            this.isFaceScanning = false;
+            // Notify doctor of failure
+            this.webrtc.sendFaceScanStatus({
+              type: 'face-scan-status',
+              status: 'Patient: Face scan failed to get results',
+              timestamp: Date.now()
+            });
+            break;
+          case 'failedToLoadPage':
+            this.faceScanStatus = 'Failed to load face scan page.';
+            this.isFaceScanning = false;
+            // Notify doctor of failure
+            this.webrtc.sendFaceScanStatus({
+              type: 'face-scan-status',
+              status: 'Patient: Face scan page failed to load',
+              timestamp: Date.now()
+            });
+            break;
+        }
+      }
+    });
+  }
+
+  // Face scan result methods
+  showFaceScanResultsModal(results: any, status: string): void {
+    this.faceScanResults = results;
+    this.faceScanStatus = status;
+    this.showFaceScanModal = true;
+  }
+
+  hideFaceScanResults(): void {
+    this.showFaceScanModal = false;
+    this.faceScanResults = null;
+    this.faceScanStatus = '';
+  }
+
+  closeFaceScanModal(): void {
+    this.showFaceScanModal = false;
+    this.isFaceScanning = false;
+    this.faceScanResults = null;
+    this.faceScanStatus = '';
+    this.isFaceScanComplete = false;
+  }
+
+  // Method to receive face scan results from doctor (can be called via WebRTC data channel)
+  receiveFaceScanResults(results: any): void {
+    this.showFaceScanResultsModal(results, 'Face scan completed successfully!');
   }
 }

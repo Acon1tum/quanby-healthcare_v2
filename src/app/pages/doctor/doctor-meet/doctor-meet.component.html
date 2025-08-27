@@ -65,8 +65,8 @@
       </div>
     </div>
 
-    <!-- Video Controls -->
-    <div class="video-controls">
+    <!-- Video Controls (top) - hidden in minimalist layout -->
+    <div class="video-controls top-controls">
       <button (click)="leave()" class="btn btn-danger">Leave Meeting</button>
       <button (click)="toggleCamera()" class="btn" [ngClass]="isCameraOn ? 'btn-warning' : 'btn-success'">
         <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
@@ -75,6 +75,18 @@
       <button (click)="refreshLocalVideo()" class="btn btn-info">🔄 Refresh Local Video</button>
       <button (click)="refreshRemoteStream()" class="btn btn-secondary">Refresh Remote Stream</button>
       <button (click)="debugRemoteStream()" class="btn btn-dark">🔍 Debug Remote</button>
+      
+      <!-- Face Scan Button - Only visible when patient is connected -->
+      <button 
+        *ngIf="remoteStream" 
+        (click)="startFaceScan()" 
+        class="btn btn-primary"
+        [disabled]="isFaceScanning"
+        title="Start face scan for patient health assessment"
+      >
+        <span *ngIf="!isFaceScanning">🔍 Start Face Scan</span>
+        <span *ngIf="isFaceScanning">⏳ Scanning...</span>
+      </button>
     </div>
 
     <!-- Video Container -->
@@ -115,6 +127,97 @@
         <div *ngIf="!remoteStream" class="waiting-message">
           <p>Waiting for patient to join...</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Meeting Footer Controls (minimalist) -->
+    <div class="meeting-footer">
+      <div class="footer-actions">
+        <button (click)="toggleCamera()" class="btn btn-ghost">
+          <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
+          <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
+        </button>
+        <button (click)="refreshRemoteStream()" class="btn btn-ghost">Refresh Remote</button>
+        <button (click)="refreshLocalVideo()" class="btn btn-ghost">Refresh Local</button>
+        <button (click)="debugRemoteStream()" class="btn btn-ghost">Debug</button>
+        
+        <span class="spacer"></span>
+        
+        <!-- Face Scan Button - Only visible when patient is connected -->
+        <button 
+          *ngIf="remoteStream" 
+          (click)="startFaceScan()" 
+          class="btn btn-primary"
+          [disabled]="isFaceScanning"
+          title="Start face scan for patient health assessment"
+        >
+          <span *ngIf="!isFaceScanning">🔍 Start Face Scan</span>
+          <span *ngIf="isFaceScanning">⏳ Scanning...</span>
+        </button>
+        <button (click)="leave()" class="btn btn-danger">Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Face Scan Modal -->
+  <div *ngIf="showFaceScanModal" class="face-scan-modal">
+    <div class="face-scan-modal-content">
+      <div class="face-scan-header">
+        <h3>{{ isFaceScanComplete ? 'Face Scan Complete!' : 'Patient Face Scan' }}</h3>
+        <button (click)="closeFaceScanModal()" class="btn-close">&times;</button>
+      </div>
+      
+      <!-- Status and Instructions only shown during scanning, not when complete -->
+      <div *ngIf="!isFaceScanComplete" class="face-scan-status-display">
+        <div class="status-icon">🔍</div>
+        <p>{{ faceScanStatus }}</p>
+        <div class="scan-instructions">
+          <p><strong>Instructions:</strong></p>
+          <ul>
+            <li>Patient will receive a face scan request</li>
+            <li>Patient will see the scanning interface</li>
+            <li>Results will be shared automatically when complete</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Scan Results -->
+      <div *ngIf="isFaceScanComplete && faceScanResults" class="scan-results">
+        <div class="results-header">
+          <h4>✅ Face Scan Complete!</h4>
+          <button 
+            (click)="showRawResults = !showRawResults" 
+            class="btn btn-sm btn-outline-secondary"
+            title="Toggle between formatted and raw results"
+          >
+            {{ showRawResults ? 'Show Formatted' : 'Show Raw Data' }}
+          </button>
+        </div>
+        <div class="results-content">
+          <div *ngIf="!showRawResults">
+            <app-health-report-display [results]="faceScanResults"></app-health-report-display>
+          </div>
+          <div *ngIf="showRawResults">
+            <h5>Raw JSON Data</h5>
+            <pre>{{ faceScanResults | json }}</pre>
+          </div>
+        </div>
+      </div>
+      
+      <div class="face-scan-actions">
+        <button 
+          *ngIf="!isFaceScanComplete" 
+          (click)="resetFaceScan()" 
+          class="btn btn-secondary"
+        >
+          Reset Scan
+        </button>
+        <button 
+          (click)="closeFaceScanModal()" 
+          class="btn btn-primary"
+        >
+          {{ isFaceScanComplete ? 'Close' : 'Cancel' }}
+        </button>
       </div>
     </div>
   </div>

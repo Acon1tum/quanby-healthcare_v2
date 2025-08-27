@@ -10,6 +10,24 @@ export interface JoinResponse {
   role?: 'doctor' | 'patient';
 }
 
+export interface FaceScanData {
+  type: 'face-scan-results';
+  results: any;
+  status: string;
+}
+
+export interface FaceScanStatus {
+  type: 'face-scan-status';
+  status: string;
+  timestamp: number;
+}
+
+export interface FaceScanRequest {
+  type: 'face-scan-request';
+  roomId: string;
+  timestamp: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WebRTCService {
   private socket?: Socket;
@@ -21,6 +39,11 @@ export class WebRTCService {
   // Observable for remote stream changes
   private remoteStreamSubject = new BehaviorSubject<MediaStream | undefined>(undefined);
   public remoteStream$ = this.remoteStreamSubject.asObservable();
+  
+  // Data channel for face scan communication
+  private dataChannel?: RTCDataChannel;
+  private dataChannelSubject = new BehaviorSubject<FaceScanData | FaceScanStatus | FaceScanRequest | undefined>(undefined);
+  public dataChannel$ = this.dataChannelSubject.asObservable();
 
   constructor(private zone: NgZone) {}
 
@@ -73,6 +96,9 @@ export class WebRTCService {
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
 
+    // Create data channel for face scan communication
+    this.createDataChannel();
+
     this.peer.onicecandidate = (event) => {
       if (event.candidate && this.currentRoomId) {
         this.socket?.emit('webrtc:ice-candidate', {
@@ -121,6 +147,77 @@ export class WebRTCService {
     this.peer.oniceconnectionstatechange = () => {
       console.log('🧊 ICE connection state changed:', this.peer?.iceConnectionState);
     };
+
+    // Add data channel handler
+    this.peer.ondatachannel = (event) => {
+      console.log('📡 Data channel received:', event.channel.label);
+      this.handleDataChannel(event.channel);
+    };
+  }
+
+  private createDataChannel(): void {
+    if (!this.peer) return;
+    
+    try {
+      // Create data channel for face scan communication
+      this.dataChannel = this.peer.createDataChannel('face-scan-channel', {
+        ordered: true
+      });
+      
+      this.dataChannel.onopen = () => {
+        console.log('📡 Data channel opened for face scan communication');
+      };
+      
+      this.dataChannel.onclose = () => {
+        console.log('📡 Data channel closed');
+      };
+      
+      this.dataChannel.onerror = (error) => {
+        console.error('📡 Data channel error:', error);
+      };
+      
+      this.dataChannel.onmessage = (event) => {
+        try {
+          const data: FaceScanData = JSON.parse(event.data);
+          console.log('📡 Data channel message received:', data);
+          this.zone.run(() => {
+            this.dataChannelSubject.next(data);
+          });
+        } catch (error) {
+          console.error('📡 Error parsing data channel message:', error);
+        }
+      };
+      
+      console.log('📡 Data channel created successfully');
+    } catch (error) {
+      console.error('📡 Error creating data channel:', error);
+    }
+  }
+
+  private handleDataChannel(datachannel: RTCDataChannel): void {
+    datachannel.onopen = () => {
+      console.log('📡 Remote data channel opened');
+    };
+    
+    datachannel.onclose = () => {
+      console.log('📡 Remote data channel closed');
+    };
+    
+    datachannel.onerror = (error) => {
+      console.error('📡 Remote data channel error:', error);
+    };
+    
+    datachannel.onmessage = (event) => {
+      try {
+        const data: FaceScanData = JSON.parse(event.data);
+        console.log('📡 Remote data channel message received:', data);
+        this.zone.run(() => {
+          this.dataChannelSubject.next(data);
+        });
+      } catch (error) {
+        console.error('📡 Error parsing remote data channel message:', error);
+      }
+    };
   }
 
   async getUserMedia(constraints: MediaStreamConstraints = { audio: true, video: true }): Promise<MediaStream> {
@@ -137,6 +234,54 @@ export class WebRTCService {
   }
   getCurrentRoomId(): string | undefined { return this.currentRoomId; }
   getCurrentRole(): 'doctor' | 'patient' | undefined { return this.currentRole; }
+
+  // Send face scan results via data channel
+  sendFaceScanResults(results: any, status: string): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      const data: FaceScanData = {
+        type: 'face-scan-results',
+        results,
+        status
+      };
+      
+      try {
+        this.dataChannel.send(JSON.stringify(data));
+        console.log('📡 Face scan results sent via data channel:', data);
+      } catch (error) {
+        console.error('📡 Error sending face scan results:', error);
+      }
+    } else {
+      console.warn('📡 Data channel not ready for sending face scan results');
+    }
+  }
+
+  // Send face scan request to patient via data channel
+  sendFaceScanRequest(request: FaceScanRequest): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      try {
+        this.dataChannel.send(JSON.stringify(request));
+        console.log('📡 Face scan request sent via data channel:', request);
+      } catch (error) {
+        console.error('📡 Error sending face scan request:', error);
+      }
+    } else {
+      console.warn('📡 Data channel not ready for sending face scan request');
+    }
+  }
+
+  // Send face scan status update via data channel
+  sendFaceScanStatus(status: FaceScanStatus): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      try {
+        this.dataChannel.send(JSON.stringify(status));
+        console.log('📡 Face scan status sent via data channel:', status);
+      } catch (error) {
+        console.error('📡 Error sending face scan status:', error);
+      }
+    } else {
+      console.warn('📡 Data channel not ready for sending face scan status');
+    }
+  }
 
   join(roomId: string): Promise<JoinResponse> {
     this.currentRoomId = roomId;

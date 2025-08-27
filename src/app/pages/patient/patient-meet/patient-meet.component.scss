@@ -119,10 +119,49 @@
   }
 
   .video-controls {
-    margin-bottom: 20px;
+    display: none; /* hidden in minimalist layout */
+  }
+
+  /* Footer controls */
+  .meeting-footer {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-top: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .footer-actions {
     display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .footer-actions .spacer { flex: 1; }
+
+  .footer-actions .btn {
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .footer-actions .btn-ghost {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    color: #374151;
+  }
+
+  .footer-actions .btn-danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
   }
 
   .btn-danger {
@@ -319,5 +358,431 @@
   
   .meeting-interface .video-controls {
     flex-direction: column;
+  }
+}
+
+// Face Scan Request Modal Styles
+.face-scan-request-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000; /* ensure above app header/sidebar */
+  
+  .face-scan-request-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    
+    .face-scan-request-header {
+      margin-bottom: 20px;
+      
+      h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+      }
+    }
+    
+    .face-scan-request-message {
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      border-left: 4px solid #2196f3;
+      
+      p {
+        margin: 0;
+        color: #1976d2;
+        font-weight: 500;
+        font-size: 16px;
+      }
+    }
+    
+    .face-scan-request-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      
+      .btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// Face Scan Modal Styles
+.face-scan-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000; /* ensure above app header/sidebar */
+  
+  .face-scan-modal-content {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 32px;
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    
+    .face-scan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      
+      h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+      
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        
+        &:hover {
+          background: #f3f4f6;
+          color: #374151;
+        }
+      }
+    }
+    
+    .face-scan-status {
+      margin-bottom: 24px;
+      padding: 16px 20px;
+      background: #f0f9ff;
+      border-radius: 6px;
+      border-left: 3px solid #0ea5e9;
+      
+      p {
+        margin: 0;
+        color: #0369a1;
+        font-weight: 500;
+        text-align: center;
+        font-size: 14px;
+      }
+    }
+    
+    .face-scan-iframe-container {
+      margin-bottom: 24px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      
+      .face-scan-iframe {
+        width: 100%;
+        height: 500px;
+        border: none;
+        display: block;
+      }
+    }
+    
+    .scan-results {
+      margin-bottom: 24px;
+      padding: 24px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        
+        h4 {
+          margin: 0;
+          color: #111827;
+          font-size: 16px;
+          font-weight: 600;
+        }
+        
+        .btn-sm {
+          padding: 8px 16px;
+          font-size: 13px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+      }
+      
+      .results-content {
+        background: white;
+        padding: 20px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        max-height: 600px;
+        overflow-y: auto;
+        
+        h5 {
+          margin: 0 0 16px 0;
+          color: #374151;
+          font-size: 15px;
+          font-weight: 600;
+        }
+        
+        pre {
+          margin: 0;
+          font-size: 12px;
+          line-height: 1.5;
+          color: #374151;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          background: #f9fafb;
+          padding: 16px;
+          border-radius: 4px;
+          border: 1px solid #e5e7eb;
+        }
+      }
+    }
+    
+    .face-scan-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: flex-end;
+      
+      .btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.15s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+}
+
+// Face Scan Results Modal Styles
+.face-scan-results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000; /* ensure above app header/sidebar */
+  
+  .face-scan-results-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    
+    .face-scan-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e9ecef;
+      
+      h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #f8f9fa;
+          color: #495057;
+        }
+      }
+    }
+    
+    .face-scan-results-status {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #d4edda;
+      border-radius: 8px;
+      border-left: 4px solid #28a745;
+      
+      p {
+        margin: 0;
+        color: #155724;
+        font-weight: 500;
+        text-align: center;
+      }
+    }
+    
+    .scan-results-display {
+      margin-bottom: 20px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+      
+      h4 {
+        margin: 0 0 15px 0;
+        color: #2c3e50;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      
+      .results-content {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        max-height: 300px;
+        overflow-y: auto;
+        
+        pre {
+          margin: 0;
+          font-size: 12px;
+          line-height: 1.4;
+          color: #495057;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+      }
+    }
+    
+    .face-scan-results-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+      
+      .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// Responsive design for face scan modals
+@media (max-width: 768px) {
+  .face-scan-request-modal .face-scan-request-content {
+    margin: 16px;
+    padding: 24px;
+    
+    .face-scan-request-actions {
+      flex-direction: column;
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+  
+  .face-scan-modal .face-scan-modal-content {
+    margin: 16px;
+    padding: 24px;
+    
+    .face-scan-header h3 {
+      font-size: 18px;
+    }
+    
+    .face-scan-iframe-container .face-scan-iframe {
+      height: 400px;
+    }
+    
+    .scan-results .results-header {
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+      
+      .btn-sm {
+        width: 100%;
+      }
+    }
+    
+    .face-scan-actions {
+      flex-direction: column;
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+  
+  .face-scan-results-modal .face-scan-results-content {
+    margin: 16px;
+    padding: 24px;
+    
+    .face-scan-results-actions {
+      flex-direction: column;
+      
+      .btn {
+        width: 100%;
+      }
+    }
   }
 }
