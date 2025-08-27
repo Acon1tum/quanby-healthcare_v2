@@ -83,13 +83,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 12px;
   background: #f8f9fa;
   border: 2px solid #e1e8ed;
   border-radius: 8px;
   padding: 15px;
   margin: 0 auto;
-  max-width: 200px;
+  max-width: 220px;
 }
 
 .room-code-text {
@@ -104,6 +104,7 @@
   border: 1px solid #dee2e6;
   min-width: 120px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .room-instructions {
@@ -115,33 +116,44 @@
 
 .btn-outline-secondary {
   background: transparent;
-  color: #6c757d;
-  border: 2px solid #6c757d;
+  color: #000000;
+  border: 2px solid #000000;
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   
   &:hover {
-    background: #6c757d;
+    background: #000000;
     color: white;
   }
 }
 
 .btn-outline-primary {
   background: transparent;
-  color: #3498db;
-  border: 2px solid #3498db;
+  color: #000000;
+  border: 2px solid #000000;
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   
   &:hover {
-    background: #3498db;
+    background: #000000;
     color: white;
   }
 }
 
 .btn-sm {
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 11px;
+  min-width: 50px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn {
