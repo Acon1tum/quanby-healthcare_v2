@@ -1,27 +1,102 @@
-<div class="meet">
-  <div class="controls">
-    <input type="text" placeholder="Room ID" [(ngModel)]="roomId" />
-    <button (click)="join()" [disabled]="isJoined()">Join</button>
-    <button (click)="leave()" [disabled]="!isJoined()">Leave</button>
-  </div>
-  
-  <!-- Room Status -->
-  <div class="room-status" *ngIf="isJoined()">
-    <p>✅ Joined Room: {{ roomId }}</p>
-    <p>👤 Role: {{ currentRole() }}</p>
-    <p>👥 Participants: {{ participants() }}/2</p>
-    <button (click)="refreshRemoteStream()" class="refresh-btn">🔄 Refresh Remote Stream</button>
-  </div>
-  
-  <div class="videos">
-    <div class="video-container">
-      <h4>Local Video (You)</h4>
-      <video [srcObject]="localStream" autoplay playsinline muted></video>
+<div class="meet-container">
+  <!-- Join Meeting Interface (shown when not joined) -->
+  <div *ngIf="!isJoined" class="join-interface">
+    <div class="join-card">
+      <h2>Join Doctor Meeting</h2>
+      <p>Enter a room ID to start or join a video consultation</p>
+      
+      <div class="input-group">
+        <input 
+          type="text" 
+          [(ngModel)]="roomId" 
+          placeholder="Enter Room ID" 
+          class="room-input"
+          [disabled]="isJoining"
+        >
+      </div>
+      
+      <div class="button-group">
+        <button 
+          (click)="join()" 
+          class="btn btn-primary"
+          [disabled]="!roomId.trim() || isJoining"
+        >
+          <span *ngIf="!isJoining">Join Meeting</span>
+          <span *ngIf="isJoining">Joining...</span>
+        </button>
+      </div>
+      
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
     </div>
+  </div>
+
+  <!-- Video Meeting Interface (shown when joined) -->
+  <div *ngIf="isJoined" class="meeting-interface">
+    <!-- Room Status -->
+    <div class="room-status">
+      <div class="status-item">
+        <strong>Room ID:</strong> {{ roomId }}
+      </div>
+      <div class="status-item">
+        <strong>Your Role:</strong> {{ currentRole }}
+      </div>
+      <div class="status-item">
+        <strong>Participants:</strong> {{ participants }}/2
+      </div>
+    </div>
+
+    <!-- Video Controls -->
+    <div class="video-controls">
+      <button (click)="leave()" class="btn btn-danger">Leave Meeting</button>
+      <button (click)="toggleCamera()" class="btn" [ngClass]="isCameraOn ? 'btn-warning' : 'btn-success'">
+        <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
+        <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
+      </button>
+      <button (click)="refreshLocalVideo()" class="btn btn-info">🔄 Refresh Local Video</button>
+      <button (click)="refreshRemoteStream()" class="btn btn-secondary">Refresh Remote Stream</button>
+    </div>
+
+    <!-- Video Container -->
     <div class="video-container">
-      <h4>Remote Video (Patient)</h4>
-      <video [srcObject]="remoteStream" autoplay playsinline></video>
-      <p *ngIf="!remoteStream" class="waiting">Waiting for patient to join...</p>
+      <!-- Local Video -->
+      <div class="video-wrapper">
+        <h3>Local Video (You - Doctor)</h3>
+        <div class="video-container-relative">
+          <video 
+            #localVideo 
+            autoplay 
+            muted 
+            playsinline
+            class="video-element"
+            *ngIf="localStream"
+          ></video>
+          <div *ngIf="!localStream && isJoined" class="video-loading">
+            <div class="loading-spinner"></div>
+            <p>Initializing camera...</p>
+          </div>
+          <div *ngIf="!isCameraOn && localStream" class="camera-off-overlay">
+            <div class="camera-off-icon">📷</div>
+            <p>Camera Off</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remote Video -->
+      <div class="video-wrapper">
+        <h3>Remote Video (Patient)</h3>
+        <video 
+          #remoteVideo 
+          autoplay 
+          playsinline
+          class="video-element"
+          *ngIf="remoteStream"
+        ></video>
+        <div *ngIf="!remoteStream" class="waiting-message">
+          <p>Waiting for patient to join...</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
