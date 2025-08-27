@@ -24,11 +24,11 @@
         class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group"
       >
         <div class="text-right">
-          <p class="text-sm font-medium text-slate-800 group-hover:text-sky-600 transition-colors">{{ currentUser?.name }}</p>
+          <p class="text-sm font-medium text-slate-800 group-hover:text-sky-600 transition-colors">{{ getUserDisplayName() }}</p>
           <p class="text-xs text-gray-500 capitalize group-hover:text-sky-500 transition-colors">{{ currentUser?.role }}</p>
         </div>
         <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center group-hover:bg-sky-600 transition-colors">
-          <span class="text-white text-sm font-medium">{{ currentUser?.name?.charAt(0) }}</span>
+          <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
         </div>
       </button>
     </div>
@@ -91,10 +91,10 @@
           class="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-4 hover:bg-gray-100 transition-colors cursor-pointer group"
         >
           <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center group-hover:bg-sky-600 transition-colors">
-            <span class="text-white text-sm font-medium">{{ currentUser?.name?.charAt(0) }}</span>
+            <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
           </div>
           <div>
-            <p class="text-sm font-medium text-slate-800 group-hover:text-sky-600 transition-colors">{{ currentUser?.name }}</p>
+            <p class="text-sm font-medium text-slate-800 group-hover:text-sky-600 transition-colors">{{ getUserDisplayName() }}</p>
             <p class="text-xs text-gray-500 capitalize group-hover:text-sky-500 transition-colors">{{ currentUser?.role }}</p>
           </div>
         </button>

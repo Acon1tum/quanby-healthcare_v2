@@ -24,7 +24,7 @@ export class AuthGuard implements CanActivate {
     }
 
     // Check if route requires specific role
-    const requiredRole = route.data['role'] as 'admin' | 'doctor' | 'patient';
+    const requiredRole = route.data['role'] as 'ADMIN' | 'DOCTOR' | 'PATIENT';
     if (requiredRole && !this.authService.hasRole(requiredRole)) {
       // Redirect to appropriate dashboard based on user's actual role
       this.authService.redirectBasedOnRole();
@@ -49,7 +49,7 @@ export class RoleGuard implements CanActivate {
     state: RouterStateSnapshot
   ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
     
-    const requiredRole = route.data['role'] as 'admin' | 'doctor' | 'patient';
+    const requiredRole = route.data['role'] as 'ADMIN' | 'DOCTOR' | 'PATIENT';
     
     if (!requiredRole) {
       return true;

@@ -1,18 +1,46 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  name: string;
-  role: 'admin' | 'doctor' | 'patient';
+  role: 'ADMIN' | 'DOCTOR' | 'PATIENT';
   token?: string;
+  refreshToken?: string;
+  doctorInfo?: {
+    firstName: string;
+    lastName: string;
+    specialization: string;
+  };
+  patientInfo?: {
+    fullName: string;
+    gender: string;
+    dateOfBirth: string;
+  };
 }
 
 export interface LoginCredentials {
   email: string;
   password: string;
+}
+
+export interface BackendLoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      email: string;
+      role: 'ADMIN' | 'DOCTOR' | 'PATIENT';
+      doctorInfo?: any;
+      patientInfo?: any;
+    };
+    token: string;
+    refreshToken: string;
+  };
 }
 
 @Injectable({
@@ -21,11 +49,18 @@ export interface LoginCredentials {
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private readonly API_URL = environment.backendApi;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) {
     // Check if user is already logged in from localStorage
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('accessToken');
+    const savedRefreshToken = localStorage.getItem('refreshToken');
+    
+    if (savedUser && savedToken) {
       this.currentUserSubject.next(JSON.parse(savedUser));
     }
   }
@@ -35,97 +70,133 @@ export class AuthService {
   }
 
   get isLoggedIn(): boolean {
-    return !!this.currentUserValue;
+    return !!this.currentUserValue && !!localStorage.getItem('accessToken');
   }
 
-  get userRole(): 'admin' | 'doctor' | 'patient' | null {
+  get userRole(): 'ADMIN' | 'DOCTOR' | 'PATIENT' | null {
     return this.currentUserValue?.role || null;
+  }
+
+  get accessToken(): string | null {
+    return localStorage.getItem('accessToken');
+  }
+
+  get refreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
   }
 
   async login(credentials: LoginCredentials): Promise<{ success: boolean; message: string; user?: User }> {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await firstValueFrom(this.http.post<BackendLoginResponse>(
+        `${this.API_URL}/auth/login`,
+        credentials
+      ));
 
-      // Mock authentication logic - replace with actual API call
-      const user = this.authenticateUser(credentials);
-      
-      if (user) {
-        // Store user in localStorage
+      if (response?.success && response.data) {
+        const user: User = {
+          id: response.data.user.id,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          token: response.data.token,
+          refreshToken: response.data.refreshToken,
+          doctorInfo: response.data.user.doctorInfo,
+          patientInfo: response.data.user.patientInfo
+        };
+
+        // Store tokens and user data
+        localStorage.setItem('accessToken', response.data.token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
         localStorage.setItem('currentUser', JSON.stringify(user));
+        
         this.currentUserSubject.next(user);
         
         return {
           success: true,
-          message: 'Login successful',
+          message: response.message,
           user
         };
       } else {
         return {
           success: false,
-          message: 'Invalid email or password'
+          message: response?.message || 'Login failed'
         };
       }
-    } catch (error) {
-      return {
-        success: false,
-        message: 'An error occurred during login'
-      };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      if (error.status === 401) {
+        return {
+          success: false,
+          message: 'Invalid email or password'
+        };
+      } else if (error.status === 400) {
+        return {
+          success: false,
+          message: error.error?.message || 'Invalid request data'
+        };
+      } else {
+        return {
+          success: false,
+          message: 'An error occurred during login. Please try again.'
+        };
+      }
     }
   }
 
-  private authenticateUser(credentials: LoginCredentials): User | null {
-    // Mock user database - replace with actual API authentication
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        email: 'admin@qhealth.com',
-        name: 'Admin User',
-        role: 'admin',
-        token: 'mock-admin-token'
-      },
-      {
-        id: '2',
-        email: 'doctor@qhealth.com',
-        name: 'Dr. Smith',
-        role: 'doctor',
-        token: 'mock-doctor-token'
-      },
-      {
-        id: '3',
-        email: 'patient@qhealth.com',
-        name: 'John Doe',
-        role: 'patient',
-        token: 'mock-patient-token'
+  async refreshAccessToken(): Promise<boolean> {
+    try {
+      const refreshToken = this.refreshToken;
+      if (!refreshToken) {
+        return false;
       }
-    ];
 
-    const user = mockUsers.find(u => 
-      u.email === credentials.email && 
-      this.validatePassword(credentials.password, u.role)
-    );
+      const response = await firstValueFrom(this.http.post<BackendLoginResponse>(
+        `${this.API_URL}/auth/refresh`,
+        { refreshToken }
+      ));
 
-    return user || null;
+      if (response?.success && response.data) {
+        // Update stored tokens
+        localStorage.setItem('accessToken', response.data.token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        
+        // Update user object with new token
+        const currentUser = this.currentUserValue;
+        if (currentUser) {
+          currentUser.token = response.data.token;
+          currentUser.refreshToken = response.data.refreshToken;
+          localStorage.setItem('currentUser', JSON.stringify(currentUser));
+          this.currentUserSubject.next(currentUser);
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return false;
+    }
   }
 
-  private validatePassword(password: string, role: string): boolean {
-    // Mock password validation - replace with actual password checking
-    const rolePasswords = {
-      admin: 'admin123',
-      doctor: 'doctor123',
-      patient: 'patient123'
-    };
-    
-    return password === rolePasswords[role as keyof typeof rolePasswords];
-  }
-
-  logout(): void {
-    // Remove user from localStorage
-    localStorage.removeItem('currentUser');
-    this.currentUserSubject.next(null);
-    
-    // Redirect to login page
-    this.router.navigate(['/login']);
+  async logout(): Promise<void> {
+    try {
+      const refreshToken = this.refreshToken;
+      if (refreshToken) {
+        // Call backend logout endpoint
+        await firstValueFrom(this.http.post(`${this.API_URL}/auth/logout`, { refreshToken }));
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local storage and state regardless of backend response
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      this.currentUserSubject.next(null);
+      
+      // Redirect to login page
+      this.router.navigate(['/login']);
+    }
   }
 
   redirectBasedOnRole(): void {
@@ -136,13 +207,13 @@ export class AuthService {
     }
 
     switch (user.role) {
-      case 'admin':
+      case 'ADMIN':
         this.router.navigate(['/admin/dashboard']);
         break;
-      case 'doctor':
+      case 'DOCTOR':
         this.router.navigate(['/doctor/dashboard']);
         break;
-      case 'patient':
+      case 'PATIENT':
         this.router.navigate(['/patient/dashboard']);
         break;
       default:
@@ -151,16 +222,48 @@ export class AuthService {
   }
 
   // Check if user has required role
-  hasRole(requiredRole: 'admin' | 'doctor' | 'patient'): boolean {
+  hasRole(requiredRole: 'ADMIN' | 'DOCTOR' | 'PATIENT'): boolean {
     const user = this.currentUserValue;
     if (!user) return false;
     
-    if (requiredRole === 'admin') {
-      return user.role === 'admin';
-    } else if (requiredRole === 'doctor') {
-      return user.role === 'admin' || user.role === 'doctor';
+    if (requiredRole === 'ADMIN') {
+      return user.role === 'ADMIN';
+    } else if (requiredRole === 'DOCTOR') {
+      return user.role === 'ADMIN' || user.role === 'DOCTOR';
     } else {
       return true; // All roles can access patient-level features
+    }
+  }
+
+  // Get HTTP headers with authorization token
+  getAuthHeaders(): HttpHeaders {
+    const token = this.accessToken;
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    });
+  }
+
+  // Check if token is expired and refresh if needed
+  async checkAndRefreshToken(): Promise<boolean> {
+    if (!this.accessToken) {
+      return false;
+    }
+
+    try {
+      // Decode JWT token to check expiration
+      const tokenPayload = JSON.parse(atob(this.accessToken.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      
+      // If token expires in less than 5 minutes, refresh it
+      if (tokenPayload.exp && (tokenPayload.exp - currentTime) < 300) {
+        return await this.refreshAccessToken();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Token validation error:', error);
+      return await this.refreshAccessToken();
     }
   }
 }

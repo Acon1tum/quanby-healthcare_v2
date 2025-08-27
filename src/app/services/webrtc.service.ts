@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
+import { AuthService } from '../auth/auth.service';
 
 export interface JoinResponse {
   ok: boolean;
@@ -45,7 +46,10 @@ export class WebRTCService {
   private dataChannelSubject = new BehaviorSubject<FaceScanData | FaceScanStatus | FaceScanRequest | undefined>(undefined);
   public dataChannel$ = this.dataChannelSubject.asObservable();
 
-  constructor(private zone: NgZone) {}
+  constructor(
+    private zone: NgZone,
+    private authService: AuthService
+  ) {}
 
   private getSignalingUrl(): string {
     // Use environment backend API URL if available, otherwise default to localhost:3000
@@ -59,11 +63,12 @@ export class WebRTCService {
     if (this.socket) return;
     const url = signalingUrl || this.getSignalingUrl();
     console.log('🔌 Connecting to Socket.IO server:', url);
-    const userRaw = localStorage.getItem('currentUser');
-    const user = userRaw ? JSON.parse(userRaw) as { token?: string } : undefined;
-    const token = user?.token;
+    
+    // Get token from AuthService instead of localStorage
+    const token = this.authService.accessToken;
     console.log('🔑 User token:', token ? 'Present' : 'Missing');
-    console.log('👤 Current user:', user);
+    console.log('👤 Current user:', this.authService.currentUserValue);
+    
     this.socket = io(url, {
       transports: ['websocket'],
       withCredentials: true,

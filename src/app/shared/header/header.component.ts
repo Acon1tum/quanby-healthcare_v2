@@ -57,13 +57,13 @@ export class HeaderComponent implements OnInit {
   navigateToProfile(): void {
     if (this.currentUser) {
       switch (this.currentUser.role) {
-        case 'admin':
+        case 'ADMIN':
           this.router.navigate(['/admin/my-profile']);
           break;
-        case 'doctor':
+        case 'DOCTOR':
           this.router.navigate(['/doctor/my-profile']);
           break;
-        case 'patient':
+        case 'PATIENT':
           this.router.navigate(['/patient/my-profile']);
           break;
       }
@@ -89,5 +89,19 @@ export class HeaderComponent implements OnInit {
         document.body.classList.remove('mobile-menu-open');
       }
     }
+  }
+
+  getUserDisplayName(): string {
+    if (!this.currentUser) return '';
+    
+    if (this.currentUser.role === 'DOCTOR' && this.currentUser.doctorInfo) {
+      return `${this.currentUser.doctorInfo.firstName} ${this.currentUser.doctorInfo.lastName}`;
+    } else if (this.currentUser.role === 'PATIENT' && this.currentUser.patientInfo) {
+      return this.currentUser.patientInfo.fullName;
+    } else if (this.currentUser.role === 'ADMIN') {
+      return 'Administrator';
+    }
+    
+    return this.currentUser.email;
   }
 } 

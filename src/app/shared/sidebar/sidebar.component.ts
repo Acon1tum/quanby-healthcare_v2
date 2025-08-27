@@ -37,8 +37,8 @@ export class SidebarComponent implements OnInit {
   }
 
   getNavigationItems(role: string): NavigationItem[] {
-    switch (role.toLowerCase()) {
-      case 'admin':
+    switch (role) {
+      case 'ADMIN':
         return [
           {
             label: 'Dashboard',
@@ -85,7 +85,7 @@ export class SidebarComponent implements OnInit {
           },
         ];
 
-      case 'doctor':
+      case 'DOCTOR':
         return [
           {
             label: 'Dashboard',
@@ -114,7 +114,7 @@ export class SidebarComponent implements OnInit {
           },
         ];
 
-      case 'patient':
+      case 'PATIENT':
         return [
           {
             label: 'Dashboard',
@@ -155,12 +155,12 @@ export class SidebarComponent implements OnInit {
   }
 
   getRoleDisplayName(role: string): string {
-    switch (role.toLowerCase()) {
-      case 'admin':
+    switch (role) {
+      case 'ADMIN':
         return 'Admin';
-      case 'doctor':
+      case 'DOCTOR':
         return 'Doctor';
-      case 'patient':
+      case 'PATIENT':
         return 'Patient';
       default:
         return 'User';

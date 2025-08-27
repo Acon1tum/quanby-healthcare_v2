@@ -51,7 +51,7 @@ export const appRoutes: Routes = [
       { 
         path: 'admin', 
         canActivate: [RoleGuard],
-        data: { role: 'admin' },
+        data: { role: 'ADMIN' },
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: AdminDashboardComponent },
@@ -76,7 +76,7 @@ export const appRoutes: Routes = [
       { 
         path: 'doctor', 
         canActivate: [RoleGuard],
-        data: { role: 'doctor' },
+        data: { role: 'DOCTOR' },
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: DoctorDashboardComponent },
@@ -90,7 +90,7 @@ export const appRoutes: Routes = [
       { 
         path: 'patient', 
         canActivate: [RoleGuard],
-        data: { role: 'patient' },
+        data: { role: 'PATIENT' },
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: PatientDashboardComponent },

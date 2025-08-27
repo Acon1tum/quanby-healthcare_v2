@@ -48,7 +48,7 @@
     </div>
 
     <!-- Video Controls (top) - hidden in minimalist layout -->
-    <div class="video-controls top-controls">
+    <div class="video-controls top-controls hide-mobile">
       <button (click)="leave()" class="btn btn-danger">Leave Meeting</button>
       <button (click)="toggleCamera()" class="btn" [ngClass]="isCameraOn ? 'btn-warning' : 'btn-success'">
         <span *ngIf="isCameraOn">📷 Turn Off Camera</span>

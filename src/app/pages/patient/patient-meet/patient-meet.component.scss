@@ -3,6 +3,15 @@
   max-width: 1200px;
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+  // Mobile-first responsive design
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 8px;
+  }
 }
 
 // Join Interface Styles
@@ -11,6 +20,14 @@
   justify-content: center;
   align-items: center;
   min-height: 400px;
+  
+  @media (max-width: 768px) {
+    min-height: 300px;
+  }
+  
+  @media (max-width: 480px) {
+    min-height: 250px;
+  }
 }
 
 .join-card {
@@ -21,18 +38,46 @@
   text-align: center;
   max-width: 400px;
   width: 100%;
+  
+  @media (max-width: 768px) {
+    padding: 30px 16px;
+    border-radius: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 24px 12px;
+    border-radius: 6px;
+  }
 }
 
 .join-card h2 {
   color: #2c3e50;
   margin-bottom: 10px;
   font-size: 24px;
+  
+  @media (max-width: 768px) {
+    font-size: 22px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
 }
 
 .join-card p {
   color: #7f8c8d;
   margin-bottom: 30px;
   font-size: 16px;
+  
+  @media (max-width: 768px) {
+    font-size: 15px;
+    margin-bottom: 25px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
 }
 
 .input-group {
@@ -56,6 +101,11 @@
     background-color: #f8f9fa;
     cursor: not-allowed;
   }
+  
+  @media (max-width: 480px) {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
 }
 
 .button-group {
@@ -70,10 +120,24 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 44px; // Better touch target
   
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px 20px;
+    font-size: 15px;
+    min-height: 40px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 44px;
+    width: 100%;
   }
 }
 
@@ -107,6 +171,20 @@
     display: flex;
     gap: 30px;
     flex-wrap: wrap;
+    
+    @media (max-width: 768px) {
+      padding: 16px;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 12px;
+      gap: 15px;
+      margin-bottom: 12px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 
   .status-item {
@@ -140,6 +218,18 @@
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
+    
+    @media (max-width: 768px) {
+      gap: 8px;
+      padding: 8px 10px;
+    }
+    
+    @media (max-width: 480px) {
+      gap: 6px;
+      padding: 6px 8px;
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
 
   .footer-actions .spacer { flex: 1; }
@@ -150,6 +240,17 @@
     font-size: 14px;
     font-weight: 600;
     border: 1px solid transparent;
+    
+    @media (max-width: 768px) {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 10px 12px;
+      font-size: 14px;
+      width: 100%;
+    }
   }
 
   .footer-actions .btn-ghost {
@@ -223,6 +324,17 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     margin-top: 20px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    @media (max-width: 480px) {
+      gap: 12px;
+      margin-top: 12px;
+    }
   }
 
   .video-wrapper {
@@ -232,10 +344,28 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
     
+    @media (max-width: 768px) {
+      padding: 16px;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 12px;
+    }
+    
     h3 {
       color: #2c3e50;
       margin-bottom: 15px;
       font-size: 18px;
+      
+      @media (max-width: 768px) {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      
+      @media (max-width: 480px) {
+        font-size: 15px;
+        margin-bottom: 10px;
+      }
     }
   }
 
@@ -252,6 +382,14 @@
     background: #f8f9fa;
     border: 2px solid #e1e8ed;
     object-fit: cover;
+    
+    @media (max-width: 768px) {
+      height: 250px;
+    }
+    
+    @media (max-width: 480px) {
+      height: 200px;
+    }
   }
 
   .camera-off-overlay {
@@ -382,6 +520,17 @@
     text-align: center;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     
+    @media (max-width: 768px) {
+      padding: 20px;
+      max-width: 90vw;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 16px;
+      max-width: 95vw;
+      border-radius: 8px;
+    }
+    
     .face-scan-request-header {
       margin-bottom: 20px;
       
@@ -390,6 +539,14 @@
         color: #2c3e50;
         font-size: 24px;
         font-weight: 600;
+        
+        @media (max-width: 768px) {
+          font-size: 22px;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 20px;
+        }
       }
     }
     
@@ -413,11 +570,30 @@
       gap: 15px;
       justify-content: center;
       
+      @media (max-width: 768px) {
+        gap: 12px;
+      }
+      
+      @media (max-width: 480px) {
+        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
       .btn {
         padding: 12px 24px;
         border-radius: 6px;
         font-weight: 500;
         transition: all 0.2s ease;
+        
+        @media (max-width: 768px) {
+          padding: 10px 20px;
+        }
+        
+        @media (max-width: 480px) {
+          padding: 12px 16px;
+          width: 100%;
+        }
         
         &:hover {
           transform: translateY(-1px);
@@ -452,6 +628,19 @@
     position: relative;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     
+    @media (max-width: 768px) {
+      padding: 24px;
+      max-width: 98vw;
+      max-height: 98vh;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 16px;
+      max-width: 100vw;
+      max-height: 100vh;
+      border-radius: 0;
+    }
+    
     .face-scan-header {
       display: flex;
       justify-content: space-between;
@@ -466,6 +655,14 @@
         font-size: 20px;
         font-weight: 600;
         letter-spacing: -0.025em;
+        
+        @media (max-width: 768px) {
+          font-size: 18px;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 16px;
+        }
       }
       
       .btn-close {
@@ -517,6 +714,14 @@
         height: 500px;
         border: none;
         display: block;
+        
+        @media (max-width: 768px) {
+          height: 400px;
+        }
+        
+        @media (max-width: 480px) {
+          height: 300px;
+        }
       }
     }
     
@@ -583,12 +788,33 @@
       gap: 16px;
       justify-content: flex-end;
       
+      @media (max-width: 768px) {
+        gap: 12px;
+      }
+      
+      @media (max-width: 480px) {
+        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
       .btn {
         padding: 12px 24px;
         border-radius: 6px;
         font-weight: 500;
         font-size: 14px;
         transition: all 0.15s ease;
+        
+        @media (max-width: 768px) {
+          padding: 10px 20px;
+          font-size: 13px;
+        }
+        
+        @media (max-width: 480px) {
+          padding: 12px 16px;
+          font-size: 14px;
+          width: 100%;
+        }
         
         &:hover {
           transform: translateY(-1px);
@@ -724,6 +950,55 @@
         }
       }
     }
+  }
+}
+
+// Additional responsive utilities
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+// Touch-friendly improvements
+@media (max-width: 768px) {
+  .btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .video-container-relative {
+    touch-action: manipulation;
+  }
+}
+
+// Landscape orientation adjustments for mobile
+@media (max-width: 768px) and (orientation: landscape) {
+  .video-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  .video-element {
+    height: 180px;
+  }
+  
+  .room-status {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+// High DPI displays
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .btn {
+    border-width: 0.5px;
   }
 }
 
