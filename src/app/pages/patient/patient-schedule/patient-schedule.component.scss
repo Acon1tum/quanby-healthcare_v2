@@ -1,0 +1,235 @@
+.schedule-page {
+  padding: 16px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  margin-bottom: 16px;
+}
+
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointments-table th, .appointments-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  font-size: 14px;
+}
+
+.appointments-table th {
+  color: #374151;
+  font-weight: 600;
+}
+
+.appointments-table td { 
+  color: #4b5563; 
+}
+
+.row-actions { 
+  display: flex; 
+  gap: 8px; 
+}
+
+.btn {
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-reschedule { 
+  background: #2563eb; 
+  color: #ffffff; 
+  border-color: #2563eb; 
+}
+
+.btn-cancel { 
+  background: #dc2626; 
+  color: #ffffff; 
+  border-color: #dc2626; 
+}
+
+.btn-ghost { 
+  background: #ffffff; 
+  color: #374151; 
+  border: 1px solid #e5e7eb; 
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+  border: 1px solid #e5e7eb;
+  font-weight: 500;
+}
+
+.badge.scheduled { 
+  background: #fffbeb; 
+  color: #92400e; 
+  border-color: #fed7aa; 
+}
+
+.badge.confirmed { 
+  background: #f0fdf4; 
+  color: #166534; 
+  border-color: #bbf7d0; 
+}
+
+.badge.cancelled { 
+  background: #fef2f2; 
+  color: #dc2626; 
+  border-color: #fecaca; 
+}
+
+.badge.completed { 
+  background: #f0f9ff; 
+  color: #1e40af; 
+  border-color: #bfdbfe; 
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px;
+}
+
+.calendar-header h3 { 
+  margin: 0; 
+  font-weight: 600; 
+  color: #111827; 
+  font-size: 20px;
+}
+
+.calendar-header .calendar-nav { 
+  display: flex; 
+  gap: 8px; 
+}
+
+.calendar {
+  padding: 12px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-grid .dow {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  padding: 6px 0;
+  font-weight: 600;
+}
+
+.calendar-grid .day {
+  min-height: 80px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.calendar-grid .day:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+}
+
+.calendar-grid .day.out { 
+  background: #f9fafb; 
+  opacity: 0.6;
+}
+
+.calendar-grid .day.appt { 
+  outline: 2px solid #2563eb; 
+  outline-offset: -2px; 
+  background: #f0f9ff;
+}
+
+.calendar-grid .day .num {
+  position: absolute;
+  top: 6px; 
+  left: 8px;
+  font-size: 12px; 
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.appointment-indicator {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+}
+
+.appointment-count {
+  background: #2563eb;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  gap: 24px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-color.appt {
+  background: #2563eb;
+  outline: 2px solid #2563eb;
+}
+
+h2 {
+  color: #111827;
+  font-weight: 700;
+  margin-bottom: 16px;
+  font-size: 24px;
+}

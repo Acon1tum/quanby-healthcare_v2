@@ -1,1 +1,70 @@
-<p>patient-schedule works!</p>
+<div class="schedule-page">
+  <h2>My Appointments</h2>
+  
+  <div class="card">
+    <table class="appointments-table">
+      <thead>
+        <tr>
+          <th>Appointment ID</th>
+          <th>Doctor</th>
+          <th>Specialty</th>
+          <th>Reason</th>
+          <th>Scheduled</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let appt of appointments">
+          <td>{{ appt.id }}</td>
+          <td>{{ appt.doctor }}</td>
+          <td>{{ appt.specialty }}</td>
+          <td>{{ appt.reason }}</td>
+          <td>{{ appt.scheduledAt | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ appt.start | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ appt.end | date:'MMM d, y, h:mm a' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getStatusColor(appt.status)">{{ appt.status }}</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-reschedule" (click)="rescheduleAppointment(appt)" [disabled]="appt.status === 'cancelled' || appt.status === 'completed'">Reschedule</button>
+              <button class="btn btn-cancel" (click)="cancelAppointment(appt)" [disabled]="appt.status === 'cancelled' || appt.status === 'completed'">Cancel</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="calendar-header">
+    <h3>{{ current | date:'MMMM y' }}</h3>
+    <div class="calendar-nav">
+      <button class="btn btn-ghost" (click)="prevMonth()">‹</button>
+      <button class="btn btn-ghost" (click)="nextMonth()">›</button>
+    </div>
+  </div>
+
+  <div class="calendar card">
+    <div class="calendar-grid">
+      <div class="dow" *ngFor="let d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']">{{ d }}</div>
+      <ng-container *ngFor="let week of weeks">
+        <div class="day" *ngFor="let c of week" [class.out]="!c.inMonth" [class.appt]="c.hasAppt">
+          <span class="num">{{ c.date.getDate() }}</span>
+          <div class="appointment-indicator" *ngIf="c.hasAppt">
+            <span class="appointment-count">{{ c.appointmentCount }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <div class="legend-color appt"></div>
+      <span>Appointments</span>
+    </div>
+  </div>
+</div>

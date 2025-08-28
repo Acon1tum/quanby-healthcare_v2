@@ -1,1 +1,219 @@
-<p>patient-dashboard works!</p>
+<div class="patient-dashboard">
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="welcome-section">
+        <h1>{{ getGreeting() }}, John</h1>
+        <p class="subtitle">Health Dashboard • {{ currentDate | date:'EEEE, MMMM d, y' }}</p>
+      </div>
+      <div class="time-display">
+        <div class="current-time">{{ currentDate | date:'h:mm a' }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="actions-grid">
+      <button 
+        *ngFor="let action of quickActions" 
+        class="action-button"
+        (click)="navigateTo(action.route)"
+      >
+        <i class="material-icons">{{ action.icon }}</i>
+        <span>{{ action.label }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Dashboard Content -->
+  <div class="dashboard-content">
+    <!-- Left Column - Primary Content -->
+    <div class="content-main">
+      <!-- Upcoming Appointments -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Upcoming Appointments</h3>
+          <button class="text-button" (click)="navigateTo('/patient/schedule')">
+            View All
+          </button>
+        </div>
+        <div class="appointments-list">
+          <div 
+            *ngFor="let appointment of upcomingAppointments" 
+            class="appointment-item"
+          >
+            <div class="appointment-time">
+              <div class="time">{{ appointment.time }}</div>
+              <div class="date">{{ appointment.date | date:'MMM d' }}</div>
+            </div>
+            <div class="appointment-details">
+              <div class="doctor-name">{{ appointment.doctorName }}</div>
+              <div class="appointment-meta">
+                <span class="specialty">{{ appointment.specialty }}</span>
+                <span class="type">{{ appointment.type }}</span>
+              </div>
+            </div>
+            <div class="appointment-actions">
+              <button 
+                class="primary-button" 
+                *ngIf="getAppointmentStatus(appointment) === 'today'"
+              >
+                Join Now
+              </button>
+              <button 
+                class="secondary-button" 
+                *ngIf="getAppointmentStatus(appointment) === 'upcoming'"
+              >
+                Reschedule
+              </button>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="upcomingAppointments.length === 0">
+            <i class="material-icons">event_busy</i>
+            <p>No upcoming appointments</p>
+            <button class="primary-button" (click)="navigateTo('/patient/schedule')">
+              Book Appointment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Metrics -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Recent Health Metrics</h3>
+          <button class="text-button" (click)="navigateTo('/patient/profile')">
+            View Details
+          </button>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="material-icons">favorite</i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">Blood Pressure</div>
+              <div class="metric-value">{{ recentHealthMetrics.bloodPressure }}</div>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="material-icons">monitor_heart</i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">Heart Rate</div>
+              <div class="metric-value">{{ recentHealthMetrics.heartRate }}</div>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="material-icons">thermostat</i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">Temperature</div>
+              <div class="metric-value">{{ recentHealthMetrics.temperature }}</div>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="material-icons">monitor_weight</i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">Weight</div>
+              <div class="metric-value">{{ recentHealthMetrics.weight }}</div>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-icon">
+              <i class="material-icons">analytics</i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">BMI</div>
+              <div class="metric-value">{{ recentHealthMetrics.bmi }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Secondary Content -->
+    <div class="content-sidebar">
+      <!-- Notifications -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Notifications</h3>
+          <button class="text-button">View All</button>
+        </div>
+        <div class="notifications-list">
+          <div 
+            *ngFor="let notification of notifications" 
+            class="notification-item"
+          >
+            <div class="notification-icon">
+              <i class="material-icons" *ngIf="notification.type === 'success'">check_circle</i>
+              <i class="material-icons" *ngIf="notification.type === 'info'">info</i>
+              <i class="material-icons" *ngIf="notification.type === 'warning'">warning</i>
+            </div>
+            <div class="notification-content">
+              <div class="notification-message">{{ notification.message }}</div>
+              <div class="notification-time">{{ notification.time }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Recent Activity</h3>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon">
+              <i class="material-icons">video_call</i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">Completed consultation with Dr. Johnson</div>
+              <div class="activity-time">2 hours ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon">
+              <i class="material-icons">calendar_today</i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">Booked appointment for next week</div>
+              <div class="activity-time">1 day ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon">
+              <i class="material-icons">person</i>
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">Updated profile information</div>
+              <div class="activity-time">3 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contact -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Emergency Contact</h3>
+        </div>
+        <div class="emergency-info">
+          <div class="emergency-name">Jane Doe (Spouse)</div>
+          <div class="emergency-phone">+1 (555) 987-6543</div>
+          <button class="emergency-button" (click)="navigateTo('/patient/profile')">
+            <i class="material-icons">phone</i>
+            Call Emergency Contact
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
