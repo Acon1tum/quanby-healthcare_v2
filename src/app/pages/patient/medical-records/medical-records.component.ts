@@ -57,7 +57,7 @@ interface Consultation {
   id: number;
   startTime: string;
   endTime?: string;
-  consultationLink: string;
+  consultationCode: string;
   doctor: {
     doctorInfo: {
       firstName: string;
@@ -168,7 +168,7 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     try {
       const headers = this.authService.getAuthHeaders();
       const response = await this.http.get<{ success: boolean; data: MedicalRecords }>(
-        `${environment.backendApi}/medical-records/patient/records`,
+        `${environment.backendApi}/medical-records/patient/${this.currentUser.id}/summary`,
         { headers }
       ).toPromise();
 

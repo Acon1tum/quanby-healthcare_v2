@@ -470,13 +470,13 @@
         </div>
 
         <div class="detail-section">
-          <h4>Consultation Link</h4>
+                      <h4>Consultation Access</h4>
           <div class="consultation-link">
-            <p><strong>Meeting ID:</strong> {{ selectedConsultation.consultationLink }}</p>
-            <button class="copy-link-btn" (click)="copyToClipboard(selectedConsultation.consultationLink)">
-              <i class="material-icons">content_copy</i>
-              Copy Link
-            </button>
+            <p><strong>Consultation Code:</strong> {{ selectedConsultation.consultationCode }}</p>
+                          <button class="copy-code-btn" (click)="copyToClipboard(selectedConsultation.consultationCode)">
+                <i class="material-icons">content_copy</i>
+                Copy Code
+              </button>
           </div>
         </div>
       </div>
