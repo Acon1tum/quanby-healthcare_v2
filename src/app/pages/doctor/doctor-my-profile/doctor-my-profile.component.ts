@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService, User } from '../../../auth/auth.service';
 
 interface DoctorProfile {
   personalInfo: {
@@ -97,73 +98,99 @@ export class DoctorMyProfileComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.loadProfile();
-    this.initForm();
   }
 
-  loadProfile(): void {
-    // Mock data - in real app, this would come from a service
+  async loadProfile(): Promise<void> {
+    // Guard: must be logged in and a doctor
+    const user = this.authService.currentUserValue || await this.authService.getProfile();
+    if (!user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    if (user.role !== 'DOCTOR') {
+      this.authService.redirectBasedOnRole();
+      return;
+    }
+
+    // Map backend user (User + DoctorInfo) to view model
+    const doctor = user.doctorInfo || {
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      gender: 'OTHER',
+      dateOfBirth: '',
+      contactNumber: '',
+      address: '',
+      specialization: '',
+      qualifications: '',
+      experience: 0
+    };
+
     this.profile = {
       personalInfo: {
-        firstName: 'Dr. Sarah',
-        middleName: 'Elizabeth',
-        lastName: 'Johnson',
-        email: 'sarah.johnson@quanbyhealth.com',
-        phone: '+1 (555) 123-4567',
-        dateOfBirth: new Date('1985-03-15'),
-        gender: 'Female',
-        profileImage: '/assets/doctor-avatar.jpg'
+        firstName: doctor.firstName || '',
+        middleName: doctor.middleName || '',
+        lastName: doctor.lastName || '',
+        email: user.email,
+        phone: doctor.contactNumber || '',
+        dateOfBirth: doctor.dateOfBirth ? new Date(doctor.dateOfBirth) : new Date(),
+        gender: (doctor.gender || 'OTHER').toString(),
+        profileImage: undefined
       },
       professionalInfo: {
-        licenseNumber: 'MD123456789',
-        specialization: 'Cardiology',
-        qualifications: 'MBBS, MD (Cardiology), FACC',
-        experience: 12,
-        languages: ['English', 'Spanish'],
-        certifications: ['Board Certified Cardiologist', 'Advanced Cardiac Life Support'],
-        hospitalAffiliations: ['Quanby Medical Center', 'City General Hospital']
+        licenseNumber: '',
+        specialization: doctor.specialization || '',
+        qualifications: doctor.qualifications || '',
+        experience: doctor.experience || 0,
+        languages: [],
+        certifications: [],
+        hospitalAffiliations: []
       },
       contactInfo: {
-        address: '123 Medical Plaza, Suite 400',
-        city: 'San Francisco',
-        state: 'CA',
-        zipCode: '94102',
-        country: 'USA',
+        address: doctor.address || '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: '',
         emergencyContact: {
-          name: 'Michael Johnson',
-          relationship: 'Spouse',
-          phone: '+1 (555) 987-6543',
-          email: 'michael.johnson@email.com'
+          name: '',
+          relationship: '',
+          phone: '',
+          email: ''
         }
       },
       bio: {
-        summary: 'Experienced cardiologist with over 12 years of practice specializing in interventional cardiology, heart failure management, and preventive cardiology. Committed to providing patient-centered care with the latest evidence-based treatments.',
-        expertise: ['Interventional Cardiology', 'Heart Failure Management', 'Preventive Cardiology', 'Echocardiography'],
-        achievements: ['Fellow of the American College of Cardiology', 'Top Doctor Award 2023', 'Published 25+ research papers'],
-        researchInterests: ['Heart Failure Biomarkers', 'Preventive Cardiology', 'Cardiac Imaging Advances']
+        summary: '',
+        expertise: [],
+        achievements: [],
+        researchInterests: []
       },
       preferences: {
-        consultationFee: 250,
-        availability: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        consultationFee: 0,
+        availability: [],
         notificationSettings: {
           email: true,
           sms: false,
           push: true
         },
-        timezone: 'UTC-08:00',
+        timezone: 'UTC+00:00',
         language: 'English'
       },
       systemInfo: {
-        lastLogin: new Date('2024-01-15T10:30:00'),
-        accountCreated: new Date('2022-06-01T09:00:00'),
+        lastLogin: new Date(),
+        accountCreated: new Date(),
         status: 'Active',
         verificationStatus: 'Verified'
       }
     };
+
+    this.initForm();
   }
 
   initForm(): void {

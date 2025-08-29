@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
+import { AuthService, User } from '../../../auth/auth.service';
 
 // Interfaces based on Prisma schema
 interface PatientPersonalInfo {
@@ -69,7 +70,8 @@ export class PatientMyProfileComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.initializeProfile();
     this.createForm();
@@ -83,30 +85,30 @@ export class PatientMyProfileComponent implements OnInit {
   private initializeProfile(): void {
     this.profile = {
       personalInfo: {
-        fullName: 'John Doe',
-        email: 'john.doe@example.com',
-        gender: 'MALE',
+        fullName: '',
+        email: '',
+        gender: 'OTHER',
         dateOfBirth: '1990-01-01',
-        contactNumber: '+1 (555) 123-4567',
-        address: '123 Main Street, City, State 12345',
-        weight: 70,
-        height: 175,
-        bloodType: 'O+',
-        medicalHistory: 'No significant medical history',
-        allergies: ['Penicillin', 'Peanuts'],
-        medications: ['Vitamin D', 'Omega-3'],
+        contactNumber: '',
+        address: '',
+        weight: 0,
+        height: 0,
+        bloodType: '',
+        medicalHistory: '',
+        allergies: [],
+        medications: [],
         profileImage: undefined
       },
       emergencyContact: {
-        contactName: 'Jane Doe',
-        relationship: 'Spouse',
-        contactNumber: '+1 (555) 987-6543',
-        contactAddress: '123 Main Street, City, State 12345'
+        contactName: '',
+        relationship: '',
+        contactNumber: '',
+        contactAddress: ''
       },
       insuranceInfo: {
-        providerName: 'Blue Cross Blue Shield',
-        policyNumber: 'BCBS123456789',
-        insuranceContact: '+1 (800) 555-0123'
+        providerName: '',
+        policyNumber: '',
+        insuranceContact: ''
       },
       preferences: {
         language: 'English',
@@ -149,9 +151,65 @@ export class PatientMyProfileComponent implements OnInit {
     });
   }
 
-  private loadProfile(): void {
-    // In a real app, this would load from a service
+  private async loadProfile(): Promise<void> {
+    const user = this.authService.currentUserValue || await this.authService.getProfile();
+    if (!user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    if (user.role !== 'PATIENT') {
+      this.authService.redirectBasedOnRole();
+      return;
+    }
+
+    const p = user.patientInfo || {
+      fullName: '',
+      gender: 'OTHER',
+      dateOfBirth: '1990-01-01',
+      contactNumber: '',
+      address: '',
+      weight: 0,
+      height: 0,
+      bloodType: '',
+      medicalHistory: '',
+      allergies: [],
+      medications: [],
+      emergencyContact: undefined,
+      insuranceInfo: undefined
+    };
+
+    this.profile = {
+      personalInfo: {
+        fullName: p.fullName || '',
+        email: user.email,
+        gender: p.gender || 'OTHER',
+        dateOfBirth: p.dateOfBirth || '1990-01-01',
+        contactNumber: p.contactNumber || '',
+        address: p.address || '',
+        weight: p.weight || 0,
+        height: p.height || 0,
+        bloodType: p.bloodType || '',
+        medicalHistory: p.medicalHistory || '',
+        allergies: p.allergies || [],
+        medications: p.medications || [],
+        profileImage: undefined
+      },
+      emergencyContact: p.emergencyContact ? {
+        contactName: p.emergencyContact.contactName,
+        relationship: p.emergencyContact.relationship,
+        contactNumber: p.emergencyContact.contactNumber,
+        contactAddress: p.emergencyContact.contactAddress
+      } : undefined,
+      insuranceInfo: p.insuranceInfo ? {
+        providerName: p.insuranceInfo.providerName,
+        policyNumber: p.insuranceInfo.policyNumber,
+        insuranceContact: p.insuranceInfo.insuranceContact
+      } : undefined,
+      preferences: this.profile.preferences
+    };
+
     this.profileForm.patchValue(this.profile);
+    this.calculateAge();
   }
 
   private calculateAge(): void {

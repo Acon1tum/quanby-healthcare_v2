@@ -3,7 +3,7 @@
   <header class="dashboard-header">
     <div class="header-content">
       <div class="welcome-section">
-        <h1>{{ getGreeting() }}, John</h1>
+        <h1>{{ getGreeting() }}, {{ getPatientDisplayName() }}</h1>
         <p class="subtitle">Health Dashboard • {{ currentDate | date:'EEEE, MMMM d, y' }}</p>
       </div>
       <div class="time-display">

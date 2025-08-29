@@ -14,11 +14,37 @@ export interface User {
     firstName: string;
     lastName: string;
     specialization: string;
+    middleName?: string;
+    gender?: 'MALE' | 'FEMALE' | 'OTHER' | string;
+    dateOfBirth?: string;
+    contactNumber?: string;
+    address?: string;
+    qualifications?: string;
+    experience?: number;
   };
   patientInfo?: {
     fullName: string;
     gender: string;
     dateOfBirth: string;
+    contactNumber?: string;
+    address?: string;
+    weight?: number;
+    height?: number;
+    bloodType?: string;
+    medicalHistory?: string;
+    allergies?: string[];
+    medications?: string[];
+    emergencyContact?: {
+      contactName: string;
+      relationship: string;
+      contactNumber: string;
+      contactAddress?: string;
+    };
+    insuranceInfo?: {
+      providerName: string;
+      policyNumber: string;
+      insuranceContact: string;
+    };
   };
 }
 
@@ -62,6 +88,79 @@ export class AuthService {
     
     if (savedUser && savedToken) {
       this.currentUserSubject.next(JSON.parse(savedUser));
+    }
+  }
+
+  async getProfile(): Promise<User | null> {
+    try {
+      const headers = this.getAuthHeaders();
+      const response = await firstValueFrom(this.http.get<any>(`${this.API_URL}/auth/profile`, { headers }));
+
+      if (!response) return null;
+
+      // Some backends wrap in { success, data }; support both
+      const payload = response.data?.user ? response.data : response;
+      const userData = payload.user || payload;
+
+      const mappedUser: User = {
+        id: userData.id,
+        email: userData.email,
+        role: userData.role,
+        token: this.accessToken || undefined,
+        refreshToken: this.refreshToken || undefined,
+        doctorInfo: userData.doctorInfo ? {
+          firstName: userData.doctorInfo.firstName,
+          middleName: userData.doctorInfo.middleName,
+          lastName: userData.doctorInfo.lastName,
+          gender: userData.doctorInfo.gender,
+          dateOfBirth: userData.doctorInfo.dateOfBirth,
+          contactNumber: userData.doctorInfo.contactNumber,
+          address: userData.doctorInfo.address,
+          specialization: userData.doctorInfo.specialization,
+          qualifications: userData.doctorInfo.qualifications,
+          experience: userData.doctorInfo.experience,
+        } : undefined,
+        patientInfo: userData.patientInfo ? {
+          fullName: userData.patientInfo.fullName,
+          gender: userData.patientInfo.gender,
+          dateOfBirth: userData.patientInfo.dateOfBirth,
+          contactNumber: userData.patientInfo.contactNumber,
+          address: userData.patientInfo.address,
+          weight: userData.patientInfo.weight,
+          height: userData.patientInfo.height,
+          bloodType: userData.patientInfo.bloodType,
+          medicalHistory: userData.patientInfo.medicalHistory,
+          allergies: userData.patientInfo.allergies,
+          medications: userData.patientInfo.medications,
+          emergencyContact: userData.patientInfo.emergencyContact,
+          insuranceInfo: userData.patientInfo.insuranceInfo,
+        } : (userData.patient ? { // support alternative shape
+          fullName: userData.patient.fullName,
+          gender: userData.patient.gender,
+          dateOfBirth: userData.patient.dateOfBirth,
+          contactNumber: userData.patient.contactNumber,
+          address: userData.patient.address,
+          weight: userData.patient.weight,
+          height: userData.patient.height,
+          bloodType: userData.patient.bloodType,
+          medicalHistory: userData.patient.medicalHistory,
+          allergies: userData.patient.allergies,
+          medications: userData.patient.medications,
+          emergencyContact: userData.patient.emergencyContact,
+          insuranceInfo: userData.patient.insuranceInfo,
+        } : undefined),
+      };
+
+      // Update current user cache with fresher profile info
+      const current = this.currentUserValue;
+      const merged = { ...(current || {}), ...mappedUser } as User;
+      this.currentUserSubject.next(merged);
+      localStorage.setItem('currentUser', JSON.stringify(merged));
+
+      return merged;
+    } catch (error) {
+      console.error('Fetch profile error:', error);
+      return null;
     }
   }
 

@@ -1,0 +1,485 @@
+<div class="header-spacer"></div>
+
+<div class="medical-records-container main-content">
+  <!-- Header Section -->
+  <div class="records-header">
+    <div class="header-content">
+      <div class="back-section">
+        <button class="back-btn" (click)="onBack()">
+          <i class="material-icons">arrow_back</i>
+        </button>
+        <div class="header-text">
+          <h1>Medical Records</h1>
+          <p>Your complete health history and medical information</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="refresh-btn" (click)="loadMedicalRecords()" [disabled]="loading">
+          <i class="material-icons">refresh</i>
+          {{ loading ? 'Loading...' : 'Refresh' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading your medical records...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <i class="material-icons">error</i>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="loadMedicalRecords()">Try Again</button>
+  </div>
+
+  <!-- Medical Records Content -->
+  <div *ngIf="medicalRecords && !loading" class="records-content">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">event</i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ medicalRecords.summary.totalConsultations }}</div>
+          <div class="card-label">Total Consultations</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">monitor_heart</i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ medicalRecords.summary.totalHealthScans }}</div>
+          <div class="card-label">Health Scans</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">schedule</i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">
+            {{ medicalRecords.summary.lastConsultation ? formatDate(medicalRecords.summary.lastConsultation) : 'N/A' }}
+          </div>
+          <div class="card-label">Last Consultation</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">favorite</i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">
+            {{ medicalRecords.summary.lastHealthScan ? formatDate(medicalRecords.summary.lastHealthScan) : 'N/A' }}
+          </div>
+          <div class="card-label">Last Health Scan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="selectedTab === 'overview'"
+        (click)="selectTab('overview')"
+      >
+        <i class="material-icons">dashboard</i>
+        Overview
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="selectedTab === 'health-scans'"
+        (click)="selectTab('health-scans')"
+      >
+        <i class="material-icons">monitor_heart</i>
+        Health Scans
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="selectedTab === 'consultations'"
+        (click)="selectTab('consultations')"
+      >
+        <i class="material-icons">event</i>
+        Consultations
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="selectedTab === 'trends'"
+        (click)="selectTab('trends')"
+      >
+        <i class="material-icons">trending_up</i>
+        Health Trends
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Overview Tab -->
+      <div *ngIf="selectedTab === 'overview'" class="overview-tab">
+        <div class="overview-grid">
+          <!-- Patient Information -->
+          <div class="overview-card">
+            <h3>Personal Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Name</label>
+                <p>{{ medicalRecords.patientInfo.fullName }}</p>
+              </div>
+              <div class="info-item">
+                <label>Gender</label>
+                <p>{{ medicalRecords.patientInfo.gender }}</p>
+              </div>
+              <div class="info-item">
+                <label>Date of Birth</label>
+                <p>{{ formatDate(medicalRecords.patientInfo.dateOfBirth) }}</p>
+              </div>
+              <div class="info-item">
+                <label>Blood Type</label>
+                <p>{{ medicalRecords.patientInfo.bloodType }}</p>
+              </div>
+              <div class="info-item">
+                <label>Height</label>
+                <p>{{ medicalRecords.patientInfo.height }} cm</p>
+              </div>
+              <div class="info-item">
+                <label>Weight</label>
+                <p>{{ medicalRecords.patientInfo.weight }} kg</p>
+              </div>
+              <div class="info-item">
+                <label>BMI</label>
+                <p>{{ getBMIValue(medicalRecords.patientInfo.weight, medicalRecords.patientInfo.height) }} ({{ getBMICategory(medicalRecords.patientInfo.weight, medicalRecords.patientInfo.height) }})</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical History -->
+          <div class="overview-card">
+            <h3>Medical History</h3>
+            <div class="info-content">
+              <div class="info-item">
+                <label>Medical History</label>
+                <p>{{ medicalRecords.patientInfo.medicalHistory || 'No significant medical history recorded' }}</p>
+              </div>
+              <div class="info-item">
+                <label>Allergies</label>
+                <div class="tags">
+                  <span *ngFor="let allergy of medicalRecords.patientInfo.allergies" class="tag">{{ allergy }}</span>
+                  <span *ngIf="!medicalRecords.patientInfo.allergies?.length" class="no-data">No allergies recorded</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <label>Current Medications</label>
+                <div class="tags">
+                  <span *ngFor="let medication of medicalRecords.patientInfo.medications" class="tag">{{ medication }}</span>
+                  <span *ngIf="!medicalRecords.patientInfo.medications?.length" class="no-data">No medications recorded</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Contact -->
+          <div class="overview-card" *ngIf="medicalRecords.patientInfo.emergencyContact">
+            <h3>Emergency Contact</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Name</label>
+                <p>{{ medicalRecords.patientInfo.emergencyContact.contactName }}</p>
+              </div>
+              <div class="info-item">
+                <label>Relationship</label>
+                <p>{{ medicalRecords.patientInfo.emergencyContact.relationship }}</p>
+              </div>
+              <div class="info-item">
+                <label>Phone</label>
+                <p>{{ medicalRecords.patientInfo.emergencyContact.contactNumber }}</p>
+              </div>
+              <div class="info-item" *ngIf="medicalRecords.patientInfo.emergencyContact.contactAddress">
+                <label>Address</label>
+                <p>{{ medicalRecords.patientInfo.emergencyContact.contactAddress }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insurance Information -->
+          <div class="overview-card" *ngIf="medicalRecords.patientInfo.insuranceInfo">
+            <h3>Insurance Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Provider</label>
+                <p>{{ medicalRecords.patientInfo.insuranceInfo.providerName }}</p>
+              </div>
+              <div class="info-item">
+                <label>Policy Number</label>
+                <p>{{ medicalRecords.patientInfo.insuranceInfo.policyNumber }}</p>
+              </div>
+              <div class="info-item">
+                <label>Contact</label>
+                <p>{{ medicalRecords.patientInfo.insuranceInfo.insuranceContact }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Scans Tab -->
+      <div *ngIf="selectedTab === 'health-scans'" class="health-scans-tab">
+        <div class="scans-list">
+          <div *ngFor="let scan of medicalRecords.healthScans" class="scan-card" (click)="viewHealthScan(scan)">
+            <div class="scan-header">
+              <div class="scan-date">
+                <div class="date">{{ formatDate(scan.consultation.startTime) }}</div>
+                <div class="time">{{ formatTime(scan.consultation.startTime) }}</div>
+              </div>
+              <div class="scan-doctor">
+                <div class="doctor-name">Dr. {{ scan.consultation.doctor.doctorInfo.firstName }} {{ scan.consultation.doctor.doctorInfo.lastName }}</div>
+                <div class="specialty">{{ scan.consultation.doctor.doctorInfo.specialization }}</div>
+              </div>
+              <div class="scan-actions">
+                <i class="material-icons">visibility</i>
+              </div>
+            </div>
+            
+            <div class="scan-metrics">
+              <div class="metric" *ngIf="scan.heartRate">
+                <i class="material-icons">favorite</i>
+                <span>{{ scan.heartRate }} bpm</span>
+              </div>
+              <div class="metric" *ngIf="scan.bloodPressure">
+                <i class="material-icons">monitor_heart</i>
+                <span>{{ scan.bloodPressure }}</span>
+              </div>
+              <div class="metric" *ngIf="scan.spO2">
+                <i class="material-icons">air</i>
+                <span>{{ scan.spO2 }}%</span>
+              </div>
+              <div class="metric" *ngIf="scan.generalWellness">
+                <i class="material-icons">star</i>
+                <span>{{ scan.generalWellness }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="!medicalRecords.healthScans?.length" class="empty-state">
+            <i class="material-icons">monitor_heart</i>
+            <p>No health scans available</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consultations Tab -->
+      <div *ngIf="selectedTab === 'consultations'" class="consultations-tab">
+        <div class="consultations-list">
+          <div *ngFor="let consultation of medicalRecords.consultations" class="consultation-card" (click)="viewConsultation(consultation)">
+            <div class="consultation-header">
+              <div class="consultation-date">
+                <div class="date">{{ formatDate(consultation.startTime) }}</div>
+                <div class="time">{{ formatTime(consultation.startTime) }}</div>
+              </div>
+              <div class="consultation-doctor">
+                <div class="doctor-name">Dr. {{ consultation.doctor.doctorInfo.firstName }} {{ consultation.doctor.doctorInfo.lastName }}</div>
+                <div class="specialty">{{ consultation.doctor.doctorInfo.specialization }}</div>
+              </div>
+              <div class="consultation-status">
+                <span class="status-badge" [class.has-scan]="consultation.healthScan">
+                  {{ consultation.healthScan ? 'With Scan' : 'No Scan' }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="consultation-duration" *ngIf="consultation.endTime">
+              <i class="material-icons">schedule</i>
+              <span>{{ formatTime(consultation.startTime) }} - {{ formatTime(consultation.endTime) }}</span>
+            </div>
+          </div>
+          
+          <div *ngIf="!medicalRecords.consultations?.length" class="empty-state">
+            <i class="material-icons">event</i>
+            <p>No consultations available</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Trends Tab -->
+      <div *ngIf="selectedTab === 'trends'" class="trends-tab">
+        <div class="trends-grid">
+          <div class="trend-card" *ngFor="let metric of ['heartRate', 'bloodPressure', 'spO2', 'weight', 'stressLevel', 'generalWellness']">
+            <div class="trend-header">
+              <h4>{{ formatMetricName(metric) }}</h4>
+              <div class="trend-indicator" [class]="getTrendColor(medicalRecords.healthTrends[metric].trend)">
+                <i class="material-icons">{{ getTrendIcon(medicalRecords.healthTrends[metric].trend) }}</i>
+                <span>{{ medicalRecords.healthTrends[metric].trend }}</span>
+              </div>
+            </div>
+            <div class="trend-change">
+              <span class="change-value" [class]="getTrendColor(medicalRecords.healthTrends[metric].trend)">
+                {{ medicalRecords.healthTrends[metric].change > 0 ? '+' : '' }}{{ medicalRecords.healthTrends[metric].change }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Health Scan Modal -->
+<div *ngIf="selectedHealthScan" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Health Scan Details</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="scan-details">
+        <div class="detail-section">
+          <h4>Basic Metrics</h4>
+          <div class="metrics-grid">
+            <div class="metric-item" *ngIf="selectedHealthScan.heartRate">
+              <label>Heart Rate</label>
+              <span>{{ selectedHealthScan.heartRate }} bpm</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.bloodPressure">
+              <label>Blood Pressure</label>
+              <span>{{ selectedHealthScan.bloodPressure }}</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.spO2">
+              <label>SpO2</label>
+              <span>{{ selectedHealthScan.spO2 }}%</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.respiratoryRate">
+              <label>Respiratory Rate</label>
+              <span>{{ selectedHealthScan.respiratoryRate }} breaths/min</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.stressLevel">
+              <label>Stress Level</label>
+              <span>{{ selectedHealthScan.stressLevel }}</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.generalWellness">
+              <label>General Wellness</label>
+              <span>{{ selectedHealthScan.generalWellness }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHealthScan.generalRisk || selectedHealthScan.coronaryHeartDisease || selectedHealthScan.strokeRisk">
+          <h4>Health Risk Assessment</h4>
+          <div class="risk-grid">
+            <div class="risk-item" *ngIf="selectedHealthScan.generalRisk">
+              <label>General Risk</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.generalRisk).color">
+                {{ getRiskLevel(selectedHealthScan.generalRisk).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.generalRisk }}%</span>
+            </div>
+            <div class="risk-item" *ngIf="selectedHealthScan.coronaryHeartDisease">
+              <label>Coronary Heart Disease</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.coronaryHeartDisease).color">
+                {{ getRiskLevel(selectedHealthScan.coronaryHeartDisease).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.coronaryHeartDisease }}%</span>
+            </div>
+            <div class="risk-item" *ngIf="selectedHealthScan.strokeRisk">
+              <label>Stroke Risk</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.strokeRisk).color">
+                {{ getRiskLevel(selectedHealthScan.strokeRisk).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.strokeRisk }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Consultation Details</h4>
+          <div class="consultation-info">
+            <p><strong>Date:</strong> {{ formatDate(selectedHealthScan.consultation.startTime) }}</p>
+            <p><strong>Time:</strong> {{ formatTime(selectedHealthScan.consultation.startTime) }}</p>
+            <p><strong>Doctor:</strong> Dr. {{ selectedHealthScan.consultation.doctor.doctorInfo.firstName }} {{ selectedHealthScan.consultation.doctor.doctorInfo.lastName }}</p>
+            <p><strong>Specialization:</strong> {{ selectedHealthScan.consultation.doctor.doctorInfo.specialization }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Consultation Modal -->
+<div *ngIf="selectedConsultation" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Consultation Details</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="consultation-details">
+        <div class="detail-section">
+          <h4>Appointment Information</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Date</label>
+              <span>{{ formatDate(selectedConsultation.startTime) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Start Time</label>
+              <span>{{ formatTime(selectedConsultation.startTime) }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedConsultation.endTime">
+              <label>End Time</label>
+              <span>{{ formatTime(selectedConsultation.endTime) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Duration</label>
+              <span *ngIf="selectedConsultation.endTime">
+                {{ calculateDuration(selectedConsultation.startTime, selectedConsultation.endTime) }}
+              </span>
+              <span *ngIf="!selectedConsultation.endTime">Ongoing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Doctor Information</h4>
+          <div class="doctor-info">
+            <p><strong>Name:</strong> Dr. {{ selectedConsultation.doctor.doctorInfo.firstName }} {{ selectedConsultation.doctor.doctorInfo.lastName }}</p>
+            <p><strong>Specialization:</strong> {{ selectedConsultation.doctor.doctorInfo.specialization }}</p>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedConsultation.healthScan">
+          <h4>Health Scan</h4>
+          <div class="scan-summary">
+            <p>This consultation included a comprehensive health scan.</p>
+            <button class="view-scan-btn" (click)="viewHealthScan(selectedConsultation.healthScan)">
+              View Scan Details
+            </button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Consultation Link</h4>
+          <div class="consultation-link">
+            <p><strong>Meeting ID:</strong> {{ selectedConsultation.consultationLink }}</p>
+            <button class="copy-link-btn" (click)="copyToClipboard(selectedConsultation.consultationLink)">
+              <i class="material-icons">content_copy</i>
+              Copy Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

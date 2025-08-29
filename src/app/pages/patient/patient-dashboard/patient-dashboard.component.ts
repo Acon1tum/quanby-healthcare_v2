@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService, User } from '../../../auth/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -9,9 +11,11 @@ import { Router } from '@angular/router';
   styleUrl: './patient-dashboard.component.scss',
   standalone: true
 })
-export class PatientDashboardComponent implements OnInit {
+export class PatientDashboardComponent implements OnInit, OnDestroy {
   // Current date for template binding
   currentDate = new Date();
+  currentUser: User | null = null;
+  private userSubscription?: Subscription;
   
   // Mock data for dashboard
   upcomingAppointments = [
@@ -69,10 +73,23 @@ export class PatientDashboardComponent implements OnInit {
     { label: 'Health Records', icon: 'folder', route: '/patient/records' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit(): void {
-    // Initialize dashboard data
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (!user) {
+        this.router.navigate(['/login']);
+        return;
+      }
+      if (user.role !== 'PATIENT') {
+        this.authService.redirectBasedOnRole();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
   }
 
   navigateTo(route: string): void {
@@ -84,6 +101,14 @@ export class PatientDashboardComponent implements OnInit {
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
+  }
+
+  getPatientDisplayName(): string {
+    if (!this.currentUser) return '';
+    if (this.currentUser.role === 'PATIENT' && this.currentUser.patientInfo) {
+      return this.currentUser.patientInfo.fullName || this.currentUser.email;
+    }
+    return this.currentUser.email;
   }
 
   getAppointmentStatus(appointment: any): string {

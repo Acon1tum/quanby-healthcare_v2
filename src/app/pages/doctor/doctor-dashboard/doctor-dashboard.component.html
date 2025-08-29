@@ -3,7 +3,7 @@
   <header class="dashboard-header">
     <div class="header-content">
       <div class="welcome-section">
-        <h1>{{ getGreeting() }}, Dr. Smith</h1>
+        <h1>{{ getGreeting() }}, {{ getDoctorDisplayName() }}</h1>
         <p class="subtitle">Medical Dashboard • {{ currentDate | date:'EEEE, MMMM d, y' }}</p>
       </div>
       <div class="time-display">
@@ -77,11 +77,30 @@
       <div class="content-card">
         <div class="card-header">
           <h3>Upcoming Appointments</h3>
-          <button class="text-button" (click)="navigateTo('/doctor/schedule')">
-            View All
-          </button>
+          <div class="header-actions">
+            <button 
+              class="refresh-button" 
+              (click)="refreshAppointments()"
+              [disabled]="isLoadingAppointments"
+              title="Refresh appointments"
+            >
+              <i class="material-icons" [class.rotating]="isLoadingAppointments">
+                {{ isLoadingAppointments ? 'refresh' : 'refresh' }}
+              </i>
+            </button>
+            <button class="text-button" (click)="navigateTo('/doctor/schedule')">
+              View All
+            </button>
+          </div>
         </div>
         <div class="appointments-list">
+          <!-- Loading State -->
+          <div class="loading-state" *ngIf="isLoadingAppointments">
+            <i class="material-icons rotating">refresh</i>
+            <p>Loading appointments...</p>
+          </div>
+          
+          <!-- Appointments List -->
           <div 
             *ngFor="let appointment of upcomingAppointments" 
             class="appointment-item"
@@ -94,7 +113,9 @@
               <div class="patient-name">{{ appointment.patientName }}</div>
               <div class="appointment-meta">
                 <span class="specialty">{{ appointment.specialty }}</span>
-                <span class="type">{{ appointment.type }}</span>
+                <span class="type appointment-type-{{ appointment.type.toLowerCase().replace(' ', '-') }}">
+                  {{ appointment.type }}
+                </span>
               </div>
             </div>
             <div class="appointment-actions">
@@ -109,9 +130,11 @@
               </button>
             </div>
           </div>
-          <div class="empty-state" *ngIf="upcomingAppointments.length === 0">
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoadingAppointments && upcomingAppointments.length === 0">
             <i class="material-icons">event_busy</i>
-            <p>No upcoming appointments</p>
+            <p>No upcoming virtual appointments</p>
+            <small class="empty-state-note">Only showing confirmed video and phone consultations</small>
             <button class="secondary-button" (click)="navigateTo('/doctor/schedule')">
               View Schedule
             </button>

@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService, User } from '../../../auth/auth.service';
+import { AppointmentsService, Appointment } from '../../../services/appointments.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-doctor-dashboard',
@@ -9,40 +12,16 @@ import { Router } from '@angular/router';
   styleUrl: './doctor-dashboard.component.scss',
   standalone: true
 })
-export class DoctorDashboardComponent implements OnInit {
+export class DoctorDashboardComponent implements OnInit, OnDestroy {
   // Current date for template binding
   currentDate = new Date();
+  currentUser: User | null = null;
+  private userSubscription?: Subscription;
+  private appointmentsSubscription?: Subscription;
   
-  // Mock data for dashboard
-  upcomingAppointments = [
-    {
-      id: 1,
-      patientName: 'John Smith',
-      specialty: 'Cardiology',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      type: 'Video Consultation',
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      patientName: 'Sarah Johnson',
-      specialty: 'Dermatology',
-      date: '2024-01-15',
-      time: '2:30 PM',
-      type: 'In-Person',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      patientName: 'Mike Wilson',
-      specialty: 'General Medicine',
-      date: '2024-01-16',
-      time: '9:00 AM',
-      type: 'Video Consultation',
-      status: 'confirmed'
-    }
-  ];
+  // Real appointment data from service
+  upcomingAppointments: Appointment[] = [];
+  isLoadingAppointments = false;
 
   patientStats = {
     totalPatients: 156,
@@ -103,10 +82,58 @@ export class DoctorDashboardComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router, 
+    private authService: AuthService,
+    private appointmentsService: AppointmentsService
+  ) {}
 
   ngOnInit(): void {
-    // Initialize dashboard data
+    // Subscribe to current user and guard access by role
+    this.userSubscription = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (!user) {
+        this.router.navigate(['/login']);
+        return;
+      }
+      if (user.role !== 'DOCTOR') {
+        this.authService.redirectBasedOnRole();
+      } else {
+        // Load appointments for the logged-in doctor
+        this.loadDoctorAppointments();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
+    this.appointmentsSubscription?.unsubscribe();
+  }
+
+  loadDoctorAppointments(): void {
+    if (!this.currentUser?.id) return;
+    
+    this.isLoadingAppointments = true;
+    this.appointmentsSubscription = this.appointmentsService
+      .getUpcomingAppointments(this.currentUser.id)
+      .subscribe({
+        next: (appointments) => {
+          this.upcomingAppointments = appointments;
+          this.isLoadingAppointments = false;
+          console.log('Loaded appointments:', appointments);
+        },
+        error: (error) => {
+          console.error('Error loading appointments:', error);
+          this.isLoadingAppointments = false;
+          // Fallback to empty array on error
+          this.upcomingAppointments = [];
+        }
+      });
+  }
+
+  // Method to refresh appointments (can be called manually or on certain events)
+  refreshAppointments(): void {
+    this.loadDoctorAppointments();
   }
 
   navigateTo(route: string): void {
@@ -120,7 +147,18 @@ export class DoctorDashboardComponent implements OnInit {
     return 'Good Evening';
   }
 
-  getAppointmentStatus(appointment: any): string {
+  getDoctorDisplayName(): string {
+    if (!this.currentUser) return 'Doctor';
+    if (this.currentUser.role === 'DOCTOR' && this.currentUser.doctorInfo) {
+      const first = this.currentUser.doctorInfo.firstName || '';
+      const last = this.currentUser.doctorInfo.lastName || '';
+      const full = `${first} ${last}`.trim();
+      return full ? `Dr. ${full}` : 'Doctor';
+    }
+    return 'Doctor';
+  }
+
+  getAppointmentStatus(appointment: Appointment): string {
     const today = new Date();
     const appointmentDate = new Date(appointment.date);
     if (appointmentDate < today) return 'past';
