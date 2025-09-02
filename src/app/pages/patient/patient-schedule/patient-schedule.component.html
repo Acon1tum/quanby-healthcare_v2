@@ -1,5 +1,8 @@
 <div class="schedule-page">
-  <h2>My Appointments</h2>
+  <div class="top-actions">
+    <h2>My Appointments</h2>
+    <button class="btn btn-ghost" (click)="openNewAppointmentModal()">Request New Appointment</button>
+  </div>
   
   <div class="card">
     <table class="appointments-table">
@@ -65,6 +68,105 @@
     <div class="legend-item">
       <div class="legend-color appt"></div>
       <span>Appointments</span>
+    </div>
+  </div>
+
+  <!-- Reschedule Modal -->
+  <div class="modal-backdrop" *ngIf="showRescheduleModal" (click)="closeRescheduleModal()"></div>
+  <div class="modal" *ngIf="showRescheduleModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Request Reschedule</h3>
+      <button class="btn btn-ghost" (click)="closeRescheduleModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>New date</label>
+      <input type="date" [(ngModel)]="rescheduleDate" />
+      <label>New time</label>
+      <input type="time" [(ngModel)]="rescheduleTime" />
+      <label>Reason</label>
+      <textarea [(ngModel)]="rescheduleReason" rows="3"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeRescheduleModal()">Cancel</button>
+      <button class="btn btn-accept" [disabled]="!rescheduleDate || !rescheduleTime || !rescheduleReason.trim()" (click)="submitReschedule()">Submit</button>
+    </div>
+  </div>
+
+  <!-- Cancel Modal -->
+  <div class="modal-backdrop" *ngIf="showCancelModal" (click)="closeCancelModal()"></div>
+  <div class="modal" *ngIf="showCancelModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Cancel Appointment</h3>
+      <button class="btn btn-ghost" (click)="closeCancelModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>Reason (optional)</label>
+      <textarea [(ngModel)]="cancelReason" rows="3"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeCancelModal()">Close</button>
+      <button class="btn btn-cancel" (click)="submitCancel()">Cancel Appointment</button>
+    </div>
+  </div>
+
+  <!-- New Appointment Modal -->
+  <div class="modal-backdrop" *ngIf="showNewAppointmentModal" (click)="closeNewAppointmentModal()"></div>
+  <div class="modal" *ngIf="showNewAppointmentModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Request New Appointment</h3>
+      <button class="btn btn-ghost" (click)="closeNewAppointmentModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>Select Doctor</label>
+      <select [(ngModel)]="newApptDoctorId" (change)="onDoctorSelected()">
+        <option value="">Choose a doctor...</option>
+        <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+          {{ doctor.name }} - {{ doctor.specialization }}
+        </option>
+      </select>
+      <label>Date</label>
+      <input 
+        type="date" 
+        [(ngModel)]="newApptDate" 
+        [min]="getMinDate()"
+        [max]="getMaxDate()"
+        (change)="onDateSelected()"
+        [class.invalid-date]="newApptDate && !isDateAvailable(newApptDate)"
+      />
+      <small *ngIf="newApptDate && !isDateAvailable(newApptDate)" class="error-text">
+        Doctor is not available on this date
+      </small>
+      <label>Time</label>
+      <input type="time" [(ngModel)]="newApptTime" />
+      <label>Reason</label>
+      <textarea [(ngModel)]="newApptReason" rows="3"></textarea>
+      <label>Priority</label>
+      <select [(ngModel)]="newApptPriority">
+        <option value="NORMAL">Normal</option>
+        <option value="LOW">Low</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeNewAppointmentModal()">Cancel</button>
+      <button class="btn btn-accept" [disabled]="!newApptDoctorId || !newApptDate || !newApptTime || !newApptReason.trim() || (newApptDate && !isDateAvailable(newApptDate))" (click)="submitNewAppointment()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div *ngIf="showErrorModal" class="modal-backdrop" (click)="closeErrorModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Notification</h3>
+      <button class="btn btn-ghost" (click)="closeErrorModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ errorMessage }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-accept" (click)="closeErrorModal()">OK</button>
     </div>
   </div>
 </div>

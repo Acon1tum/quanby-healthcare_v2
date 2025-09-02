@@ -1,6 +1,12 @@
 <div class="schedule-page">
-  <h2>Schedule Requests</h2>
-  <div class="card">
+  <div class="top-actions">
+    <button class="btn btn-ghost" (click)="openAvailabilityModal()">Manage Weekly Availability</button>
+  </div>
+  <h2>All Appointments</h2>
+  
+  <!-- Pending Appointments -->
+  <div class="card" *ngIf="getPendingRequests().length > 0">
+    <h3>Pending Requests</h3>
     <table class="requests-table">
       <thead>
         <tr>
@@ -15,7 +21,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of requests">
+        <tr *ngFor="let r of getPendingRequests()">
           <td>{{ r.id }}</td>
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
@@ -27,9 +33,44 @@
           </td>
           <td>
             <div class="row-actions">
-              <button class="btn btn-accept" (click)="accept(r)" [disabled]="r.status!=='pending'">Accept</button>
-              <button class="btn btn-reject" (click)="reject(r)" [disabled]="r.status!=='pending'">Reject</button>
+              <button class="btn btn-accept" (click)="accept(r)">Accept</button>
+              <button class="btn btn-reject" (click)="reject(r)">Reject</button>
             </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Confirmed Appointments -->
+  <div class="card" *ngIf="getConfirmedRequests().length > 0">
+    <h3>Confirmed Appointments</h3>
+    <table class="requests-table">
+      <thead>
+        <tr>
+          <th>Request ID</th>
+          <th>Patient</th>
+          <th>Reason</th>
+          <th>Requested</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of getConfirmedRequests()">
+          <td>{{ r.id }}</td>
+          <td>{{ r.patient }}</td>
+          <td>{{ r.reason }}</td>
+          <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ r.end | date:'MMM d, y, h:mm a' }}</td>
+          <td>
+            <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
+          </td>
+          <td>
+            <span class="confirmed-text">✓ Confirmed</span>
           </td>
         </tr>
       </tbody>
@@ -52,6 +93,93 @@
           <span class="num">{{ c.date.getDate() }}</span>
         </div>
       </ng-container>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="showAvailabilityModal" (click)="closeAvailabilityModal()"></div>
+  <div class="modal" *ngIf="showAvailabilityModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Weekly Availability</h3>
+      <button class="btn btn-ghost" (click)="closeAvailabilityModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="availability-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Available</th>
+            <th>Start</th>
+            <th>End</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of days">
+            <td>{{ d.dayOfWeek }}</td>
+            <td>
+              <input type="checkbox" [(ngModel)]="d.isAvailable" />
+              <span *ngIf="d.hasExistingAppointments" class="warning-text">
+                ({{ d.existingAppointments?.length }} appointments)
+              </span>
+            </td>
+            <td>
+              <input type="time" [(ngModel)]="d.startTime" [disabled]="!d.isAvailable" />
+            </td>
+            <td>
+              <input type="time" [(ngModel)]="d.endTime" [disabled]="!d.isAvailable" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div *ngIf="conflictError" class="conflict-warning">
+      <h4>Cannot Update Availability</h4>
+      <p>{{ conflictError.message }}</p>
+      <ul>
+        <li *ngFor="let conflict of conflictError.conflicts">{{ conflict }}</li>
+      </ul>
+      <p>You can request reschedule for affected appointments:</p>
+      <div class="conflict-actions">
+        <button *ngFor="let conflict of conflictError.conflicts" 
+                class="btn btn-ghost" 
+                (click)="requestRescheduleForDay(conflict.split(' ')[0])">
+          Reschedule {{ conflict.split(' ')[0] }}
+        </button>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAvailabilityModal()">Cancel</button>
+      <button class="btn btn-accept" [disabled]="saving || conflictError" (click)="saveAvailability()">{{ saving ? 'Saving…' : 'Save' }}</button>
+    </div>
+  </div>
+
+  <!-- Reschedule Modal -->
+  <div class="modal-backdrop" *ngIf="showRescheduleModal" (click)="closeRescheduleModal()"></div>
+  <div class="modal" *ngIf="showRescheduleModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Request Reschedule for {{ conflictDay }}</h3>
+      <button class="btn btn-ghost" (click)="closeRescheduleModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>This will send reschedule requests to all patients with appointments on {{ conflictDay }}.</p>
+      <label>Reason for reschedule:</label>
+      <textarea [(ngModel)]="rescheduleReason" placeholder="Please provide a reason for the reschedule request..." rows="3"></textarea>
+
+      <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Proposed new date (optional)</label>
+          <input type="date" [(ngModel)]="rescheduleNewDate" />
+        </div>
+        <div>
+          <label>Proposed new time (optional)</label>
+          <input type="time" [(ngModel)]="rescheduleNewTime" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeRescheduleModal()">Cancel</button>
+      <button class="btn btn-accept" [disabled]="!rescheduleReason.trim()" (click)="submitReschedule()">Send Reschedule Requests</button>
     </div>
   </div>
 </div>

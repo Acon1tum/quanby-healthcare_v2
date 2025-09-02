@@ -80,4 +80,70 @@ export class AppointmentsService {
       })
     );
   }
+
+  // Doctor weekly availability APIs
+  getMyAvailability(): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${this.API_URL}/appointments/my/availability`, { headers });
+  }
+
+  updateMyAvailability(days: Array<{ dayOfWeek: string; isAvailable: boolean; startTime?: string; endTime?: string; }>): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.put(`${this.API_URL}/appointments/my/availability`, { days }, { headers });
+  }
+
+  requestRescheduleForDay(dayOfWeek: string, reason: string, newDate?: string, newTime?: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.API_URL}/appointments/my/reschedule-day`, { dayOfWeek, reason, newDate, newTime }, { headers });
+  }
+
+  // Authenticated doctor's appointments
+  getMyAppointments(params?: { status?: string; page?: number; limit?: number }): Observable<any> {
+    const headers = this.getAuthHeaders();
+    const query = new URLSearchParams();
+    if (params?.status) query.append('status', params.status);
+    if (params?.page) query.append('page', String(params.page));
+    if (params?.limit) query.append('limit', String(params.limit));
+    const qs = query.toString();
+    return this.http.get(`${this.API_URL}/appointments/my-appointments${qs ? `?${qs}` : ''}`, { headers });
+  }
+
+  updateAppointmentStatus(appointmentId: number, status: 'CONFIRMED' | 'REJECTED' | 'CANCELLED', notes?: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch(`${this.API_URL}/appointments/${appointmentId}/status`, { status, notes }, { headers });
+  }
+
+  // Patient actions
+  cancelMyAppointment(appointmentId: number, reason?: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch(`${this.API_URL}/appointments/${appointmentId}/cancel`, { reason }, { headers });
+  }
+
+  requestReschedule(appointmentId: number, newDate: string, newTime: string, reason: string, notes?: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.API_URL}/appointments/${appointmentId}/reschedule`, { newDate, newTime, reason, notes }, { headers });
+  }
+
+  createAppointmentRequest(payload: {
+    patientId: number;
+    doctorId: number;
+    requestedDate: string; // YYYY-MM-DD
+    requestedTime: string; // HH:mm
+    reason: string;
+    priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+    notes?: string;
+  }): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.API_URL}/appointments/request`, payload, { headers });
+  }
+
+  getAvailableDoctors(): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${this.API_URL}/appointments/doctors`, { headers });
+  }
+
+  getDoctorAvailability(doctorId: number): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${this.API_URL}/appointments/doctor/${doctorId}/availability`, { headers });
+  }
 }
