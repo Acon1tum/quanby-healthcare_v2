@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -54,10 +54,29 @@ interface PatientProfile {
   standalone: true
 })
 export class PatientMyProfileComponent implements OnInit {
+  @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('idFileInput') idFileInput!: ElementRef<HTMLInputElement>;
+
   profile!: PatientProfile;
   isEditing = false;
   selectedImage: File | null = null;
   age: number = 0;
+
+  // Verification modal properties
+  showVerificationModal = false;
+  philhealthIdFile: File | null = null;
+  capturedSelfie: string | null = null;
+  isCapturing = false;
+  mediaStream: MediaStream | null = null;
+  isSubmittingVerification = false;
+
+  // Liveness check modal properties
+  showLivenessModal = false;
+  isLivenessCheckActive = false;
+  currentFlashColor = '';
+  flashSequence = ['blue', 'green', 'red', 'yellow'];
+  currentFlashIndex = 0;
+  livenessCheckComplete = false;
 
   // Form groups
   profileForm!: FormGroup;
@@ -190,8 +209,8 @@ export class PatientMyProfileComponent implements OnInit {
         height: p.height || 0,
         bloodType: p.bloodType || '',
         medicalHistory: p.medicalHistory || '',
-        allergies: p.allergies || [],
-        medications: p.medications || [],
+        allergies: Array.isArray(p.allergies) ? p.allergies : (p.allergies ? [p.allergies] : []),
+        medications: Array.isArray(p.medications) ? p.medications : (p.medications ? [p.medications] : []),
         profileImage: undefined
       },
       emergencyContact: p.emergencyContact ? {
@@ -353,5 +372,242 @@ export class PatientMyProfileComponent implements OnInit {
 
   get fullName(): string {
     return this.profile.personalInfo.fullName;
+  }
+
+  // Verification Modal Methods
+  openVerificationModal(): void {
+    this.showVerificationModal = true;
+    this.resetVerificationData();
+  }
+
+  closeVerificationModal(event?: Event): void {
+    if (event && event.target !== event.currentTarget) {
+      return;
+    }
+    this.showVerificationModal = false;
+    this.stopCamera();
+    this.resetVerificationData();
+  }
+
+  resetVerificationData(): void {
+    this.philhealthIdFile = null;
+    this.capturedSelfie = null;
+    this.isCapturing = false;
+    this.isSubmittingVerification = false;
+    this.showLivenessModal = false;
+    this.isLivenessCheckActive = false;
+    this.currentFlashColor = '';
+    this.currentFlashIndex = 0;
+    this.livenessCheckComplete = false;
+  }
+
+  // PhilHealth ID Upload Methods
+  triggerIdUpload(): void {
+    this.idFileInput.nativeElement.click();
+  }
+
+  onPhilhealthIdSelect(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        this.idFileInput.nativeElement.value = '';
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a JPG, PNG, or PDF file');
+        this.idFileInput.nativeElement.value = '';
+        return;
+      }
+      
+      // Process the file
+      this.philhealthIdFile = file;
+      console.log('PhilHealth ID uploaded:', {
+        name: file.name,
+        size: this.formatFileSize(file.size),
+        type: file.type
+      });
+      
+      // Show success message
+      console.log('PhilHealth ID file uploaded successfully!');
+    }
+  }
+
+  removePhilhealthId(event: Event): void {
+    event.stopPropagation();
+    this.philhealthIdFile = null;
+    this.idFileInput.nativeElement.value = '';
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Liveness Check Methods
+  openLivenessModal(): void {
+    this.showLivenessModal = true;
+    this.startLivenessCheck();
+  }
+
+  closeLivenessModal(event?: Event): void {
+    if (event && event.target !== event.currentTarget) {
+      return;
+    }
+    this.showLivenessModal = false;
+    this.stopLivenessCheck();
+  }
+
+  async startLivenessCheck(): Promise<void> {
+    try {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        } 
+      });
+      
+      if (this.videoElement) {
+        this.videoElement.nativeElement.srcObject = this.mediaStream;
+        this.isLivenessCheckActive = true;
+        this.startFlashSequence();
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert('Unable to access camera. Please check your permissions.');
+      this.closeLivenessModal();
+    }
+  }
+
+  stopLivenessCheck(): void {
+    this.isLivenessCheckActive = false;
+    this.currentFlashColor = '';
+    this.currentFlashIndex = 0;
+    this.stopCamera();
+  }
+
+  startFlashSequence(): void {
+    if (!this.isLivenessCheckActive) return;
+
+    const flashDuration = 1000; // 1 second per color
+    const totalDuration = this.flashSequence.length * flashDuration;
+
+    // Start the flash sequence
+    this.flashNextColor();
+
+    // Complete liveness check after all colors
+    setTimeout(() => {
+      if (this.isLivenessCheckActive) {
+        this.completeLivenessCheck();
+      }
+    }, totalDuration);
+  }
+
+  flashNextColor(): void {
+    if (!this.isLivenessCheckActive || this.currentFlashIndex >= this.flashSequence.length) {
+      return;
+    }
+
+    this.currentFlashColor = this.flashSequence[this.currentFlashIndex];
+    console.log(`Flashing ${this.currentFlashColor}`);
+
+    // Move to next color after 1 second
+    setTimeout(() => {
+      this.currentFlashIndex++;
+      if (this.currentFlashIndex < this.flashSequence.length) {
+        this.flashNextColor();
+      }
+    }, 1000);
+  }
+
+  completeLivenessCheck(): void {
+    this.livenessCheckComplete = true;
+    this.isLivenessCheckActive = false;
+    this.currentFlashColor = '';
+    console.log('Liveness check completed successfully!');
+  }
+
+  captureLivenessSelfie(): void {
+    if (!this.videoElement || !this.livenessCheckComplete) return;
+    
+    const canvas = document.createElement('canvas');
+    const video = this.videoElement.nativeElement;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      this.capturedSelfie = canvas.toDataURL('image/jpeg', 0.8);
+      this.stopLivenessCheck();
+      this.closeLivenessModal();
+      
+      console.log('Liveness selfie captured successfully!', {
+        width: canvas.width,
+        height: canvas.height,
+        dataSize: this.capturedSelfie.length
+      });
+    }
+  }
+
+  stopCamera(): void {
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream = null;
+    }
+    this.isCapturing = false;
+  }
+
+
+
+  // Verification Submission
+  canSubmitVerification(): boolean {
+    return !!(this.philhealthIdFile && this.capturedSelfie);
+  }
+
+  submitVerification(): void {
+    if (!this.canSubmitVerification()) {
+      alert('Please upload both PhilHealth ID and take a selfie before submitting.');
+      return;
+    }
+
+    this.isSubmittingVerification = true;
+
+    // Prepare verification data
+    const verificationData = {
+      philhealthId: {
+        name: this.philhealthIdFile?.name,
+        size: this.philhealthIdFile?.size,
+        type: this.philhealthIdFile?.type,
+        lastModified: this.philhealthIdFile?.lastModified
+      },
+      selfie: {
+        dataSize: this.capturedSelfie?.length,
+        captured: true
+      },
+      timestamp: new Date().toISOString(),
+      userId: this.profile.personalInfo.email
+    };
+
+    console.log('Submitting verification:', verificationData);
+    
+    // Simulate API call with loading state
+    console.log('Uploading verification data...');
+    
+    // Simulate processing time
+    setTimeout(() => {
+      console.log('Verification data uploaded successfully!');
+      this.isSubmittingVerification = false;
+      alert('Verification submitted successfully! Your identity will be reviewed and verified within 24-48 hours.');
+      this.closeVerificationModal();
+    }, 2000);
   }
 }

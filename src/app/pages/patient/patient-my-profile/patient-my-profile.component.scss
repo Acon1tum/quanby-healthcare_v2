@@ -5,6 +5,21 @@
   margin: 0;
   background: #f8fafc;
   min-height: 100vh;
+  transition: all 0.3s ease;
+
+  &.modal-open {
+    .profile-header {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+      z-index: 1;
+      position: relative;
+    }
+
+    .profile-content {
+      filter: blur(2px);
+      opacity: 0.7;
+    }
+  }
   
   // Reduce top spacing
   .header-spacer {
@@ -17,6 +32,7 @@
     padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 
     .header-content {
       display: flex;
@@ -68,6 +84,7 @@
         display: flex;
         gap: 0.75rem;
 
+        .verify-btn,
         .edit-btn,
         .cancel-btn,
         .save-btn {
@@ -81,6 +98,16 @@
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
+        }
+
+        .verify-btn {
+          background: #8b5cf6;
+          color: white;
+
+          &:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+          }
         }
 
         .edit-btn {
@@ -119,6 +146,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    transition: all 0.3s ease;
 
     .profile-section {
       background: white;
@@ -521,6 +549,7 @@
         }
 
         .header-actions {
+          .verify-btn,
           .edit-btn,
           .cancel-btn,
           .save-btn {
@@ -564,6 +593,834 @@
           
           .list-section {
             margin-bottom: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Verification Modal Styles
+.verification-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+
+  .verification-modal {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalSlideIn 0.3s ease-out;
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+
+      h2 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .close-btn {
+        background: #f3f4f6;
+        border: none;
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #e5e7eb;
+        }
+
+        i {
+          color: #6b7280;
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+
+      .modal-description {
+        margin: 0 0 2rem 0;
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        text-align: center;
+      }
+
+      .upload-section,
+      .selfie-section {
+        margin-bottom: 2rem;
+
+        h3 {
+          margin: 0 0 1rem 0;
+          color: #1e293b;
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+      }
+
+      // PhilHealth ID Upload Styles
+      .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f9fafb;
+
+        &:hover {
+          border-color: #3b82f6;
+          background: #f0f9ff;
+        }
+
+        &.has-file {
+          border-color: #10b981;
+          background: #f0fdf4;
+        }
+
+        .file-input {
+          display: none;
+        }
+
+        .upload-placeholder {
+          i {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+          }
+
+          p {
+            margin: 0 0 0.5rem 0;
+            color: #374151;
+            font-size: 1rem;
+            font-weight: 500;
+          }
+
+          span {
+            color: #6b7280;
+            font-size: 0.875rem;
+          }
+        }
+
+        .uploaded-file {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          background: white;
+          padding: 1rem;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+
+          i {
+            font-size: 2rem;
+            color: #10b981;
+          }
+
+          .file-info {
+            flex: 1;
+            text-align: left;
+
+            .file-name {
+              margin: 0 0 0.25rem 0;
+              color: #1e293b;
+              font-weight: 500;
+              font-size: 0.875rem;
+            }
+
+            .file-size {
+              margin: 0;
+              color: #6b7280;
+              font-size: 0.75rem;
+            }
+          }
+
+          .remove-file-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+              background: #dc2626;
+            }
+
+            i {
+              font-size: 1rem;
+              color: white;
+            }
+          }
+        }
+      }
+
+      // Selfie Capture Styles
+      .camera-container {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        background: #f9fafb;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .camera-placeholder {
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            color: #3b82f6;
+          }
+
+          i {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+          }
+
+          p {
+            margin: 0 0 0.5rem 0;
+            color: #374151;
+            font-size: 1rem;
+            font-weight: 500;
+          }
+
+          span {
+            color: #6b7280;
+            font-size: 0.875rem;
+          }
+        }
+
+        .camera-preview {
+          position: relative;
+          width: 100%;
+
+          .camera-video {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 8px;
+            background: #000;
+          }
+
+          .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+
+            .capture-btn,
+            .cancel-capture-btn {
+              width: 60px;
+              height: 60px;
+              border-radius: 50%;
+              border: none;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              transition: all 0.2s ease;
+
+              i {
+                font-size: 1.5rem;
+              }
+            }
+
+            .capture-btn {
+              background: #10b981;
+              color: white;
+
+              &:hover {
+                background: #059669;
+                transform: scale(1.1);
+              }
+            }
+
+            .cancel-capture-btn {
+              background: #ef4444;
+              color: white;
+
+              &:hover {
+                background: #dc2626;
+                transform: scale(1.1);
+              }
+            }
+          }
+        }
+
+        .captured-image {
+          .selfie-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+          }
+
+          .image-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+
+            .retake-btn {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              padding: 0.75rem 1rem;
+              border: none;
+              border-radius: 8px;
+              font-size: 0.875rem;
+              font-weight: 500;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              background: #f3f4f6;
+              color: #374151;
+
+              &:hover {
+                background: #e5e7eb;
+              }
+            }
+
+            .verification-badge {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              padding: 0.5rem 1rem;
+              background: #10b981;
+              color: white;
+              border-radius: 20px;
+              font-size: 0.875rem;
+              font-weight: 500;
+
+              i {
+                font-size: 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      background: #f9fafb;
+
+      .cancel-modal-btn,
+      .submit-verification-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .cancel-modal-btn {
+        background: #f3f4f6;
+        color: #374151;
+
+        &:hover {
+          background: #e5e7eb;
+        }
+      }
+
+      .submit-verification-btn {
+        background: #8b5cf6;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #7c3aed;
+          transform: translateY(-1px);
+        }
+
+        &:disabled {
+          background: #d1d5db;
+          color: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        .material-icons {
+          &.hourglass_empty {
+            animation: spin 1s linear infinite;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive Modal Styles
+@media (max-width: 768px) {
+  .verification-modal-overlay {
+    padding: 0.5rem;
+
+    .verification-modal {
+      max-height: 95vh;
+
+      .modal-header {
+        padding: 1rem;
+
+        h2 {
+          font-size: 1.25rem;
+        }
+      }
+
+      .modal-content {
+        padding: 1rem;
+
+        .upload-area,
+        .camera-container {
+          padding: 1rem;
+          min-height: 200px;
+        }
+
+        .camera-container {
+          .camera-preview {
+            .camera-video {
+              max-width: 100%;
+            }
+
+            .camera-controls {
+              .capture-btn,
+              .cancel-capture-btn {
+                width: 50px;
+                height: 50px;
+
+                i {
+                  font-size: 1.25rem;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+
+        .cancel-modal-btn,
+        .submit-verification-btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+// Liveness Check Modal Styles
+.liveness-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+
+  .liveness-modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: livenessModalSlideIn 0.4s ease-out;
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px 20px 0 0;
+
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        i {
+          color: white;
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+
+      .liveness-instructions {
+        text-align: center;
+        margin-bottom: 2rem;
+
+        h3 {
+          margin: 0 0 0.5rem 0;
+          color: #1e293b;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 0;
+          color: #6b7280;
+          font-size: 0.875rem;
+          line-height: 1.5;
+        }
+      }
+
+      .camera-container {
+        .camera-preview {
+          position: relative;
+          width: 100%;
+          max-width: 400px;
+          margin: 0 auto;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #000;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+          .camera-video {
+            width: 100%;
+            height: auto;
+            display: block;
+          }
+
+          .color-flash-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.7;
+            animation: colorFlash 1s ease-in-out;
+
+            &.flash-blue {
+              background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            }
+
+            &.flash-green {
+              background: linear-gradient(45deg, #10b981, #047857);
+            }
+
+            &.flash-red {
+              background: linear-gradient(45deg, #ef4444, #dc2626);
+            }
+
+            &.flash-yellow {
+              background: linear-gradient(45deg, #f59e0b, #d97706);
+            }
+          }
+
+          .progress-indicator {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+
+            .progress-bar {
+              width: 100%;
+              height: 6px;
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 3px;
+              overflow: hidden;
+              margin-bottom: 0.5rem;
+
+              .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #3b82f6, #10b981);
+                border-radius: 3px;
+                transition: width 1s ease;
+              }
+            }
+
+            .progress-text {
+              margin: 0;
+              font-size: 0.875rem;
+              font-weight: 500;
+              text-align: center;
+            }
+          }
+
+          .completion-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(16, 185, 129, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            animation: completionSlideIn 0.5s ease-out;
+
+            i {
+              font-size: 4rem;
+              margin-bottom: 1rem;
+              animation: checkBounce 0.6s ease-out 0.3s both;
+            }
+
+            h3 {
+              margin: 0 0 0.5rem 0;
+              font-size: 1.5rem;
+              font-weight: 600;
+            }
+
+            p {
+              margin: 0;
+              font-size: 1rem;
+              opacity: 0.9;
+            }
+          }
+        }
+
+        .camera-controls {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+          margin-top: 1.5rem;
+
+          .cancel-btn,
+          .capture-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 120px;
+            justify-content: center;
+          }
+
+          .cancel-btn {
+            background: #f3f4f6;
+            color: #374151;
+
+            &:hover {
+              background: #e5e7eb;
+            }
+          }
+
+          .capture-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Liveness Modal Animations
+@keyframes livenessModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes colorFlash {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes completionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes checkBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Responsive Liveness Modal
+@media (max-width: 768px) {
+  .liveness-modal-overlay {
+    padding: 0.5rem;
+
+    .liveness-modal {
+      max-height: 95vh;
+
+      .modal-header {
+        padding: 1rem;
+
+        h2 {
+          font-size: 1.25rem;
+        }
+      }
+
+      .modal-content {
+        padding: 1rem;
+
+        .camera-container {
+          .camera-preview {
+            max-width: 100%;
+
+            .progress-indicator {
+              bottom: 0.5rem;
+              left: 0.5rem;
+              right: 0.5rem;
+              padding: 0.75rem;
+            }
+
+            .completion-message {
+              i {
+                font-size: 3rem;
+              }
+
+              h3 {
+                font-size: 1.25rem;
+              }
+
+              p {
+                font-size: 0.875rem;
+              }
+            }
+          }
+
+          .camera-controls {
+            flex-direction: column;
+            gap: 0.75rem;
+
+            .cancel-btn,
+            .capture-btn {
+              width: 100%;
+            }
           }
         }
       }

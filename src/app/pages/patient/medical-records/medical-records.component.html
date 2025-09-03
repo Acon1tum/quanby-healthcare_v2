@@ -83,6 +83,16 @@
           <div class="card-label">Last Health Scan</div>
         </div>
       </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">medical_information</i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ medicalRecords.summary.totalMedicalRecords }}</div>
+          <div class="card-label">Medical Records</div>
+        </div>
+      </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -110,6 +120,14 @@
       >
         <i class="material-icons">event</i>
         Consultations
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="selectedTab === 'medical-history'"
+        (click)="selectTab('medical-history')"
+      >
+        <i class="material-icons">medical_information</i>
+        Medical History
       </button>
       <button 
         class="tab-btn" 
@@ -172,15 +190,15 @@
               <div class="info-item">
                 <label>Allergies</label>
                 <div class="tags">
-                  <span *ngFor="let allergy of medicalRecords.patientInfo.allergies" class="tag">{{ allergy }}</span>
-                  <span *ngIf="!medicalRecords.patientInfo.allergies?.length" class="no-data">No allergies recorded</span>
+                  <span *ngFor="let allergy of parseStringArray(medicalRecords.patientInfo.allergies)" class="tag">{{ allergy }}</span>
+                  <span *ngIf="!parseStringArray(medicalRecords.patientInfo.allergies)?.length" class="no-data">No allergies recorded</span>
                 </div>
               </div>
               <div class="info-item">
                 <label>Current Medications</label>
                 <div class="tags">
-                  <span *ngFor="let medication of medicalRecords.patientInfo.medications" class="tag">{{ medication }}</span>
-                  <span *ngIf="!medicalRecords.patientInfo.medications?.length" class="no-data">No medications recorded</span>
+                  <span *ngFor="let medication of parseStringArray(medicalRecords.patientInfo.medications)" class="tag">{{ medication }}</span>
+                  <span *ngIf="!parseStringArray(medicalRecords.patientInfo.medications)?.length" class="no-data">No medications recorded</span>
                 </div>
               </div>
             </div>
@@ -308,6 +326,53 @@
         </div>
       </div>
 
+      <!-- Medical History Tab -->
+      <div *ngIf="selectedTab === 'medical-history'" class="medical-history-tab">
+        <div class="medical-history-list">
+          <div *ngFor="let record of medicalRecords.medicalHistory" class="medical-record-card" (click)="viewMedicalRecord(record)">
+            <div class="record-header">
+              <div class="record-type">
+                <div class="type-icon" [class]="'type-' + getRecordTypeColor(record.recordType)">
+                  <i class="material-icons">{{ getRecordTypeIcon(record.recordType) }}</i>
+                </div>
+                <div class="type-info">
+                  <div class="type-name">{{ formatRecordType(record.recordType) }}</div>
+                  <div class="record-title">{{ record.title }}</div>
+                </div>
+              </div>
+              <div class="record-meta">
+                <div class="privacy-badge" [class]="'privacy-' + getPrivacyColor(record.isPublic, record.isSensitive)">
+                  <i class="material-icons">{{ getPrivacyIcon(record.isPublic, record.isSensitive) }}</i>
+                  <span>{{ getPrivacyText(record.isPublic, record.isSensitive) }}</span>
+                </div>
+                <div class="record-date">{{ formatDate(record.createdAt) }}</div>
+              </div>
+            </div>
+            
+            <div class="record-content">
+              <p class="record-preview">{{ getContentPreview(record.content, record.recordType) }}</p>
+            </div>
+            
+            <div class="record-footer">
+              <div class="creator-info">
+                <span class="creator-label">Created by:</span>
+                <span class="creator-name">
+                  {{ record.creator.doctorInfo ? 'Dr. ' + record.creator.doctorInfo.firstName + ' ' + record.creator.doctorInfo.lastName : record.creator.email }}
+                </span>
+              </div>
+              <div class="record-actions">
+                <i class="material-icons">visibility</i>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="!medicalRecords.medicalHistory?.length" class="empty-state">
+            <i class="material-icons">medical_information</i>
+            <p>No medical history records available</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Health Trends Tab -->
       <div *ngIf="selectedTab === 'trends'" class="trends-tab">
         <div class="trends-grid">
@@ -390,12 +455,135 @@
               </span>
               <span class="risk-value">{{ selectedHealthScan.coronaryHeartDisease }}%</span>
             </div>
+            <div class="risk-item" *ngIf="selectedHealthScan.congestiveHeartFailure">
+              <label>Congestive Heart Failure</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.congestiveHeartFailure).color">
+                {{ getRiskLevel(selectedHealthScan.congestiveHeartFailure).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.congestiveHeartFailure }}%</span>
+            </div>
+            <div class="risk-item" *ngIf="selectedHealthScan.intermittentClaudication">
+              <label>Intermittent Claudication</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.intermittentClaudication).color">
+                {{ getRiskLevel(selectedHealthScan.intermittentClaudication).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.intermittentClaudication }}%</span>
+            </div>
             <div class="risk-item" *ngIf="selectedHealthScan.strokeRisk">
               <label>Stroke Risk</label>
               <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.strokeRisk).color">
                 {{ getRiskLevel(selectedHealthScan.strokeRisk).level }}
               </span>
               <span class="risk-value">{{ selectedHealthScan.strokeRisk }}%</span>
+            </div>
+            <div class="risk-item" *ngIf="selectedHealthScan.covidRisk">
+              <label>COVID-19 Risk</label>
+              <span class="risk-level" [class]="getRiskLevel(selectedHealthScan.covidRisk).color">
+                {{ getRiskLevel(selectedHealthScan.covidRisk).level }}
+              </span>
+              <span class="risk-value">{{ selectedHealthScan.covidRisk }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHealthScan.hrvSdnn || selectedHealthScan.hrvRmsdd || selectedHealthScan.stressScore">
+          <h4>Heart Rate Variability & Stress</h4>
+          <div class="metrics-grid">
+            <div class="metric-item" *ngIf="selectedHealthScan.hrvSdnn">
+              <label>HRV SDNN</label>
+              <span>{{ selectedHealthScan.hrvSdnn }} ms</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.hrvRmsdd">
+              <label>HRV RMSSD</label>
+              <span>{{ selectedHealthScan.hrvRmsdd }} ms</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.stressScore">
+              <label>Stress Score</label>
+              <span>{{ selectedHealthScan.stressScore }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHealthScan.height || selectedHealthScan.weight || selectedHealthScan.waistCircumference">
+          <h4>Physical Measurements</h4>
+          <div class="metrics-grid">
+            <div class="metric-item" *ngIf="selectedHealthScan.height">
+              <label>Height</label>
+              <span>{{ selectedHealthScan.height }} cm</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.weight">
+              <label>Weight</label>
+              <span>{{ selectedHealthScan.weight }} kg</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.waistCircumference">
+              <label>Waist Circumference</label>
+              <span>{{ selectedHealthScan.waistCircumference }} cm</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.height && selectedHealthScan.weight">
+              <label>BMI</label>
+              <span>{{ getBMIValue(selectedHealthScan.weight, selectedHealthScan.height) }} ({{ getBMICategory(selectedHealthScan.weight, selectedHealthScan.height) }})</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHealthScan.totalCholesterol || selectedHealthScan.hdl">
+          <h4>Cholesterol Levels</h4>
+          <div class="metrics-grid">
+            <div class="metric-item" *ngIf="selectedHealthScan.totalCholesterol">
+              <label>Total Cholesterol</label>
+              <span>{{ selectedHealthScan.totalCholesterol }} mg/dL</span>
+            </div>
+            <div class="metric-item" *ngIf="selectedHealthScan.hdl">
+              <label>HDL Cholesterol</label>
+              <span>{{ selectedHealthScan.hdl }} mg/dL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHealthScan.smoker !== undefined || selectedHealthScan.hypertension !== undefined || selectedHealthScan.diabetic !== undefined || selectedHealthScan.heartDisease !== undefined || selectedHealthScan.depression !== undefined">
+          <h4>Health Conditions & Lifestyle</h4>
+          <div class="conditions-grid">
+            <div class="condition-item" *ngIf="selectedHealthScan.smoker !== undefined">
+              <label>Smoker</label>
+              <span class="condition-value" [class]="selectedHealthScan.smoker ? 'yes' : 'no'">
+                {{ selectedHealthScan.smoker ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.hypertension !== undefined">
+              <label>Hypertension</label>
+              <span class="condition-value" [class]="selectedHealthScan.hypertension ? 'yes' : 'no'">
+                {{ selectedHealthScan.hypertension ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.diabetic !== undefined">
+              <label>Diabetes Status</label>
+              <span class="condition-value">
+                {{ selectedHealthScan.diabetic === 0 ? 'No Diabetes' : selectedHealthScan.diabetic === 1 ? 'Prediabetes' : 'Diabetic' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.heartDisease !== undefined">
+              <label>Heart Disease</label>
+              <span class="condition-value" [class]="selectedHealthScan.heartDisease ? 'yes' : 'no'">
+                {{ selectedHealthScan.heartDisease ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.depression !== undefined">
+              <label>Depression</label>
+              <span class="condition-value" [class]="selectedHealthScan.depression ? 'yes' : 'no'">
+                {{ selectedHealthScan.depression ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.physicalActivity !== undefined">
+              <label>Physical Activity</label>
+              <span class="condition-value" [class]="selectedHealthScan.physicalActivity ? 'yes' : 'no'">
+                {{ selectedHealthScan.physicalActivity ? 'Yes' : 'No' }}
+              </span>
+            </div>
+            <div class="condition-item" *ngIf="selectedHealthScan.healthyDiet !== undefined">
+              <label>Healthy Diet</label>
+              <span class="condition-value" [class]="selectedHealthScan.healthyDiet ? 'yes' : 'no'">
+                {{ selectedHealthScan.healthyDiet ? 'Yes' : 'No' }}
+              </span>
             </div>
           </div>
         </div>
@@ -459,6 +647,36 @@
           </div>
         </div>
 
+        <div class="detail-section" *ngIf="selectedConsultation.notes || selectedConsultation.diagnosis || selectedConsultation.treatment">
+          <h4>Medical Information</h4>
+          <div class="medical-info">
+            <div class="info-item" *ngIf="selectedConsultation.notes">
+              <label>Doctor's Notes</label>
+              <div class="notes-content">
+                <p>{{ selectedConsultation.notes }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="selectedConsultation.diagnosis">
+              <label>Diagnosis</label>
+              <div class="diagnosis-content">
+                <p>{{ selectedConsultation.diagnosis }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="selectedConsultation.treatment">
+              <label>Treatment Plan</label>
+              <div class="treatment-content">
+                <p>{{ selectedConsultation.treatment }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="selectedConsultation.followUpDate">
+              <label>Follow-up Date</label>
+              <div class="followup-content">
+                <p><strong>Next Appointment:</strong> {{ formatDate(selectedConsultation.followUpDate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="detail-section" *ngIf="selectedConsultation.healthScan">
           <h4>Health Scan</h4>
           <div class="scan-summary">
@@ -477,6 +695,79 @@
                 <i class="material-icons">content_copy</i>
                 Copy Code
               </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Medical Record Modal -->
+<div *ngIf="selectedMedicalRecord" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedMedicalRecord.title }}</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="medical-record-details">
+        <div class="detail-section">
+          <h4>Record Information</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Type</label>
+              <span class="record-type-badge" [class]="'type-' + getRecordTypeColor(selectedMedicalRecord.recordType)">
+                <i class="material-icons">{{ getRecordTypeIcon(selectedMedicalRecord.recordType) }}</i>
+                {{ formatRecordType(selectedMedicalRecord.recordType) }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Privacy</label>
+              <span class="privacy-badge" [class]="'privacy-' + getPrivacyColor(selectedMedicalRecord.isPublic, selectedMedicalRecord.isSensitive)">
+                <i class="material-icons">{{ getPrivacyIcon(selectedMedicalRecord.isPublic, selectedMedicalRecord.isSensitive) }}</i>
+                {{ getPrivacyText(selectedMedicalRecord.isPublic, selectedMedicalRecord.isSensitive) }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Created</label>
+              <span>{{ formatDate(selectedMedicalRecord.createdAt) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Last Updated</label>
+              <span>{{ formatDate(selectedMedicalRecord.updatedAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Content</h4>
+          <div class="record-content-full" [innerHTML]="formatMedicalRecordContent(selectedMedicalRecord.content, selectedMedicalRecord.recordType)"></div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Creator Information</h4>
+          <div class="creator-details">
+            <p><strong>Created by:</strong> 
+              {{ selectedMedicalRecord.creator.doctorInfo ? 'Dr. ' + selectedMedicalRecord.creator.doctorInfo.firstName + ' ' + selectedMedicalRecord.creator.doctorInfo.lastName : selectedMedicalRecord.creator.email }}
+            </p>
+            <p><strong>Role:</strong> {{ selectedMedicalRecord.creator.role }}</p>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedMedicalRecord.privacySettings?.length">
+          <h4>Privacy Settings</h4>
+          <div class="privacy-settings">
+            <div *ngFor="let setting of selectedMedicalRecord.privacySettings" class="privacy-setting">
+              <div class="setting-info">
+                <span class="setting-type">{{ formatPrivacySettingType(setting.settingType) }}</span>
+                <span class="setting-status" [class]="setting.isEnabled ? 'enabled' : 'disabled'">
+                  {{ setting.isEnabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

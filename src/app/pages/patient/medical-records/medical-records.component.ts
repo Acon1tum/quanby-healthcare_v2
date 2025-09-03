@@ -8,6 +8,7 @@ import { environment } from '../../../../environments/environment';
 
 interface HealthScan {
   id: number;
+  consultationId: number;
   bloodPressure?: string;
   heartRate?: number;
   spO2?: number;
@@ -58,6 +59,11 @@ interface Consultation {
   startTime: string;
   endTime?: string;
   consultationCode: string;
+  isPublic: boolean;
+  notes?: string;
+  diagnosis?: string;
+  treatment?: string;
+  followUpDate?: string;
   doctor: {
     doctorInfo: {
       firstName: string;
@@ -68,7 +74,67 @@ interface Consultation {
   healthScan?: HealthScan;
 }
 
+// Medical Record Types from backend schema
+enum MedicalRecordType {
+  CONSULTATION_NOTES = 'CONSULTATION_NOTES',
+  DIAGNOSIS = 'DIAGNOSIS',
+  TREATMENT_PLAN = 'TREATMENT_PLAN',
+  MEDICATION = 'MEDICATION',
+  LAB_RESULTS = 'LAB_RESULTS',
+  IMAGING_RESULTS = 'IMAGING_RESULTS',
+  ALLERGIES = 'ALLERGIES',
+  CHRONIC_CONDITIONS = 'CHRONIC_CONDITIONS',
+  SURGICAL_HISTORY = 'SURGICAL_HISTORY',
+  FAMILY_HISTORY = 'FAMILY_HISTORY',
+  LIFESTYLE = 'LIFESTYLE',
+  VACCINATIONS = 'VACCINATIONS'
+}
+
+enum PrivacySettingType {
+  PUBLIC_READ = 'PUBLIC_READ',
+  PUBLIC_WRITE = 'PUBLIC_WRITE',
+  SHARED_SPECIFIC = 'SHARED_SPECIFIC',
+  PATIENT_APPROVED = 'PATIENT_APPROVED',
+  TIME_LIMITED = 'TIME_LIMITED',
+  ROLE_BASED = 'ROLE_BASED'
+}
+
+interface MedicalRecordPrivacy {
+  id: number;
+  medicalRecordId: number;
+  settingType: PrivacySettingType;
+  isEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PatientMedicalHistory {
+  id: number;
+  patientId: number;
+  consultationId?: number;
+  recordType: MedicalRecordType;
+  title: string;
+  content: string;
+  isPublic: boolean;
+  isSensitive: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  creator: {
+    id: number;
+    email: string;
+    role: string;
+    doctorInfo?: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  privacySettings: MedicalRecordPrivacy[];
+}
+
 interface PatientInfo {
+  id: number;
+  userId: number;
   fullName: string;
   gender: string;
   dateOfBirth: string;
@@ -78,15 +144,19 @@ interface PatientInfo {
   height: number;
   bloodType: string;
   medicalHistory?: string;
-  allergies: string[];
-  medications: string[];
+  allergies?: string;
+  medications?: string;
   emergencyContact?: {
+    id: number;
+    patientId: number;
     contactName: string;
     relationship: string;
     contactNumber: string;
     contactAddress?: string;
   };
   insuranceInfo?: {
+    id: number;
+    patientId: number;
     providerName: string;
     policyNumber: string;
     insuranceContact: string;
@@ -107,12 +177,15 @@ interface MedicalRecords {
   patientInfo: PatientInfo;
   consultations: Consultation[];
   healthScans: HealthScan[];
+  medicalHistory: PatientMedicalHistory[];
   healthTrends: HealthTrends;
   summary: {
     totalConsultations: number;
     totalHealthScans: number;
+    totalMedicalRecords: number;
     lastConsultation: string | null;
     lastHealthScan: string | null;
+    lastMedicalRecord: string | null;
   };
 }
 
@@ -131,6 +204,11 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   selectedTab = 'overview';
   selectedHealthScan: HealthScan | null = null;
   selectedConsultation: Consultation | null = null;
+  selectedMedicalRecord: PatientMedicalHistory | null = null;
+  
+  // Expose enums to template
+  MedicalRecordType = MedicalRecordType;
+  PrivacySettingType = PrivacySettingType;
   
   private userSubscription?: Subscription;
 
@@ -201,9 +279,14 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.selectedConsultation = consultation;
   }
 
+  viewMedicalRecord(record: PatientMedicalHistory): void {
+    this.selectedMedicalRecord = record;
+  }
+
   closeModal(): void {
     this.selectedHealthScan = null;
     this.selectedConsultation = null;
+    this.selectedMedicalRecord = null;
   }
 
   getTrendIcon(trend: string): string {
@@ -286,6 +369,230 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
       }).catch(err => {
         console.error('Failed to copy: ', err);
       });
+    }
+  }
+
+  // Helper methods for medical records
+  getRecordTypeIcon(recordType: MedicalRecordType): string {
+    switch (recordType) {
+      case MedicalRecordType.CONSULTATION_NOTES: return 'notes';
+      case MedicalRecordType.DIAGNOSIS: return 'medical_services';
+      case MedicalRecordType.TREATMENT_PLAN: return 'assignment';
+      case MedicalRecordType.MEDICATION: return 'medication';
+      case MedicalRecordType.LAB_RESULTS: return 'science';
+      case MedicalRecordType.IMAGING_RESULTS: return 'photo_camera';
+      case MedicalRecordType.ALLERGIES: return 'warning';
+      case MedicalRecordType.CHRONIC_CONDITIONS: return 'healing';
+      case MedicalRecordType.SURGICAL_HISTORY: return 'medical_information';
+      case MedicalRecordType.FAMILY_HISTORY: return 'family_restroom';
+      case MedicalRecordType.LIFESTYLE: return 'fitness_center';
+      case MedicalRecordType.VACCINATIONS: return 'vaccines';
+      default: return 'description';
+    }
+  }
+
+  getRecordTypeColor(recordType: MedicalRecordType): string {
+    switch (recordType) {
+      case MedicalRecordType.CONSULTATION_NOTES: return 'primary';
+      case MedicalRecordType.DIAGNOSIS: return 'danger';
+      case MedicalRecordType.TREATMENT_PLAN: return 'success';
+      case MedicalRecordType.MEDICATION: return 'warning';
+      case MedicalRecordType.LAB_RESULTS: return 'info';
+      case MedicalRecordType.IMAGING_RESULTS: return 'secondary';
+      case MedicalRecordType.ALLERGIES: return 'danger';
+      case MedicalRecordType.CHRONIC_CONDITIONS: return 'warning';
+      case MedicalRecordType.SURGICAL_HISTORY: return 'info';
+      case MedicalRecordType.FAMILY_HISTORY: return 'secondary';
+      case MedicalRecordType.LIFESTYLE: return 'success';
+      case MedicalRecordType.VACCINATIONS: return 'primary';
+      default: return 'secondary';
+    }
+  }
+
+  formatRecordType(recordType: MedicalRecordType): string {
+    return recordType.replace(/_/g, ' ').toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  getPrivacyIcon(isPublic: boolean, isSensitive: boolean): string {
+    if (isSensitive) return 'lock';
+    if (isPublic) return 'public';
+    return 'visibility_off';
+  }
+
+  getPrivacyColor(isPublic: boolean, isSensitive: boolean): string {
+    if (isSensitive) return 'danger';
+    if (isPublic) return 'success';
+    return 'warning';
+  }
+
+  getPrivacyText(isPublic: boolean, isSensitive: boolean): string {
+    if (isSensitive) return 'Sensitive';
+    if (isPublic) return 'Public';
+    return 'Private';
+  }
+
+  // Parse allergies and medications from strings
+  parseStringArray(str: string | undefined): string[] {
+    if (!str) return [];
+    return str.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+
+  // Format privacy setting type for display
+  formatPrivacySettingType(settingType: string): string {
+    return settingType.replace(/_/g, ' ').toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  // Format medical record content for better readability
+  formatMedicalRecordContent(content: string, recordType: MedicalRecordType): string {
+    try {
+      // Check if this is a health scan result with JSON data
+      if (recordType === MedicalRecordType.CONSULTATION_NOTES && content.includes('[') && content.includes('{')) {
+        // Extract JSON part from the content
+        const jsonStart = content.indexOf('[');
+        const jsonEnd = content.lastIndexOf(']') + 1;
+        
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          const jsonPart = content.substring(jsonStart, jsonEnd);
+          const parsedContent = JSON.parse(jsonPart);
+          
+          if (Array.isArray(parsedContent)) {
+            // Get the description part before the JSON
+            const description = content.substring(0, jsonStart).trim();
+            return this.formatHealthScanResults(parsedContent, description);
+          }
+        }
+      }
+      
+      // For other content types, return as is but with basic formatting
+      return content.replace(/\n/g, '<br>');
+    } catch (error) {
+      // If parsing fails, return original content with basic formatting
+      return content.replace(/\n/g, '<br>');
+    }
+  }
+
+  // Format health scan results into readable format
+  private formatHealthScanResults(results: any[], description?: string): string {
+    if (!Array.isArray(results) || results.length === 0) {
+      return '<div class="health-scan-results"><p class="no-data">No health scan data available.</p></div>';
+    }
+
+    let formattedContent = `
+      <div class="health-scan-results">
+        <div class="scan-header">
+          <h3>Self-Check Health Scan Results</h3>
+          <p class="scan-summary">${description || `Comprehensive health assessment with ${results.length} vital signs measured`}</p>
+        </div>
+        <div class="health-scan-table-container">
+          <table class="health-scan-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Status</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    results.forEach((result, index) => {
+      if (result.title && result.value) {
+        const statusClass = this.getStatusClass(result.status);
+        const statusIcon = this.getStatusIcon(result.status);
+        
+        formattedContent += `
+              <tr>
+                <td class="metric-cell">
+                  <div class="metric-info">
+                    <div class="metric-name">${result.title}</div>
+                    ${result.description ? `<div class="metric-description">${result.description}</div>` : ''}
+                  </div>
+                </td>
+                <td class="value-cell">${result.value}</td>
+                <td class="status-cell">
+                  <span class="status-badge ${statusClass}">
+                    <i class="material-icons">${statusIcon}</i>
+                    ${result.status || 'Good'}
+                  </span>
+                </td>
+                <td class="category-cell">${result.category || 'unknown'}</td>
+              </tr>
+        `;
+      }
+    });
+    
+    formattedContent += `
+            </tbody>
+          </table>
+        </div>
+        <div class="scan-footer">
+          <p class="scan-note">Results based on advanced facial analysis technology</p>
+        </div>
+      </div>
+    `;
+    return formattedContent;
+  }
+
+  // Get appropriate icon for each metric
+  private getMetricIcon(title: string): string {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('heart') || titleLower.includes('hrv')) return 'favorite';
+    if (titleLower.includes('oxygen') || titleLower.includes('spo2')) return 'air';
+    if (titleLower.includes('respiratory') || titleLower.includes('breathing')) return 'air';
+    if (titleLower.includes('stress')) return 'psychology';
+    if (titleLower.includes('blood pressure') || titleLower.includes('pressure')) return 'monitor_heart';
+    if (titleLower.includes('temperature')) return 'thermostat';
+    return 'monitor_heart';
+  }
+
+  // Get status class for styling
+  private getStatusClass(status: string): string {
+    if (!status) return 'status-normal';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('good') || statusLower.includes('normal') || statusLower.includes('excellent')) return 'status-good';
+    if (statusLower.includes('fair') || statusLower.includes('moderate')) return 'status-fair';
+    if (statusLower.includes('poor') || statusLower.includes('high') || statusLower.includes('low')) return 'status-poor';
+    return 'status-normal';
+  }
+
+  // Get status icon
+  private getStatusIcon(status: string): string {
+    if (!status) return 'check_circle';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('good') || statusLower.includes('normal') || statusLower.includes('excellent')) return 'check_circle';
+    if (statusLower.includes('fair') || statusLower.includes('moderate')) return 'warning';
+    if (statusLower.includes('poor') || statusLower.includes('high') || statusLower.includes('low')) return 'error';
+    return 'check_circle';
+  }
+
+  // Check if content is JSON format
+  isJsonContent(content: string): boolean {
+    try {
+      JSON.parse(content);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Get content preview for cards
+  getContentPreview(content: string, recordType: MedicalRecordType): string {
+    try {
+      if (recordType === MedicalRecordType.CONSULTATION_NOTES && this.isJsonContent(content)) {
+        const parsedContent = JSON.parse(content);
+        if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+          const firstResult = parsedContent[0];
+          return `Health scan results: ${firstResult.title || 'Multiple metrics'} - ${firstResult.value || 'Data available'}`;
+        }
+      }
+      
+      // For regular content, return first 150 characters
+      return content.length > 150 ? content.substring(0, 150) + '...' : content;
+    } catch {
+      return content.length > 150 ? content.substring(0, 150) + '...' : content;
     }
   }
 }

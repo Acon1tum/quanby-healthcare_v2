@@ -1,6 +1,6 @@
 <div class="header-spacer"></div>
 
-<div class="patient-profile-container main-content">
+<div class="patient-profile-container main-content" [class.modal-open]="showVerificationModal">
   <!-- Header Section -->
   <div class="profile-header">
     <div class="header-content">
@@ -15,6 +15,10 @@
       </div>
       
       <div class="header-actions">
+        <button *ngIf="!isEditing" class="verify-btn" (click)="openVerificationModal()">
+          <i class="material-icons">verified_user</i>
+          Verify Identity
+        </button>
         <button *ngIf="!isEditing" class="edit-btn" (click)="onEdit()">
           <i class="material-icons">edit</i>
           Edit Profile
@@ -472,6 +476,160 @@
             <p *ngIf="!isEditing" class="info-value">{{ profile.preferences.communicationMethod || 'Email' }}</p>
             <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'communicationMethod') }}</span>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Verification Modal -->
+<div class="verification-modal-overlay" *ngIf="showVerificationModal" (click)="closeVerificationModal($event)">
+  <div class="verification-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Identity Verification</h2>
+      <button class="close-btn" (click)="closeVerificationModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <p class="modal-description">
+        Please upload your PhilHealth ID and take a selfie to verify your identity.
+      </p>
+      
+      <!-- PhilHealth ID Upload Section -->
+      <div class="upload-section">
+        <h3>PhilHealth ID Upload</h3>
+        <div class="upload-area" [class.has-file]="philhealthIdFile" (click)="triggerIdUpload()">
+          <input 
+            type="file" 
+            #idFileInput 
+            (change)="onPhilhealthIdSelect($event)" 
+            accept="image/*,.pdf"
+            class="file-input"
+          >
+          <div *ngIf="!philhealthIdFile" class="upload-placeholder">
+            <i class="material-icons">cloud_upload</i>
+            <p>Click to upload PhilHealth ID</p>
+            <span>Supports JPG, PNG, PDF (Max 5MB)</span>
+          </div>
+          <div *ngIf="philhealthIdFile" class="uploaded-file">
+            <i class="material-icons">description</i>
+            <div class="file-info">
+              <p class="file-name">{{ philhealthIdFile.name }}</p>
+              <p class="file-size">{{ formatFileSize(philhealthIdFile.size) }}</p>
+            </div>
+            <button class="remove-file-btn" (click)="removePhilhealthId($event)">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Selfie Capture Section -->
+      <div class="selfie-section">
+        <h3>Selfie Verification</h3>
+        <div class="camera-container">
+          <div *ngIf="!capturedSelfie" class="camera-placeholder" (click)="openLivenessModal()">
+            <i class="material-icons">face</i>
+            <p>Click to start liveness check</p>
+            <span>We'll verify you're a real person with a quick test</span>
+          </div>
+          
+          <div *ngIf="capturedSelfie" class="captured-image">
+            <img [src]="capturedSelfie" alt="Captured selfie" class="selfie-image">
+            <div class="image-actions">
+              <button class="retake-btn" (click)="openLivenessModal()">
+                <i class="material-icons">refresh</i>
+                Retake
+              </button>
+              <div class="verification-badge">
+                <i class="material-icons">verified</i>
+                <span>Liveness Verified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="cancel-modal-btn" (click)="closeVerificationModal()">
+        Cancel
+      </button>
+      <button 
+        class="submit-verification-btn" 
+        [disabled]="!canSubmitVerification() || isSubmittingVerification"
+        (click)="submitVerification()"
+      >
+        <i class="material-icons" *ngIf="!isSubmittingVerification">verified_user</i>
+        <i class="material-icons" *ngIf="isSubmittingVerification">hourglass_empty</i>
+        {{ isSubmittingVerification ? 'Submitting...' : 'Submit Verification' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Liveness Check Modal -->
+<div class="liveness-modal-overlay" *ngIf="showLivenessModal" (click)="closeLivenessModal($event)">
+  <div class="liveness-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Liveness Check</h2>
+      <button class="close-btn" (click)="closeLivenessModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <div class="liveness-instructions">
+        <h3>Follow the color sequence</h3>
+        <p>Look at the camera and follow the colored flashes. This helps us verify you're a real person.</p>
+      </div>
+      
+      <div class="camera-container">
+        <div class="camera-preview">
+          <video #videoElement autoplay playsinline class="camera-video"></video>
+          
+          <!-- Color Flash Overlay -->
+          <div class="color-flash-overlay" [class]="'flash-' + currentFlashColor" *ngIf="currentFlashColor"></div>
+          
+          <!-- Progress Indicator -->
+          <div class="progress-indicator" *ngIf="isLivenessCheckActive">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="(currentFlashIndex / flashSequence.length) * 100"></div>
+            </div>
+            <p class="progress-text">
+              {{ currentFlashIndex + 1 }} of {{ flashSequence.length }} - {{ currentFlashColor | titlecase }}
+            </p>
+          </div>
+          
+          <!-- Completion Message -->
+          <div class="completion-message" *ngIf="livenessCheckComplete">
+            <i class="material-icons">check_circle</i>
+            <h3>Liveness Check Complete!</h3>
+            <p>You can now capture your selfie</p>
+          </div>
+        </div>
+        
+        <!-- Camera Controls -->
+        <div class="camera-controls">
+          <button 
+            *ngIf="!livenessCheckComplete" 
+            class="cancel-btn" 
+            (click)="closeLivenessModal()"
+          >
+            <i class="material-icons">close</i>
+            Cancel
+          </button>
+          
+          <button 
+            *ngIf="livenessCheckComplete" 
+            class="capture-btn" 
+            (click)="captureLivenessSelfie()"
+          >
+            <i class="material-icons">camera_alt</i>
+            Capture Selfie
+          </button>
         </div>
       </div>
     </div>
