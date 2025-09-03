@@ -258,8 +258,8 @@
                 <div class="time">{{ formatTime(scan.consultation.startTime) }}</div>
               </div>
               <div class="scan-doctor">
-                <div class="doctor-name">Dr. {{ scan.consultation.doctor.doctorInfo.firstName }} {{ scan.consultation.doctor.doctorInfo.lastName }}</div>
-                <div class="specialty">{{ scan.consultation.doctor.doctorInfo.specialization }}</div>
+                <div class="doctor-name">Dr. {{ scan.consultation.doctor?.doctorInfo?.firstName || 'Unknown' }} {{ scan.consultation.doctor?.doctorInfo?.lastName || 'Doctor' }}</div>
+                <div class="specialty">{{ scan.consultation.doctor?.doctorInfo?.specialization || 'General Practice' }}</div>
               </div>
               <div class="scan-actions">
                 <i class="material-icons">visibility</i>
@@ -303,8 +303,8 @@
                 <div class="time">{{ formatTime(consultation.startTime) }}</div>
               </div>
               <div class="consultation-doctor">
-                <div class="doctor-name">Dr. {{ consultation.doctor.doctorInfo.firstName }} {{ consultation.doctor.doctorInfo.lastName }}</div>
-                <div class="specialty">{{ consultation.doctor.doctorInfo.specialization }}</div>
+                <div class="doctor-name">Dr. {{ consultation.doctor?.doctorInfo?.firstName || 'Unknown' }} {{ consultation.doctor?.doctorInfo?.lastName || 'Doctor' }}</div>
+                <div class="specialty">{{ consultation.doctor?.doctorInfo?.specialization || 'General Practice' }}</div>
               </div>
               <div class="consultation-status">
                 <span class="status-badge" [class.has-scan]="consultation.healthScan">
@@ -375,19 +375,116 @@
 
       <!-- Health Trends Tab -->
       <div *ngIf="selectedTab === 'trends'" class="trends-tab">
+        <!-- Trends Overview Cards -->
         <div class="trends-grid">
-          <div class="trend-card" *ngFor="let metric of ['heartRate', 'bloodPressure', 'spO2', 'weight', 'stressLevel', 'generalWellness']">
+          <div class="trend-card" *ngFor="let metric of availableMetrics" (click)="selectMetric(metric.key)" [class.selected]="selectedMetric === metric.key">
             <div class="trend-header">
-              <h4>{{ formatMetricName(metric) }}</h4>
-              <div class="trend-indicator" [class]="getTrendColor(medicalRecords.healthTrends[metric].trend)">
-                <i class="material-icons">{{ getTrendIcon(medicalRecords.healthTrends[metric].trend) }}</i>
-                <span>{{ medicalRecords.healthTrends[metric].trend }}</span>
+              <h4>{{ metric.label }}</h4>
+              <div class="trend-indicator" [class]="getTrendColor(getCurrentTrends()[metric.key].trend)">
+                <i class="material-icons">{{ getTrendIcon(getCurrentTrends()[metric.key].trend) }}</i>
+                <span>{{ getCurrentTrends()[metric.key].trend }}</span>
               </div>
             </div>
             <div class="trend-change">
-              <span class="change-value" [class]="getTrendColor(medicalRecords.healthTrends[metric].trend)">
-                {{ medicalRecords.healthTrends[metric].change > 0 ? '+' : '' }}{{ medicalRecords.healthTrends[metric].change }}%
+              <span class="change-value" [class]="getTrendColor(getCurrentTrends()[metric.key].trend)">
+                {{ getCurrentTrends()[metric.key].change > 0 ? '+' : '' }}{{ getCurrentTrends()[metric.key].change }}%
               </span>
+            </div>
+            <div class="metric-unit">{{ metric.unit }}</div>
+          </div>
+        </div>
+
+        <!-- Interactive Chart Section -->
+        <div class="chart-section">
+          <div class="chart-header">
+            <h3>{{ getSelectedMetricInfo().label }} Trend</h3>
+            <div class="chart-controls">
+              <div class="metric-selector">
+                <label>Select Metric:</label>
+                <select [(ngModel)]="selectedMetric" (change)="selectMetric(selectedMetric)">
+                  <option *ngFor="let metric of availableMetrics" [value]="metric.key">
+                    {{ metric.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <div *ngIf="getSelectedMetricData().length > 0" class="chart-wrapper">
+              <!-- Simple Line Chart using CSS and HTML -->
+              <div class="simple-chart">
+                <div class="chart-title">{{ getSelectedMetricInfo().label }} Over Time</div>
+                <div class="chart-area">
+                  <svg class="trend-chart" viewBox="0 0 800 300">
+                    <!-- Chart will be rendered here -->
+                    <g class="chart-grid">
+                      <!-- Grid lines -->
+                      <line x1="50" y1="50" x2="750" y2="50" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="50" y1="100" x2="750" y2="100" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="50" y1="150" x2="750" y2="150" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="50" y1="200" x2="750" y2="200" stroke="#e0e0e0" stroke-width="1"/>
+                      <line x1="50" y1="250" x2="750" y2="250" stroke="#e0e0e0" stroke-width="1"/>
+                    </g>
+                    
+                    <!-- Data points and line -->
+                    <g class="data-line">
+                      <polyline 
+                        [attr.points]="getChartPoints()" 
+                        fill="none" 
+                        stroke="#3b82f6" 
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"/>
+                      
+                      <!-- Data points -->
+                      <circle 
+                        *ngFor="let point of getChartPointsArray(); let i = index"
+                        [attr.cx]="point.x" 
+                        [attr.cy]="point.y" 
+                        r="4" 
+                        fill="#3b82f6"
+                        class="data-point"
+                        [attr.data-value]="getSelectedMetricData()[i].value"
+                        [attr.data-date]="getSelectedMetricData()[i].date"/>
+                    </g>
+                    
+                    <!-- Y-axis labels -->
+                    <g class="y-axis-labels">
+                      <text x="40" y="55" text-anchor="end" class="axis-label">{{ getMaxValue() }}</text>
+                      <text x="40" y="105" text-anchor="end" class="axis-label">{{ getMaxValue() * 0.75 }}</text>
+                      <text x="40" y="155" text-anchor="end" class="axis-label">{{ getMaxValue() * 0.5 }}</text>
+                      <text x="40" y="205" text-anchor="end" class="axis-label">{{ getMaxValue() * 0.25 }}</text>
+                      <text x="40" y="255" text-anchor="end" class="axis-label">{{ getMinValue() }}</text>
+                    </g>
+                    
+                    <!-- X-axis labels -->
+                    <g class="x-axis-labels">
+                      <text *ngFor="let data of getSelectedMetricData(); let i = index"
+                            [attr.x]="50 + (i * (700 / (getSelectedMetricData().length - 1)))" 
+                            y="280" 
+                            text-anchor="middle" 
+                            class="axis-label">
+                        {{ formatDateShort(data.date) }}
+                      </text>
+                    </g>
+                  </svg>
+                </div>
+                
+                <!-- Chart Legend -->
+                <div class="chart-legend">
+                  <div class="legend-item">
+                    <div class="legend-color" style="background-color: #3b82f6;"></div>
+                    <span>{{ getSelectedMetricInfo().label }} ({{ getSelectedMetricInfo().unit }})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="getSelectedMetricData().length === 0" class="no-data-chart">
+              <i class="material-icons">show_chart</i>
+              <p>No data available for {{ getSelectedMetricInfo().label }}</p>
+              <small>Data will appear here once you have multiple health scans</small>
             </div>
           </div>
         </div>
@@ -593,8 +690,8 @@
           <div class="consultation-info">
             <p><strong>Date:</strong> {{ formatDate(selectedHealthScan.consultation.startTime) }}</p>
             <p><strong>Time:</strong> {{ formatTime(selectedHealthScan.consultation.startTime) }}</p>
-            <p><strong>Doctor:</strong> Dr. {{ selectedHealthScan.consultation.doctor.doctorInfo.firstName }} {{ selectedHealthScan.consultation.doctor.doctorInfo.lastName }}</p>
-            <p><strong>Specialization:</strong> {{ selectedHealthScan.consultation.doctor.doctorInfo.specialization }}</p>
+            <p><strong>Doctor:</strong> Dr. {{ selectedHealthScan.consultation.doctor?.doctorInfo?.firstName || 'Unknown' }} {{ selectedHealthScan.consultation.doctor?.doctorInfo?.lastName || 'Doctor' }}</p>
+            <p><strong>Specialization:</strong> {{ selectedHealthScan.consultation.doctor?.doctorInfo?.specialization || 'General Practice' }}</p>
           </div>
         </div>
       </div>
@@ -642,8 +739,8 @@
         <div class="detail-section">
           <h4>Doctor Information</h4>
           <div class="doctor-info">
-            <p><strong>Name:</strong> Dr. {{ selectedConsultation.doctor.doctorInfo.firstName }} {{ selectedConsultation.doctor.doctorInfo.lastName }}</p>
-            <p><strong>Specialization:</strong> {{ selectedConsultation.doctor.doctorInfo.specialization }}</p>
+            <p><strong>Name:</strong> Dr. {{ selectedConsultation.doctor?.doctorInfo?.firstName || 'Unknown' }} {{ selectedConsultation.doctor?.doctorInfo?.lastName || 'Doctor' }}</p>
+            <p><strong>Specialization:</strong> {{ selectedConsultation.doctor?.doctorInfo?.specialization || 'General Practice' }}</p>
           </div>
         </div>
 

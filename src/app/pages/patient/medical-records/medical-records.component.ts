@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, User } from '../../../auth/auth.service';
 import { Subscription } from 'rxjs';
@@ -44,11 +45,11 @@ interface HealthScan {
   consultation: {
     startTime: string;
     endTime?: string;
-    doctor: {
-      doctorInfo: {
-        firstName: string;
-        lastName: string;
-        specialization: string;
+    doctor?: {
+      doctorInfo?: {
+        firstName?: string;
+        lastName?: string;
+        specialization?: string;
       };
     };
   };
@@ -64,11 +65,11 @@ interface Consultation {
   diagnosis?: string;
   treatment?: string;
   followUpDate?: string;
-  doctor: {
-    doctorInfo: {
-      firstName: string;
-      lastName: string;
-      specialization: string;
+  doctor?: {
+    doctorInfo?: {
+      firstName?: string;
+      lastName?: string;
+      specialization?: string;
     };
   };
   healthScan?: HealthScan;
@@ -125,8 +126,8 @@ interface PatientMedicalHistory {
     email: string;
     role: string;
     doctorInfo?: {
-      firstName: string;
-      lastName: string;
+      firstName?: string;
+      lastName?: string;
     };
   };
   privacySettings: MedicalRecordPrivacy[];
@@ -192,7 +193,7 @@ interface MedicalRecords {
 @Component({
   selector: 'app-medical-records',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './medical-records.component.html',
   styleUrl: './medical-records.component.scss'
 })
@@ -205,6 +206,17 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   selectedHealthScan: HealthScan | null = null;
   selectedConsultation: Consultation | null = null;
   selectedMedicalRecord: PatientMedicalHistory | null = null;
+  
+  // Graph and trends properties
+  selectedMetric = 'heartRate';
+  availableMetrics = [
+    { key: 'heartRate', label: 'Heart Rate', unit: 'bpm' },
+    { key: 'bloodPressure', label: 'Blood Pressure', unit: 'mmHg' },
+    { key: 'spO2', label: 'SpO2', unit: '%' },
+    { key: 'weight', label: 'Weight', unit: 'kg' },
+    { key: 'stressLevel', label: 'Stress Level', unit: '' },
+    { key: 'generalWellness', label: 'General Wellness', unit: '' }
+  ];
   
   // Expose enums to template
   MedicalRecordType = MedicalRecordType;
@@ -269,6 +281,88 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
 
   selectTab(tab: string): void {
     this.selectedTab = tab;
+  }
+
+  selectMetric(metric: string): void {
+    this.selectedMetric = metric;
+  }
+
+  getCurrentTrends(): HealthTrends {
+    return this.calculateHealthTrends();
+  }
+
+  getSelectedMetricData(): { date: string; value: number | null }[] {
+    return this.getTrendChartData(this.selectedMetric);
+  }
+
+  getSelectedMetricInfo(): { key: string; label: string; unit: string } {
+    return this.availableMetrics.find(m => m.key === this.selectedMetric) || this.availableMetrics[0];
+  }
+
+  // Chart helper methods
+  getChartPoints(): string {
+    const data = this.getSelectedMetricData();
+    if (data.length === 0) return '';
+
+    const maxValue = this.getMaxValue();
+    const minValue = this.getMinValue();
+    const valueRange = maxValue - minValue;
+    const chartHeight = 200; // SVG chart height
+    const chartWidth = 700; // SVG chart width
+    const padding = 50;
+
+    return data.map((item, index) => {
+      const x = padding + (index * (chartWidth / (data.length - 1)));
+      const y = padding + chartHeight - ((item.value! - minValue) / valueRange) * chartHeight;
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  getChartPointsArray(): { x: number; y: number }[] {
+    const data = this.getSelectedMetricData();
+    if (data.length === 0) return [];
+
+    const maxValue = this.getMaxValue();
+    const minValue = this.getMinValue();
+    const valueRange = maxValue - minValue;
+    const chartHeight = 200;
+    const chartWidth = 700;
+    const padding = 50;
+
+    return data.map((item, index) => {
+      const x = padding + (index * (chartWidth / (data.length - 1)));
+      const y = padding + chartHeight - ((item.value! - minValue) / valueRange) * chartHeight;
+      return { x, y };
+    });
+  }
+
+  getMaxValue(): number {
+    const data = this.getSelectedMetricData();
+    if (data.length === 0) return 100;
+    
+    const values = data.map(item => item.value!).filter(val => val !== null);
+    const max = Math.max(...values);
+    
+    // Add 10% padding to the top
+    return Math.ceil(max * 1.1);
+  }
+
+  getMinValue(): number {
+    const data = this.getSelectedMetricData();
+    if (data.length === 0) return 0;
+    
+    const values = data.map(item => item.value!).filter(val => val !== null);
+    const min = Math.min(...values);
+    
+    // Add 10% padding to the bottom, but don't go below 0
+    return Math.max(0, Math.floor(min * 0.9));
+  }
+
+  formatDateShort(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
   }
 
   viewHealthScan(scan: HealthScan): void {
@@ -571,6 +665,19 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   // Check if content is JSON format
   isJsonContent(content: string): boolean {
     try {
+      // Check if content contains JSON array or object
+      if (content.includes('[') && content.includes('{')) {
+        const jsonStart = content.indexOf('[');
+        const jsonEnd = content.lastIndexOf(']') + 1;
+        
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          const jsonPart = content.substring(jsonStart, jsonEnd);
+          JSON.parse(jsonPart);
+          return true;
+        }
+      }
+      
+      // Check if entire content is JSON
       JSON.parse(content);
       return true;
     } catch {
@@ -578,20 +685,164 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Helper method to safely get doctor name
+  getDoctorName(doctor: any): string {
+    if (!doctor?.doctorInfo) {
+      return 'Dr. Unknown Doctor';
+    }
+    const firstName = doctor.doctorInfo.firstName || 'Unknown';
+    const lastName = doctor.doctorInfo.lastName || 'Doctor';
+    return `Dr. ${firstName} ${lastName}`;
+  }
+
+  // Helper method to safely get doctor specialization
+  getDoctorSpecialization(doctor: any): string {
+    return doctor?.doctorInfo?.specialization || 'General Practice';
+  }
+
+  // Calculate health trends from health scan data
+  calculateHealthTrends(): HealthTrends {
+    if (!this.medicalRecords?.healthScans || this.medicalRecords.healthScans.length < 2) {
+      // Return default trends if not enough data
+      return {
+        heartRate: { trend: 'stable', change: 0 },
+        bloodPressure: { trend: 'stable', change: 0 },
+        spO2: { trend: 'stable', change: 0 },
+        weight: { trend: 'stable', change: 0 },
+        stressLevel: { trend: 'stable', change: 0 },
+        generalWellness: { trend: 'stable', change: 0 }
+      };
+    }
+
+    // Sort health scans by date (most recent first)
+    const sortedScans = [...this.medicalRecords.healthScans].sort((a, b) => 
+      new Date(b.consultation.startTime).getTime() - new Date(a.consultation.startTime).getTime()
+    );
+
+    const trends: HealthTrends = {
+      heartRate: this.calculateMetricTrend(sortedScans, 'heartRate'),
+      bloodPressure: this.calculateMetricTrend(sortedScans, 'bloodPressure'),
+      spO2: this.calculateMetricTrend(sortedScans, 'spO2'),
+      weight: this.calculateMetricTrend(sortedScans, 'weight'),
+      stressLevel: this.calculateMetricTrend(sortedScans, 'stressLevel'),
+      generalWellness: this.calculateMetricTrend(sortedScans, 'generalWellness')
+    };
+
+    return trends;
+  }
+
+  // Calculate trend for a specific metric
+  private calculateMetricTrend(scans: HealthScan[], metric: string): { trend: string; change: number } {
+    const validScans = scans.filter(scan => {
+      const value = (scan as any)[metric];
+      return value !== null && value !== undefined && value !== '';
+    });
+
+    if (validScans.length < 2) {
+      return { trend: 'stable', change: 0 };
+    }
+
+    // Get the most recent and oldest values
+    const latest = (validScans[0] as any)[metric];
+    const oldest = (validScans[validScans.length - 1] as any)[metric];
+
+    // Handle different metric types
+    let change = 0;
+    let trend = 'stable';
+
+    if (typeof latest === 'number' && typeof oldest === 'number') {
+      if (oldest !== 0) {
+        change = ((latest - oldest) / oldest) * 100;
+      } else {
+        change = latest > 0 ? 100 : 0;
+      }
+    } else if (typeof latest === 'string' && typeof oldest === 'string') {
+      // For string values like blood pressure, try to extract numeric values
+      const latestNum = this.extractNumericValue(latest);
+      const oldestNum = this.extractNumericValue(oldest);
+      
+      if (latestNum !== null && oldestNum !== null && oldestNum !== 0) {
+        change = ((latestNum - oldestNum) / oldestNum) * 100;
+      }
+    }
+
+    // Determine trend direction
+    if (change > 5) {
+      trend = 'improving';
+    } else if (change < -5) {
+      trend = 'declining';
+    } else {
+      trend = 'stable';
+    }
+
+    return { trend, change: Math.round(change * 10) / 10 };
+  }
+
+  // Extract numeric value from string (e.g., "120/80" -> 120)
+  private extractNumericValue(value: string): number | null {
+    const match = value.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  // Get trend data for charting
+  getTrendChartData(metric: string): { date: string; value: number | null }[] {
+    if (!this.medicalRecords?.healthScans) {
+      return [];
+    }
+
+    const sortedScans = [...this.medicalRecords.healthScans].sort((a, b) => 
+      new Date(a.consultation.startTime).getTime() - new Date(b.consultation.startTime).getTime()
+    );
+
+    return sortedScans.map(scan => {
+      const value = (scan as any)[metric];
+      let numericValue: number | null = null;
+
+      if (typeof value === 'number') {
+        numericValue = value;
+      } else if (typeof value === 'string') {
+        numericValue = this.extractNumericValue(value);
+      }
+
+      return {
+        date: this.formatDate(scan.consultation.startTime),
+        value: numericValue
+      };
+    }).filter(item => item.value !== null);
+  }
+
   // Get content preview for cards
   getContentPreview(content: string, recordType: MedicalRecordType): string {
     try {
-      if (recordType === MedicalRecordType.CONSULTATION_NOTES && this.isJsonContent(content)) {
-        const parsedContent = JSON.parse(content);
-        if (Array.isArray(parsedContent) && parsedContent.length > 0) {
-          const firstResult = parsedContent[0];
-          return `Health scan results: ${firstResult.title || 'Multiple metrics'} - ${firstResult.value || 'Data available'}`;
+      // Check if this is a health scan result with JSON data
+      if (recordType === MedicalRecordType.CONSULTATION_NOTES && content.includes('[') && content.includes('{')) {
+        // Extract JSON part from the content
+        const jsonStart = content.indexOf('[');
+        const jsonEnd = content.lastIndexOf(']') + 1;
+        
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          const jsonPart = content.substring(jsonStart, jsonEnd);
+          const parsedContent = JSON.parse(jsonPart);
+          
+          if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+            // Get the description part before the JSON
+            const description = content.substring(0, jsonStart).trim();
+            const metricsCount = parsedContent.length;
+            const firstMetric = parsedContent[0];
+            
+            if (description) {
+              return `${description} (${metricsCount} health metrics measured)`;
+            } else {
+              return `Health scan results: ${firstMetric.title || 'Multiple metrics'} - ${firstMetric.value || 'Data available'} (${metricsCount} total metrics)`;
+            }
+          }
         }
       }
       
-      // For regular content, return first 150 characters
+      // For other content types, return first 150 characters
       return content.length > 150 ? content.substring(0, 150) + '...' : content;
     } catch {
+      // If parsing fails, return original content with basic formatting
       return content.length > 150 ? content.substring(0, 150) + '...' : content;
     }
   }
