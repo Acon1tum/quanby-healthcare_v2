@@ -1,0 +1,238 @@
+<div class="header-spacer"></div>
+
+<div class="self-check-container main-content">
+  <!-- Header Section
+  <div class="self-check-header">
+    <div class="header-content">
+      <div class="back-section">
+        <button class="back-btn" (click)="navigateToHome()">
+          <i class="material-icons">arrow_back</i>
+        </button>
+        <div class="header-text">
+          <h1>Self-Check Face Scan</h1>
+          <p>Get personalized health insights from your facial analysis</p>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Self-Check Content -->
+  <div class="self-check-content">
+    <div class="scan-container">
+      <!-- Scanning State -->
+      <div *ngIf="isScanning" class="scanning-section">
+        <div class="scan-card">
+          <div class="scan-header">
+            <div class="scan-icon">
+              <i class="material-icons">camera_alt</i>
+            </div>
+            <h2>Self-Check Face Scan in Progress</h2>
+            <p>Please look directly at the camera and stay still</p>
+          </div>
+          
+          <div class="iframe-container">
+            <iframe
+              #scanIframe
+              [src]="iframeUrl | safe"
+              title="Self-Check Face Scan Interface"
+              id="self-check-iframe"
+              allow="camera; microphone"
+              class="scan-iframe"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-section">
+        <div class="loading-card">
+          <div class="loading-spinner">
+            <i class="material-icons">refresh</i>
+          </div>
+          <h3>Preparing Your Self-Check...</h3>
+          <p>Setting up the face scan interface</p>
+        </div>
+      </div>
+
+      <!-- Results State -->
+      <div *ngIf="scanComplete" class="results-section">
+        <div class="results-card">
+          <!-- Results Header -->
+          <div class="results-header">
+            <div class="success-icon">
+              <i class="material-icons">check_circle</i>
+            </div>
+            <h2>Self-Check Complete</h2>
+            <p>Your health analysis has been saved to your profile!</p>
+          </div>
+
+          <!-- Overall Score -->
+          <div class="overall-score-section" *ngIf="getOverallScore() as overallScore">
+            <div class="score-circle">
+              <div class="score-value">{{ overallScore.score }}%</div>
+              <div class="score-label">Health Score</div>
+              <div class="score-status">{{ overallScore.status }}</div>
+            </div>
+            <h3>Health Assessment Report</h3>
+            <p>Your personalized health insights based on facial analysis</p>
+          </div>
+
+          <!-- Health Metrics Sections -->
+          <div class="health-metrics">
+            <!-- Cardiovascular Section -->
+            <div class="metric-section" *ngIf="getResultsByCategory(['heartFailureRisk', 'coronaryRisk', 'strokeRisk', 'cvdRisk', 'intermittentClaudication']) as cardioResults">
+              <div class="section-header">
+                <h3><i class="material-icons">favorite</i> Cardiovascular</h3>
+              </div>
+              <div class="metrics-grid">
+                <div *ngFor="let result of cardioResults" class="metric-card">
+                  <button class="info-btn" (click)="openMetricModal(result)">
+                    <i class="material-icons">info</i>
+                  </button>
+                  <div class="metric-status" [class]="'status-' + result.color">{{ result.status }}</div>
+                  <div class="metric-value">{{ result.value }}</div>
+                  <div class="metric-title">{{ result.title.replace('Risk of ', '') }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heart Section -->
+            <div class="metric-section" *ngIf="getResultsByCategory(['heartRate']) as heartResults">
+              <div class="section-header">
+                <h3><i class="material-icons">monitor_heart</i> Heart</h3>
+              </div>
+              <div class="metrics-grid">
+                <div *ngFor="let result of heartResults" class="metric-card">
+                  <button class="info-btn" (click)="openMetricModal(result)">
+                    <i class="material-icons">info</i>
+                  </button>
+                  <div class="metric-status" [class]="'status-' + result.color">{{ result.status }}</div>
+                  <div class="metric-value">{{ result.value }}</div>
+                  <div class="metric-title">{{ result.title }}</div>
+                  <div class="metric-range" *ngIf="result.normalRange">Normal: {{ result.normalRange }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- HRV Section -->
+            <div class="metric-section" *ngIf="getResultsByCategory(['hrvRmssd', 'hrvSdnn']) as hrvResults">
+              <div class="section-header">
+                <h3><i class="material-icons">analytics</i> HRV</h3>
+              </div>
+              <div class="metrics-grid">
+                <div *ngFor="let result of hrvResults" class="metric-card">
+                  <button class="info-btn" (click)="openMetricModal(result)">
+                    <i class="material-icons">info</i>
+                  </button>
+                  <div class="metric-status" [class]="'status-' + result.color">{{ result.status }}</div>
+                  <div class="metric-value">{{ result.value }}</div>
+                  <div class="metric-title">{{ result.title }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Blood Section -->
+            <div class="metric-section">
+              <div class="section-header">
+                <h3><i class="material-icons">bloodtype</i> Blood</h3>
+              </div>
+              <div class="metrics-grid">
+                <div *ngFor="let result of getResultsByCategory(['oxygenSaturation', 'systolicPressure', 'diastolicPressure'])" class="metric-card">
+                  <button class="info-btn" (click)="openMetricModal(result)">
+                    <i class="material-icons">info</i>
+                  </button>
+                  <div class="metric-status" [class]="'status-' + result.color">{{ result.status }}</div>
+                  <div class="metric-value">{{ result.value }}</div>
+                  <div class="metric-title">{{ result.title.includes('Systolic') ? 'Systolic' : result.title.includes('Diastolic') ? 'Diastolic' : 'Oxygen Saturation' }}</div>
+                  <div class="metric-range" *ngIf="result.normalRange">Normal: {{ result.normalRange }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Other Section -->
+            <div class="metric-section" *ngIf="getResultsByCategory(['respiratoryRate', 'stress']) as otherResults">
+              <div class="section-header">
+                <h3><i class="material-icons">thermostat</i> Other</h3>
+              </div>
+              <div class="metrics-grid">
+                <div *ngFor="let result of otherResults" class="metric-card">
+                  <button class="info-btn" (click)="openMetricModal(result)">
+                    <i class="material-icons">info</i>
+                  </button>
+                  <div class="metric-status" [class]="'status-' + result.color">{{ result.status }}</div>
+                  <div class="metric-value">{{ result.value }}</div>
+                  <div class="metric-title">{{ result.title }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons
+          <div class="action-buttons">
+            <button (click)="navigateToHome()" class="secondary-button">
+              <i class="material-icons">home</i>
+              Home
+            </button>
+            <button (click)="startNewScan()" class="primary-button">
+              <i class="material-icons">refresh</i>
+              New Self-Check
+            </button>
+          </div> -->
+
+          <!-- Email Section
+          <div class="email-section">
+            <h3>Send Your Results to Email</h3>
+            <form (ngSubmit)="sendResultsToEmail()" #emailForm="ngForm" class="email-form">
+              <div class="form-group">
+                <input
+                  type="email"
+                  name="email"
+                  [(ngModel)]="recipientEmail"
+                  placeholder="Enter your email"
+                  required
+                  class="form-control"
+                />
+                <button type="submit" [disabled]="!recipientEmail" class="primary-button">
+                  <i class="material-icons">email</i>
+                  Send Results
+                </button>
+              </div>
+            </form>
+            <div *ngIf="emailStatus && !showEmailSuccessModal" class="email-status">{{ emailStatus }}</div>
+          </div> -->
+
+          <!-- Email Success Modal
+          <div *ngIf="showEmailSuccessModal" class="modal-overlay">
+            <div class="modal-content">
+              <div class="modal-icon">
+                <i class="material-icons">check_circle</i>
+              </div>
+              <h3>Results sent successfully!</h3>
+              <p>Your health report has been sent to your email address.</p>
+              <button (click)="closeEmailSuccessModal()" class="primary-button">Close</button>
+            </div>
+          </div>
+        </div>
+      </div> -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal for metric details -->
+<div *ngIf="showMetricModal" class="modal-overlay">
+  <div class="modal-content">
+    <button (click)="closeMetricModal()" class="modal-close">
+      <i class="material-icons">close</i>
+    </button>
+    <h3>{{ selectedMetric?.title || 'Metric Details' }}</h3>
+    <div class="modal-value">{{ selectedMetric?.value }}</div>
+    <div class="modal-status" [ngClass]="'status-' + selectedMetric?.color">{{ selectedMetric?.status }}</div>
+    <div class="modal-description">
+      {{
+        ['coronaryRisk','heartFailureRisk','strokeRisk','cvdRisk'].includes(selectedMetric?.category)
+          ? getScoreDescription(selectedMetric?.category)
+          : selectedMetric?.description
+      }}
+    </div>
+    <div *ngIf="selectedMetric?.normalRange" class="modal-range">Normal Range: {{ selectedMetric.normalRange }}</div>
+  </div>
+</div>

@@ -28,6 +28,7 @@ import { PatientMeetComponent } from './pages/patient/patient-meet/patient-meet.
 import { PatientMyProfileComponent } from './pages/patient/patient-my-profile/patient-my-profile.component';
 import { PatientScheduleComponent } from './pages/patient/patient-schedule/patient-schedule.component';
 import { MedicalRecordsComponent } from './pages/patient/medical-records/medical-records.component';
+import { SelfCheckComponent } from './pages/patient/self-check/self-check.component';
 
 // Layout Components
 import { DashboardLayoutComponent } from './shared/layouts/dashboard-layout.component';
@@ -98,7 +99,8 @@ export const appRoutes: Routes = [
           { path: 'meet', component: PatientMeetComponent },
           { path: 'my-profile', component: PatientMyProfileComponent },
           { path: 'schedule', component: PatientScheduleComponent },
-          { path: 'medical-record', component: MedicalRecordsComponent}
+          { path: 'medical-record', component: MedicalRecordsComponent},
+          { path: 'self-check', component: SelfCheckComponent}
         ]
       }
     ]

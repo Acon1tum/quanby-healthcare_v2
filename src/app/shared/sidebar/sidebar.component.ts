@@ -141,6 +141,11 @@ export class SidebarComponent implements OnInit {
             icon: 'folder',
             route: '/patient/medical-record'
           },
+          {
+            label: 'Self Check',
+            icon: 'check_circle',
+            route: '/patient/self-check'
+          }
         ];
 
       default:
