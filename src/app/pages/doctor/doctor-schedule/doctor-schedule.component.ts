@@ -43,6 +43,18 @@ export class DoctorScheduleComponent {
   ];
   requests: ScheduleRequest[] = [];
 
+  // Pagination for pending requests
+  pendingCurrentPage = 1;
+  pendingItemsPerPage = 5;
+  pendingTotalPages = 1;
+  paginatedPendingRequests: ScheduleRequest[] = [];
+
+  // Pagination for confirmed requests
+  confirmedCurrentPage = 1;
+  confirmedItemsPerPage = 5;
+  confirmedTotalPages = 1;
+  paginatedConfirmedRequests: ScheduleRequest[] = [];
+
   // Calendar
   current = new Date();
   weeks: Array<Array<{ date: Date; inMonth: boolean; hasAppt: boolean }>> = [];
@@ -67,6 +79,8 @@ export class DoctorScheduleComponent {
     this.appointments.updateAppointmentStatus(id, 'CONFIRMED').subscribe({
       next: () => {
         req.status = 'accepted';
+        this.updatePendingPagination();
+        this.updateConfirmedPagination();
         this.buildCalendar();
         this.loadRequests();
       },
@@ -78,6 +92,8 @@ export class DoctorScheduleComponent {
     this.appointments.updateAppointmentStatus(id, 'REJECTED').subscribe({
       next: () => {
         req.status = 'rejected';
+        this.updatePendingPagination();
+        this.updateConfirmedPagination();
         this.buildCalendar();
         this.loadRequests();
       },
@@ -136,6 +152,8 @@ export class DoctorScheduleComponent {
             end: a.requestedDate,
             status: this.mapBackendStatus(a.status)
           }));
+          this.updatePendingPagination();
+          this.updateConfirmedPagination();
           this.buildCalendar();
         }
       },
@@ -252,5 +270,111 @@ export class DoctorScheduleComponent {
 
   getConfirmedRequests(): ScheduleRequest[] {
     return this.requests.filter(r => r.status === 'accepted');
+  }
+
+  // Pagination methods for pending requests
+  updatePendingPagination() {
+    const pendingRequests = this.getPendingRequests();
+    this.pendingTotalPages = Math.ceil(pendingRequests.length / this.pendingItemsPerPage);
+    if (this.pendingCurrentPage > this.pendingTotalPages) {
+      this.pendingCurrentPage = 1;
+    }
+    
+    const startIndex = (this.pendingCurrentPage - 1) * this.pendingItemsPerPage;
+    const endIndex = startIndex + this.pendingItemsPerPage;
+    this.paginatedPendingRequests = pendingRequests.slice(startIndex, endIndex);
+  }
+
+  goToPendingPage(page: number) {
+    if (page >= 1 && page <= this.pendingTotalPages) {
+      this.pendingCurrentPage = page;
+      this.updatePendingPagination();
+    }
+  }
+
+  previousPendingPage() {
+    if (this.pendingCurrentPage > 1) {
+      this.goToPendingPage(this.pendingCurrentPage - 1);
+    }
+  }
+
+  nextPendingPage() {
+    if (this.pendingCurrentPage < this.pendingTotalPages) {
+      this.goToPendingPage(this.pendingCurrentPage + 1);
+    }
+  }
+
+  getPendingPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.pendingCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.pendingTotalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  getPendingEndIndex(): number {
+    const pendingRequests = this.getPendingRequests();
+    return Math.min(this.pendingCurrentPage * this.pendingItemsPerPage, pendingRequests.length);
+  }
+
+  // Pagination methods for confirmed requests
+  updateConfirmedPagination() {
+    const confirmedRequests = this.getConfirmedRequests();
+    this.confirmedTotalPages = Math.ceil(confirmedRequests.length / this.confirmedItemsPerPage);
+    if (this.confirmedCurrentPage > this.confirmedTotalPages) {
+      this.confirmedCurrentPage = 1;
+    }
+    
+    const startIndex = (this.confirmedCurrentPage - 1) * this.confirmedItemsPerPage;
+    const endIndex = startIndex + this.confirmedItemsPerPage;
+    this.paginatedConfirmedRequests = confirmedRequests.slice(startIndex, endIndex);
+  }
+
+  goToConfirmedPage(page: number) {
+    if (page >= 1 && page <= this.confirmedTotalPages) {
+      this.confirmedCurrentPage = page;
+      this.updateConfirmedPagination();
+    }
+  }
+
+  previousConfirmedPage() {
+    if (this.confirmedCurrentPage > 1) {
+      this.goToConfirmedPage(this.confirmedCurrentPage - 1);
+    }
+  }
+
+  nextConfirmedPage() {
+    if (this.confirmedCurrentPage < this.confirmedTotalPages) {
+      this.goToConfirmedPage(this.confirmedCurrentPage + 1);
+    }
+  }
+
+  getConfirmedPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.confirmedCurrentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.confirmedTotalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  getConfirmedEndIndex(): number {
+    const confirmedRequests = this.getConfirmedRequests();
+    return Math.min(this.confirmedCurrentPage * this.confirmedItemsPerPage, confirmedRequests.length);
   }
 }

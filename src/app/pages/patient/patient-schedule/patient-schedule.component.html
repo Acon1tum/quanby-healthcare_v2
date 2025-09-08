@@ -1,7 +1,10 @@
 <div class="schedule-page">
   <div class="top-actions">
     <h2>My Appointments</h2>
-    <button class="btn btn-ghost" (click)="openNewAppointmentModal()">Request New Appointment</button>
+    <button class="btn btn-ghost" (click)="openNewAppointmentModal()">
+      <span class="icon-plus">+</span>
+      Request New Appointment
+    </button>
   </div>
   
   <div class="card">
@@ -20,7 +23,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let appt of appointments">
+        <tr *ngFor="let appt of paginatedAppointments">
           <td>{{ appt.id }}</td>
           <td>{{ appt.doctor }}</td>
           <td>{{ appt.specialty }}</td>
@@ -40,6 +43,39 @@
         </tr>
       </tbody>
     </table>
+    
+    <!-- Pagination Controls -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ getEndIndex() }} of {{ appointments.length }} appointments
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="previousPage()" 
+          [disabled]="currentPage === 1"
+          title="Previous page">
+          ‹
+        </button>
+        
+        <button 
+          *ngFor="let page of getPageNumbers()" 
+          class="btn pagination-btn" 
+          [class.btn-active]="page === currentPage"
+          [class.btn-ghost]="page !== currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+        
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="nextPage()" 
+          [disabled]="currentPage === totalPages"
+          title="Next page">
+          ›
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="calendar-header">

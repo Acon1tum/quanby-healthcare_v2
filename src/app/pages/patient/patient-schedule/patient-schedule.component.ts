@@ -33,6 +33,12 @@ interface PatientAppointment {
 })
 export class PatientScheduleComponent {
   appointments: PatientAppointment[] = [];
+  paginatedAppointments: PatientAppointment[] = [];
+
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 5;
+  totalPages = 1;
 
   // Calendar
   current = new Date();
@@ -98,6 +104,7 @@ export class PatientScheduleComponent {
               status: this.mapBackendStatus(a.status)
             };
           });
+          this.updatePagination();
           this.buildCalendar();
         }
       },
@@ -348,5 +355,56 @@ export class PatientScheduleComponent {
       case 'completed': return 'completed';
       default: return '';
     }
+  }
+
+  // Pagination methods
+  updatePagination() {
+    this.totalPages = Math.ceil(this.appointments.length / this.itemsPerPage);
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = 1;
+    }
+    
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedAppointments = this.appointments.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  getEndIndex(): number {
+    return Math.min(this.currentPage * this.itemsPerPage, this.appointments.length);
   }
 }

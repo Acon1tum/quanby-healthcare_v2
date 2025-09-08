@@ -166,7 +166,7 @@
 
 // Medical Records Component Styles
 .medical-records-container {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   max-width: 100%;
   margin: 0;
   background: #f8fafc;
@@ -174,7 +174,7 @@
   
   // Reduce top spacing
   .header-spacer {
-    height: 0.5rem;
+    height: 0.25rem;
   }
 }
 
@@ -183,7 +183,7 @@
   background: white;
   border-radius: 12px;
   padding: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .header-content {
@@ -1758,7 +1758,7 @@
 // Responsive Design
 @media (max-width: 768px) {
   .medical-records-container {
-    padding: 0.5rem;
+    padding: 0.25rem;
 
     .records-header {
       padding: 0.75rem;
@@ -1824,7 +1824,7 @@
 
 @media (max-width: 480px) {
   .medical-records-container {
-    padding: 0.25rem;
+    padding: 0.125rem;
 
     .records-header {
       padding: 0.5rem;

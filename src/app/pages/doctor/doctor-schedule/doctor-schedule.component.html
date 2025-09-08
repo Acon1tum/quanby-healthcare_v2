@@ -1,6 +1,9 @@
 <div class="schedule-page">
   <div class="top-actions">
-    <button class="btn btn-ghost" (click)="openAvailabilityModal()">Manage Weekly Availability</button>
+    <button class="btn btn-ghost" (click)="openAvailabilityModal()">
+      <span class="icon-calendar">📅</span>
+      Manage Weekly Availability
+    </button>
   </div>
   <h2>All Appointments</h2>
   
@@ -21,7 +24,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of getPendingRequests()">
+        <tr *ngFor="let r of paginatedPendingRequests">
           <td>{{ r.id }}</td>
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
@@ -40,6 +43,39 @@
         </tr>
       </tbody>
     </table>
+    
+    <!-- Pagination Controls for Pending Requests -->
+    <div class="pagination-container" *ngIf="pendingTotalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (pendingCurrentPage - 1) * pendingItemsPerPage + 1 }} to {{ getPendingEndIndex() }} of {{ getPendingRequests().length }} pending requests
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="previousPendingPage()" 
+          [disabled]="pendingCurrentPage === 1"
+          title="Previous page">
+          ‹
+        </button>
+        
+        <button 
+          *ngFor="let page of getPendingPageNumbers()" 
+          class="btn pagination-btn" 
+          [class.btn-active]="page === pendingCurrentPage"
+          [class.btn-ghost]="page !== pendingCurrentPage"
+          (click)="goToPendingPage(page)">
+          {{ page }}
+        </button>
+        
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="nextPendingPage()" 
+          [disabled]="pendingCurrentPage === pendingTotalPages"
+          title="Next page">
+          ›
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Confirmed Appointments -->
@@ -59,7 +95,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of getConfirmedRequests()">
+        <tr *ngFor="let r of paginatedConfirmedRequests">
           <td>{{ r.id }}</td>
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
@@ -75,6 +111,39 @@
         </tr>
       </tbody>
     </table>
+    
+    <!-- Pagination Controls for Confirmed Requests -->
+    <div class="pagination-container" *ngIf="confirmedTotalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (confirmedCurrentPage - 1) * confirmedItemsPerPage + 1 }} to {{ getConfirmedEndIndex() }} of {{ getConfirmedRequests().length }} confirmed appointments
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="previousConfirmedPage()" 
+          [disabled]="confirmedCurrentPage === 1"
+          title="Previous page">
+          ‹
+        </button>
+        
+        <button 
+          *ngFor="let page of getConfirmedPageNumbers()" 
+          class="btn pagination-btn" 
+          [class.btn-active]="page === confirmedCurrentPage"
+          [class.btn-ghost]="page !== confirmedCurrentPage"
+          (click)="goToConfirmedPage(page)">
+          {{ page }}
+        </button>
+        
+        <button 
+          class="btn btn-ghost pagination-btn" 
+          (click)="nextConfirmedPage()" 
+          [disabled]="confirmedCurrentPage === confirmedTotalPages"
+          title="Next page">
+          ›
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="calendar-header">

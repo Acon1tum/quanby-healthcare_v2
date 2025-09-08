@@ -15,42 +15,58 @@
   <!-- Statistics Overview -->
   <section class="stats-overview">
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" [class.loading]="isLoadingStats">
         <div class="stat-icon">
           <i class="material-icons">people</i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ patientStats.totalPatients }}</div>
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ patientStats.totalPatients }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
           <div class="stat-label">Total Patients</div>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" [class.loading]="isLoadingStats">
         <div class="stat-icon">
           <i class="material-icons">person_add</i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ patientStats.activePatients }}</div>
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ patientStats.activePatients }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
           <div class="stat-label">Active Patients</div>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" [class.loading]="isLoadingStats">
         <div class="stat-icon">
           <i class="material-icons">event</i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ patientStats.consultationsToday }}</div>
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ patientStats.consultationsToday }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
           <div class="stat-label">Today's Consultations</div>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" [class.loading]="isLoadingStats">
         <div class="stat-icon">
           <i class="material-icons">schedule</i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ patientStats.newPatients }}</div>
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ patientStats.newPatients }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
           <div class="stat-label">New This Month</div>
         </div>
       </div>
+    </div>
+    <div class="stats-error" *ngIf="statsError">
+      <i class="material-icons">error</i>
+      <span>{{ statsError }}</span>
     </div>
   </section>
 
@@ -100,34 +116,46 @@
             <p>Loading appointments...</p>
           </div>
           
+          <!-- Error State -->
+          <div class="error-state" *ngIf="appointmentsError && !isLoadingAppointments">
+            <i class="material-icons">error</i>
+            <p>{{ appointmentsError }}</p>
+            <button class="secondary-button" (click)="refreshAppointments()">
+              <i class="material-icons">refresh</i>
+              Try Again
+            </button>
+          </div>
+          
           <!-- Appointments List -->
-          <div 
-            *ngFor="let appointment of upcomingAppointments" 
-            class="appointment-item"
-          >
-            <div class="appointment-time">
-              <div class="time">{{ appointment.time }}</div>
-              <div class="date">{{ appointment.date | date:'MMM d' }}</div>
-            </div>
-            <div class="appointment-details">
-              <div class="patient-name">{{ appointment.patientName }}</div>
-              <div class="appointment-meta">
-                <span class="specialty">{{ appointment.specialty }}</span>
-                <span class="type appointment-type-{{ appointment.type.toLowerCase().replace(' ', '-') }}">
-                  {{ appointment.type }}
-                </span>
+          <div *ngIf="!isLoadingAppointments && !appointmentsError">
+            <div 
+              *ngFor="let appointment of upcomingAppointments; trackBy: trackByAppointmentId" 
+              class="appointment-item"
+            >
+              <div class="appointment-time">
+                <div class="time">{{ appointment.time }}</div>
+                <div class="date">{{ appointment.date | date:'MMM d' }}</div>
               </div>
-            </div>
-            <div class="appointment-actions">
-              <span class="status-badge status-{{ getStatusColor(appointment.status) }}">
-                {{ appointment.status }}
-              </span>
-              <button 
-                class="primary-button" 
-                *ngIf="getAppointmentStatus(appointment) === 'today'"
-              >
-                Start
-              </button>
+              <div class="appointment-details">
+                <div class="patient-name">{{ appointment.patientName }}</div>
+                <div class="appointment-meta">
+                  <span class="specialty">{{ appointment.specialty }}</span>
+                  <span class="type appointment-type-{{ appointment.type.toLowerCase().replace(' ', '-') }}">
+                    {{ appointment.type }}
+                  </span>
+                </div>
+              </div>
+              <div class="appointment-actions">
+                <span class="status-badge status-{{ getStatusColor(appointment.status) }}">
+                  {{ appointment.status }}
+                </span>
+                <button 
+                  class="primary-button" 
+                  *ngIf="getAppointmentStatus(appointment) === 'today'"
+                >
+                  Start
+                </button>
+              </div>
             </div>
           </div>
           <!-- Empty State -->
@@ -151,10 +179,18 @@
           </button>
         </div>
         <div class="patients-list">
-          <div 
-            *ngFor="let patient of recentPatients" 
-            class="patient-item"
-          >
+          <!-- Loading State -->
+          <div class="loading-state" *ngIf="isLoadingRecentPatients">
+            <i class="material-icons rotating">refresh</i>
+            <p>Loading recent patients...</p>
+          </div>
+          
+          <!-- Patients List -->
+          <div *ngIf="!isLoadingRecentPatients">
+            <div 
+              *ngFor="let patient of recentPatients; trackBy: trackByPatientId" 
+              class="patient-item"
+            >
             <div class="patient-info">
               <div class="patient-name">{{ patient.name }}</div>
               <div class="patient-details">
@@ -172,6 +208,7 @@
               <span class="status-badge status-{{ patient.status }}">
                 {{ patient.status }}
               </span>
+            </div>
             </div>
           </div>
         </div>

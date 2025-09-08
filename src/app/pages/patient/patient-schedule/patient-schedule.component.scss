@@ -78,6 +78,18 @@
   box-shadow: none;
 }
 
+.icon-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .badge {
   padding: 4px 8px;
   border-radius: 999px;
@@ -227,10 +239,17 @@
   outline: 2px solid #2563eb;
 }
 
+.top-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 h2 {
   color: #111827;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin: 0;
   font-size: 24px;
 }
 
@@ -314,4 +333,54 @@ h2 {
   font-size: 12px;
   margin-top: 4px;
   display: block;
+}
+
+// Pagination styles
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pagination-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pagination-btn.btn-active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pagination-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

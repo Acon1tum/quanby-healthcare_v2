@@ -111,7 +111,7 @@ export class LoginComponent implements OnInit {
 
   loginAsDoctor(): void {
     this.loginForm.patchValue({
-      email: 'doctor@qhealth.com',
+      email: 'dr.william@qhealth.com',
       password: 'doctor123'
     });
     this.onSubmit();
@@ -119,7 +119,7 @@ export class LoginComponent implements OnInit {
 
   loginAsPatient(): void {
     this.loginForm.patchValue({
-      email: 'patient@qhealth.com',
+      email: 'patient.anderson@email.com',
       password: 'patient123'
     });
     this.onSubmit();
