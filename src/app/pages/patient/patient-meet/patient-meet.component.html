@@ -70,7 +70,7 @@
             autoplay 
             muted 
             playsinline
-            class="video-element"
+            class="video-element local-video"
             *ngIf="localStream"
           ></video>
           <div *ngIf="!localStream && isJoined" class="video-loading">
@@ -92,7 +92,7 @@
             #remoteVideo 
             autoplay 
             playsinline
-            class="video-element"
+            class="video-element local-video"
             *ngIf="remoteStream"
           ></video>
           <div *ngIf="!remoteStream" class="waiting-message">
@@ -159,6 +159,17 @@
       <!-- Status only shown during scanning, not when complete -->
       <div *ngIf="!isFaceScanComplete" class="face-scan-status">
         <p>{{ faceScanStatus }}</p>
+        
+        <!-- Scan Time Remaining Display -->
+        <div *ngIf="scanTimeRemaining > 0" class="scan-timer-display">
+          <div class="timer-container">
+            <div class="timer-icon">⏱️</div>
+            <div class="timer-text">
+              <span class="timer-label">Time Remaining:</span>
+              <span class="timer-value">{{ scanTimeRemaining }} seconds</span>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- Face Scan iframe (only show when scanning, not when complete) -->

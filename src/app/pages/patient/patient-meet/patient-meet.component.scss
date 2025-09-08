@@ -407,6 +407,11 @@
       height: 200px;
     }
   }
+
+  // Camera mirroring for local video (self-view)
+  .video-element.local-video {
+    transform: scaleX(-1); // Horizontal flip for mirror effect
+  }
   
   // Ensure remote video has consistent sizing
   .video-wrapper:last-child .video-container-relative {
@@ -648,6 +653,117 @@
   }
 }
 
+// Countdown Modal Styles
+.countdown-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000; /* ensure above app header/sidebar */
+  
+  .countdown-content {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+      padding: 32px;
+      max-width: 90vw;
+    }
+    
+    @media (max-width: 480px) {
+      padding: 24px;
+      max-width: 95vw;
+      border-radius: 8px;
+    }
+    
+    .countdown-header {
+      margin-bottom: 30px;
+      
+      h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+        
+        @media (max-width: 768px) {
+          font-size: 22px;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 20px;
+        }
+      }
+    }
+    
+    .countdown-display {
+      margin-bottom: 30px;
+      
+      .countdown-number {
+        font-size: 72px;
+        font-weight: bold;
+        color: #3498db;
+        margin-bottom: 16px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        animation: pulse 1s ease-in-out infinite;
+        
+        @media (max-width: 768px) {
+          font-size: 64px;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 56px;
+        }
+      }
+      
+      .countdown-text {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 16px;
+        line-height: 1.5;
+        
+        @media (max-width: 768px) {
+          font-size: 15px;
+        }
+        
+        @media (max-width: 480px) {
+          font-size: 14px;
+        }
+      }
+    }
+    
+    .countdown-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      
+      @media (max-width: 480px) {
+        flex-direction: column;
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 // Face Scan Modal Styles
 .face-scan-modal {
   position: fixed;
@@ -744,6 +860,57 @@
         font-weight: 500;
         text-align: center;
         font-size: 14px;
+      }
+    }
+    
+    .scan-timer-display {
+      margin-top: 16px;
+      
+      .timer-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 8px;
+        
+        .timer-icon {
+          font-size: 20px;
+          animation: pulse 2s infinite;
+        }
+        
+        .timer-text {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          
+          .timer-label {
+            font-size: 12px;
+            color: #1e40af;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .timer-value {
+            font-size: 18px;
+            color: #1e3a8a;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+          }
+        }
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
       }
     }
     

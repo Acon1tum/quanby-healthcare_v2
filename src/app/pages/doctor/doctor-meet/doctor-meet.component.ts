@@ -38,6 +38,23 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isFaceScanComplete: boolean = false;
   showRawResults: boolean = false;
   
+  // Prescription properties
+  showPrescriptionModal: boolean = false;
+  prescriptionForm: any = {
+    medicationName: '',
+    dosage: '',
+    frequency: '',
+    duration: '',
+    instructions: '',
+    quantity: null,
+    refills: 0,
+    prescribedAt: new Date(),
+    expiresAt: null,
+    notes: ''
+  };
+  prescriptions: any[] = [];
+  isSubmittingPrescription: boolean = false;
+  
   private remoteStreamSubscription: any;
 
   constructor(
@@ -600,5 +617,127 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         this.errorMessage = 'Face scan timed out. Please try again or check patient connection.';
       }
     }, 120000); // 2 minute timeout
+  }
+
+  // Prescription methods
+  openPrescriptionModal(): void {
+    this.showPrescriptionModal = true;
+    this.resetPrescriptionForm();
+  }
+
+  closePrescriptionModal(): void {
+    this.showPrescriptionModal = false;
+    this.resetPrescriptionForm();
+  }
+
+  resetPrescriptionForm(): void {
+    this.prescriptionForm = {
+      medicationName: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: '',
+      quantity: null,
+      refills: 0,
+      prescribedAt: new Date(),
+      expiresAt: null,
+      notes: ''
+    };
+  }
+
+  async submitPrescription(): Promise<void> {
+    if (!this.validatePrescriptionForm()) {
+      return;
+    }
+
+    this.isSubmittingPrescription = true;
+
+    try {
+      // Create prescription object
+      const prescription = {
+        ...this.prescriptionForm,
+        prescribedAt: new Date(this.prescriptionForm.prescribedAt),
+        expiresAt: this.prescriptionForm.expiresAt ? new Date(this.prescriptionForm.expiresAt) : null,
+        id: Date.now(), // Temporary ID for frontend display
+        createdAt: new Date()
+      };
+
+      // Add to prescriptions list
+      this.prescriptions.push(prescription);
+
+      // Send prescription to patient via WebRTC data channel
+      this.webrtc.sendFaceScanStatus({
+        type: 'face-scan-status',
+        status: `Prescription: ${prescription.medicationName} - ${prescription.dosage}`,
+        timestamp: Date.now()
+      });
+      
+      // Store prescription data for patient access
+      console.log('📋 Prescription data for patient:', prescription);
+
+      console.log('✅ Prescription submitted:', prescription);
+      
+      // Close modal and reset form
+      this.closePrescriptionModal();
+      
+      // Show success message (you could add a toast notification here)
+      alert('Prescription submitted successfully!');
+      
+    } catch (error) {
+      console.error('❌ Error submitting prescription:', error);
+      alert('Error submitting prescription. Please try again.');
+    } finally {
+      this.isSubmittingPrescription = false;
+    }
+  }
+
+  validatePrescriptionForm(): boolean {
+    const requiredFields = ['medicationName', 'dosage', 'frequency', 'duration'];
+    
+    for (const field of requiredFields) {
+      if (!this.prescriptionForm[field] || this.prescriptionForm[field].trim() === '') {
+        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+        return false;
+      }
+    }
+
+    // Validate quantity if provided
+    if (this.prescriptionForm.quantity && (isNaN(this.prescriptionForm.quantity) || this.prescriptionForm.quantity <= 0)) {
+      alert('Quantity must be a positive number.');
+      return false;
+    }
+
+    // Validate refills
+    if (this.prescriptionForm.refills < 0) {
+      alert('Refills cannot be negative.');
+      return false;
+    }
+
+    // Validate expiration date if provided
+    if (this.prescriptionForm.expiresAt && new Date(this.prescriptionForm.expiresAt) <= new Date()) {
+      alert('Expiration date must be in the future.');
+      return false;
+    }
+
+    return true;
+  }
+
+  deletePrescription(index: number): void {
+    if (confirm('Are you sure you want to delete this prescription?')) {
+      this.prescriptions.splice(index, 1);
+    }
+  }
+
+  editPrescription(index: number): void {
+    this.prescriptionForm = { ...this.prescriptions[index] };
+    this.showPrescriptionModal = true;
+  }
+
+  // Handle prescription data from WebRTC data channel
+  handlePrescriptionData(data: any): void {
+    if (data.type === 'prescription') {
+      console.log('📋 Prescription received:', data.prescription);
+      // You could add prescription to a received prescriptions list here
+    }
   }
 }

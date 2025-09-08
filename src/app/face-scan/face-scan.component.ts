@@ -35,6 +35,7 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   isScanningComplete = false;
   isLoading = false;
   scanComplete = false;
+  scanTimeRemaining: number = 0;
   
   userAge?: number;
   userGender?: string;
@@ -53,7 +54,12 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   
   private subscription = new Subscription();
 
-  constructor(private faceScanService: FaceScanService, private router: Router, private cdr: ChangeDetectorRef, private http: HttpClient) {}
+  constructor(
+    private faceScanService: FaceScanService, 
+    private router: Router, 
+    private cdr: ChangeDetectorRef, 
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     // Enable detailed debugging
@@ -457,7 +463,7 @@ export class FaceScanComponent implements OnInit, OnDestroy {
         
       case 'scanTimeRemaining':
         console.log('⏱️ Scan time remaining:', data);
-        // Handle scan timer if needed
+        this.scanTimeRemaining = data.analysisData || 0;
         break;
         
       case 'videoElementDimensions':
@@ -1739,4 +1745,5 @@ export class FaceScanComponent implements OnInit, OnDestroy {
     if (bmi >= 17 && bmi < 30) return 'orange';
     return 'red';
   }
-} 
+
+}

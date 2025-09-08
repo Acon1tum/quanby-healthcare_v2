@@ -11,6 +11,20 @@
           Face Scan in Progress
         </h2>
         <p class="text-gray-600 mb-1 text-lg">Please look directly at the camera and stay still</p>
+        
+        <!-- Scan Time Remaining Display -->
+        <div *ngIf="scanTimeRemaining > 0" class="scan-timer-container mb-4">
+          <div class="bg-blue-100 border border-blue-300 rounded-lg px-4 py-2 inline-block">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-blue-800 font-semibold">
+                Time Remaining: {{ scanTimeRemaining }} seconds
+              </span>
+            </div>
+          </div>
+        </div>
 
       </div>
       <div class="iframe-container-full flex-1 w-full flex items-center justify-center">

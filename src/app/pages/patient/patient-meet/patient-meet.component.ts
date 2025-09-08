@@ -37,6 +37,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isFaceScanning: boolean = false;
   isFaceScanComplete: boolean = false;
   showRawResults: boolean = false;
+  scanTimeRemaining: number = 0;
   
   private remoteStreamSubscription: any;
   private dataChannelSubscription: any;
@@ -407,6 +408,11 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
               status: 'Patient: Face analysis started...',
               timestamp: Date.now()
             });
+            break;
+          case 'scanTimeRemaining':
+            console.log('⏱️ Scan time remaining received in patient-meet:', data);
+            this.scanTimeRemaining = data.analysisData || 0;
+            console.log('⏱️ Updated scan time remaining in patient-meet:', this.scanTimeRemaining);
             break;
           case 'onHealthAnalysisFinished':
             this.faceScanResults = data.analysisData;
