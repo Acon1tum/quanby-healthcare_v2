@@ -3,6 +3,7 @@ import { WebRTCService } from '../../../services/webrtc.service';
 import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
 import { PrescriptionsService, CreatePrescriptionRequest, Prescription, Patient } from '../../../services/prescriptions.service';
 import { ConsultationsService, CreateDirectConsultationRequest, Consultation } from '../../../services/consultations.service';
+import { DiagnosesService, CreateDiagnosisRequest, Diagnosis, DiagnosisSeverity, DiagnosisStatus } from '../../../services/diagnoses.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -67,6 +68,31 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   consultationId: number | null = null;
   patientId: number | null = null;
   
+  // Diagnosis properties
+  showDiagnosisModal: boolean = false;
+  diagnosisForm: any = {
+    patientId: null,
+    consultationId: null,
+    diagnosisCode: '',
+    diagnosisName: '',
+    description: '',
+    severity: DiagnosisSeverity.MILD,
+    status: DiagnosisStatus.ACTIVE,
+    onsetDate: null,
+    diagnosedAt: new Date(),
+    resolvedAt: null,
+    notes: '',
+    isPrimary: false
+  };
+  diagnoses: Diagnosis[] = [];
+  isSubmittingDiagnosis: boolean = false;
+  diagnosisError: string = '';
+  diagnosisSuccess: string = '';
+  
+  // Enums for template
+  DiagnosisSeverity = DiagnosisSeverity;
+  DiagnosisStatus = DiagnosisStatus;
+  
   private remoteStreamSubscription: any;
 
   constructor(
@@ -74,6 +100,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     private faceScanService: FaceScanService,
     private prescriptionsService: PrescriptionsService,
     private consultationsService: ConsultationsService,
+    private diagnosesService: DiagnosesService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -702,6 +729,10 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           
           // Update the prescription form with the actual patient ID
           this.prescriptionForm.patientId = this.patientId;
+          // Keep diagnosis form in sync with the resolved patient context
+          if (this.diagnosisForm) {
+            this.diagnosisForm.patientId = this.patientId;
+          }
           
           console.log('✅ Loaded actual patient data:', this.currentPatient);
           console.log('📋 Updated prescription form patientId:', this.prescriptionForm.patientId);
@@ -720,8 +751,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Ensure we still have a valid patient ID for testing
         if (!this.patientId) {
-          this.patientId = 4; // Fallback to first seeded patient
+          this.patientId = 5; // Fallback to first seeded patient (after admin/doctors)
           this.prescriptionForm.patientId = this.patientId;
+          if (this.diagnosisForm) {
+            this.diagnosisForm.patientId = this.patientId;
+          }
           console.log('🔄 Using fallback patient ID:', this.patientId);
         }
         
@@ -759,9 +793,14 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           
           // Update the prescription form with the consultation ID
           this.prescriptionForm.consultationId = this.consultationId;
+          // Also update diagnosis form with the consultation ID
+          if (this.diagnosisForm) {
+            this.diagnosisForm.consultationId = this.consultationId;
+          }
           
           console.log('✅ Consultation created successfully:', this.currentConsultation);
           console.log('📋 Updated prescription form consultationId:', this.prescriptionForm.consultationId);
+          console.log('📋 Updated diagnosis form consultationId:', this.diagnosisForm?.consultationId);
         } else {
           console.warn('⚠️ Failed to create consultation:', response.message);
           this.consultationId = null;
@@ -797,6 +836,9 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           
           // Update the prescription form with the actual patient ID
           this.prescriptionForm.patientId = this.patientId;
+          if (this.diagnosisForm) {
+            this.diagnosisForm.patientId = this.patientId;
+          }
           
           console.log('✅ Loaded actual patient data:', this.currentPatient);
           console.log('📋 Updated prescription form patientId:', this.prescriptionForm.patientId);
@@ -811,8 +853,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Ensure we still have a valid patient ID for testing
         if (!this.patientId) {
-          this.patientId = 4; // Fallback to first seeded patient
+          this.patientId = 5; // Fallback to first seeded patient (after admin/doctors)
           this.prescriptionForm.patientId = this.patientId;
+          if (this.diagnosisForm) {
+            this.diagnosisForm.patientId = this.patientId;
+          }
           console.log('🔄 Using fallback patient ID:', this.patientId);
         }
       }
@@ -838,7 +883,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // For now, return the first available patient ID from seeded data
     // Based on seed.ts: Admin(1), Doctors(2,3), Patients(4,5,6)
     // In real implementation, this would be the actual patient ID from the consultation
-    return 4; // First patient ID from seeded data
+    return 5; // First patient ID from seeded data (IDs 2-4 are doctors)
   }
 
   closePrescriptionModal(): void {
@@ -1006,6 +1051,194 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (data.type === 'prescription') {
       console.log('📋 Prescription received:', data.prescription);
       // You could add prescription to a received prescriptions list here
+    }
+  }
+
+  // Diagnosis methods
+  openDiagnosisModal(): void {
+    // Check if patient is connected
+    if (!this.remoteStream) {
+      this.diagnosisError = 'Patient must be connected to create a diagnosis.';
+      return;
+    }
+
+    // Check if doctor is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.role !== 'DOCTOR') {
+      this.diagnosisError = 'Only doctors can create diagnoses.';
+      return;
+    }
+
+    // Initialize consultation context if not already done
+    if (!this.consultationId) {
+      this.initializeConsultationContext();
+    }
+
+    this.showDiagnosisModal = true;
+    this.resetDiagnosisForm();
+    this.diagnosisError = '';
+    this.diagnosisSuccess = '';
+  }
+
+  closeDiagnosisModal(): void {
+    this.showDiagnosisModal = false;
+    this.resetDiagnosisForm();
+    this.diagnosisError = '';
+    this.diagnosisSuccess = '';
+  }
+
+  resetDiagnosisForm(): void {
+    this.diagnosisForm = {
+      patientId: this.patientId,
+      consultationId: this.consultationId || null,
+      diagnosisCode: '',
+      diagnosisName: '',
+      description: '',
+      severity: DiagnosisSeverity.MILD,
+      status: DiagnosisStatus.ACTIVE,
+      onsetDate: null,
+      diagnosedAt: new Date(),
+      resolvedAt: null,
+      notes: '',
+      isPrimary: false
+    };
+  }
+
+  async submitDiagnosis(): Promise<void> {
+    if (!this.validateDiagnosisForm()) {
+      return;
+    }
+
+    // Ensure we have valid patient context
+    if (!this.diagnosisForm.patientId) {
+      this.diagnosisError = 'Patient context is required to create a diagnosis.';
+      return;
+    }
+
+    this.isSubmittingDiagnosis = true;
+    this.diagnosisError = '';
+    this.diagnosisSuccess = '';
+
+    try {
+      // Prepare diagnosis data for API
+      const diagnosisData: CreateDiagnosisRequest = {
+        patientId: this.diagnosisForm.patientId,
+        consultationId: this.diagnosisForm.consultationId,
+        diagnosisCode: this.diagnosisForm.diagnosisCode || undefined,
+        diagnosisName: this.diagnosisForm.diagnosisName,
+        description: this.diagnosisForm.description || undefined,
+        severity: this.diagnosisForm.severity,
+        status: this.diagnosisForm.status,
+        onsetDate: this.diagnosisForm.onsetDate ? new Date(this.diagnosisForm.onsetDate) : undefined,
+        resolvedAt: this.diagnosisForm.resolvedAt ? new Date(this.diagnosisForm.resolvedAt) : undefined,
+        notes: this.diagnosisForm.notes || undefined,
+        isPrimary: this.diagnosisForm.isPrimary
+      };
+
+      console.log('🔍 Submitting diagnosis with data:', diagnosisData);
+      console.log('👤 Current patient ID:', this.patientId);
+      console.log('🏥 Current consultation ID:', this.consultationId);
+
+      // Validate diagnosis data
+      const validation = this.diagnosesService.validateDiagnosisData(diagnosisData);
+      if (!validation.isValid) {
+        this.diagnosisError = validation.errors.join(', ');
+        return;
+      }
+
+      // Create diagnosis via API
+      this.diagnosesService.createDiagnosis(diagnosisData).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            // Add to local diagnoses list
+            this.diagnoses.push(response.data as Diagnosis);
+
+            // Send diagnosis notification to patient via WebRTC data channel
+            this.webrtc.sendFaceScanStatus({
+              type: 'face-scan-status',
+              status: `Diagnosis Created: ${diagnosisData.diagnosisName} - ${diagnosisData.severity}`,
+              timestamp: Date.now()
+            });
+            
+            console.log('✅ Diagnosis created successfully:', response.data);
+            
+            // Close modal and reset form
+            this.closeDiagnosisModal();
+            
+            // Show success message
+            this.diagnosisSuccess = 'Diagnosis created and saved successfully!';
+            setTimeout(() => {
+              this.diagnosisSuccess = '';
+            }, 5000);
+            
+          } else {
+            this.diagnosisError = response.message || 'Failed to create diagnosis';
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error creating diagnosis:', error);
+          this.diagnosisError = error.error?.message || 'Error creating diagnosis. Please try again.';
+        },
+        complete: () => {
+          this.isSubmittingDiagnosis = false;
+        }
+      });
+      
+    } catch (error) {
+      console.error('❌ Error submitting diagnosis:', error);
+      this.diagnosisError = 'Error submitting diagnosis. Please try again.';
+      this.isSubmittingDiagnosis = false;
+    }
+  }
+
+  validateDiagnosisForm(): boolean {
+    const requiredFields = ['diagnosisName'];
+    
+    for (const field of requiredFields) {
+      if (!this.diagnosisForm[field] || this.diagnosisForm[field].trim() === '') {
+        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+        return false;
+      }
+    }
+
+    // Validate onset date if provided
+    if (this.diagnosisForm.onsetDate && new Date(this.diagnosisForm.onsetDate) > new Date()) {
+      alert('Onset date cannot be in the future.');
+      return false;
+    }
+
+    // Validate resolved date if provided
+    if (this.diagnosisForm.resolvedAt && new Date(this.diagnosisForm.resolvedAt) > new Date()) {
+      alert('Resolved date cannot be in the future.');
+      return false;
+    }
+
+    // Validate onset date vs resolved date
+    if (this.diagnosisForm.onsetDate && this.diagnosisForm.resolvedAt && 
+        new Date(this.diagnosisForm.onsetDate) > new Date(this.diagnosisForm.resolvedAt)) {
+      alert('Onset date cannot be after resolved date.');
+      return false;
+    }
+
+    return true;
+  }
+
+  deleteDiagnosis(index: number): void {
+    if (confirm('Are you sure you want to delete this diagnosis?')) {
+      this.diagnoses.splice(index, 1);
+    }
+  }
+
+  editDiagnosis(index: number): void {
+    this.diagnosisForm = { ...this.diagnoses[index] };
+    this.showDiagnosisModal = true;
+  }
+
+  // Handle diagnosis data from WebRTC data channel
+  handleDiagnosisData(data: any): void {
+    if (data.type === 'diagnosis') {
+      console.log('🔍 Diagnosis received:', data.diagnosis);
+      // You could add diagnosis to a received diagnoses list here
     }
   }
 }

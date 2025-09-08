@@ -104,6 +104,15 @@
       >
         💊 Write Prescription
       </button>
+      
+      <button 
+        *ngIf="remoteStream" 
+        (click)="openDiagnosisModal()" 
+        class="btn btn-warning"
+        title="Create diagnosis for patient"
+      >
+        🔍 Create Diagnosis
+      </button>
     </div>
 
     <!-- Video Container -->
@@ -190,6 +199,15 @@
           title="Create prescription for patient"
         >
           💊 Prescription
+        </button>
+        
+        <button 
+          *ngIf="remoteStream" 
+          (click)="openDiagnosisModal()" 
+          class="btn btn-ghost btn-warning"
+          title="Create diagnosis for patient"
+        >
+          🔍 Diagnosis
         </button>
         
         <span class="spacer"></span>
@@ -482,6 +500,200 @@
       <div class="prescription-actions">
         <button (click)="editPrescription(i)" class="btn btn-sm btn-outline-primary">Edit</button>
         <button (click)="deletePrescription(i)" class="btn btn-sm btn-outline-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnosis Modal -->
+  <div *ngIf="showDiagnosisModal" class="diagnosis-modal">
+    <div class="diagnosis-modal-content">
+      <div class="diagnosis-header">
+        <h3>🔍 Create Diagnosis</h3>
+        <button (click)="closeDiagnosisModal()" class="btn-close">&times;</button>
+      </div>
+      
+      <form (ngSubmit)="submitDiagnosis()" class="diagnosis-form">
+        <!-- Error Message -->
+        <div *ngIf="diagnosisError" class="alert alert-error">
+          {{ diagnosisError }}
+        </div>
+        
+        <!-- Success Message -->
+        <div *ngIf="diagnosisSuccess" class="alert alert-success">
+          {{ diagnosisSuccess }}
+        </div>
+        
+        <!-- Patient and Consultation Info Display -->
+        <div class="consultation-info" *ngIf="currentPatient">
+          <div class="info-item">
+            <strong>Patient:</strong> {{ currentPatient.fullName }}
+          </div>
+          <div class="info-item" *ngIf="currentConsultation">
+            <strong>Consultation ID:</strong> {{ currentConsultation.id }}
+          </div>
+          <div class="info-item" *ngIf="!currentConsultation && consultationId">
+            <strong>Status:</strong> Creating consultation...
+          </div>
+          <div class="info-item" *ngIf="!currentConsultation && !consultationId">
+            <strong>Mode:</strong> Direct Diagnosis (No Consultation)
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="diagnosisName">Diagnosis Name *</label>
+            <input 
+              type="text" 
+              id="diagnosisName"
+              [(ngModel)]="diagnosisForm.diagnosisName" 
+              name="diagnosisName"
+              class="form-control"
+              placeholder="e.g., Hypertension, Diabetes Type 2"
+              required
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="diagnosisCode">Diagnosis Code</label>
+            <input 
+              type="text" 
+              id="diagnosisCode"
+              [(ngModel)]="diagnosisForm.diagnosisCode" 
+              name="diagnosisCode"
+              class="form-control"
+              placeholder="e.g., I10, E11"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description"
+            [(ngModel)]="diagnosisForm.description" 
+            name="description"
+            class="form-control"
+            rows="3"
+            placeholder="Detailed description of the diagnosis"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="severity">Severity *</label>
+            <select 
+              id="severity"
+              [(ngModel)]="diagnosisForm.severity" 
+              name="severity"
+              class="form-control"
+              required
+            >
+              <option [value]="DiagnosisSeverity.MILD">Mild</option>
+              <option [value]="DiagnosisSeverity.MODERATE">Moderate</option>
+              <option [value]="DiagnosisSeverity.SEVERE">Severe</option>
+              <option [value]="DiagnosisSeverity.CRITICAL">Critical</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="status">Status *</label>
+            <select 
+              id="status"
+              [(ngModel)]="diagnosisForm.status" 
+              name="status"
+              class="form-control"
+              required
+            >
+              <option [value]="DiagnosisStatus.ACTIVE">Active</option>
+              <option [value]="DiagnosisStatus.RESOLVED">Resolved</option>
+              <option [value]="DiagnosisStatus.CHRONIC">Chronic</option>
+              <option [value]="DiagnosisStatus.SUSPECTED">Suspected</option>
+              <option [value]="DiagnosisStatus.RULED_OUT">Ruled Out</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="onsetDate">Onset Date</label>
+            <input 
+              type="date" 
+              id="onsetDate"
+              [(ngModel)]="diagnosisForm.onsetDate" 
+              name="onsetDate"
+              class="form-control"
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="resolvedAt">Resolved Date</label>
+            <input 
+              type="date" 
+              id="resolvedAt"
+              [(ngModel)]="diagnosisForm.resolvedAt" 
+              name="resolvedAt"
+              class="form-control"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea 
+            id="notes"
+            [(ngModel)]="diagnosisForm.notes" 
+            name="notes"
+            class="form-control"
+            rows="2"
+            placeholder="Additional notes about this diagnosis"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="diagnosisForm.isPrimary" 
+              name="isPrimary"
+            >
+            <span class="checkmark"></span>
+            Primary Diagnosis
+          </label>
+        </div>
+
+        <div class="diagnosis-actions">
+          <button 
+            type="button" 
+            (click)="closeDiagnosisModal()" 
+            class="btn btn-secondary"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-warning"
+            [disabled]="isSubmittingDiagnosis"
+          >
+            <span *ngIf="!isSubmittingDiagnosis">🔍 Submit Diagnosis</span>
+            <span *ngIf="isSubmittingDiagnosis">⏳ Submitting...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Diagnoses List Modal (if needed) -->
+  <div *ngIf="diagnoses.length > 0" class="diagnoses-list">
+    <h4>Recent Diagnoses</h4>
+    <div class="diagnosis-item" *ngFor="let diagnosis of diagnoses; let i = index">
+      <div class="diagnosis-info">
+        <strong>{{ diagnosis.diagnosisName }}</strong> - {{ diagnosis.severity }}
+        <br>
+        <small>{{ diagnosis.status }} | {{ diagnosis.diagnosedAt | date:'short' }}</small>
+      </div>
+      <div class="diagnosis-actions">
+        <button (click)="editDiagnosis(i)" class="btn btn-sm btn-outline-primary">Edit</button>
+        <button (click)="deleteDiagnosis(i)" class="btn btn-sm btn-outline-danger">Delete</button>
       </div>
     </div>
   </div>
