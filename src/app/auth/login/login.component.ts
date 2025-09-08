@@ -111,7 +111,7 @@ export class LoginComponent implements OnInit {
 
   loginAsDoctor(): void {
     this.loginForm.patchValue({
-      email: 'dr.william@qhealth.com',
+      email: 'dr.williams@qhealth.com',
       password: 'doctor123'
     });
     this.onSubmit();

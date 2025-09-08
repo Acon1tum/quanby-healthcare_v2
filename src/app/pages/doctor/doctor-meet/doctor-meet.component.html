@@ -273,6 +273,32 @@
       </div>
       
       <form (ngSubmit)="submitPrescription()" class="prescription-form">
+        <!-- Error Message -->
+        <div *ngIf="prescriptionError" class="alert alert-error">
+          {{ prescriptionError }}
+        </div>
+        
+        <!-- Success Message -->
+        <div *ngIf="prescriptionSuccess" class="alert alert-success">
+          {{ prescriptionSuccess }}
+        </div>
+        
+        <!-- Patient and Consultation Info Display -->
+        <div class="consultation-info" *ngIf="currentPatient">
+          <div class="info-item">
+            <strong>Patient:</strong> {{ currentPatient.fullName }}
+          </div>
+          <div class="info-item" *ngIf="currentConsultation">
+            <strong>Consultation ID:</strong> {{ currentConsultation.id }}
+          </div>
+          <div class="info-item" *ngIf="!currentConsultation && consultationId">
+            <strong>Status:</strong> Creating consultation...
+          </div>
+          <div class="info-item" *ngIf="!currentConsultation && !consultationId">
+            <strong>Mode:</strong> Direct Prescription (No Consultation)
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="medicationName">Medication Name *</label>
@@ -288,6 +314,12 @@
           </div>
           
           <div class="form-group">
+            <!-- Empty div for layout balance -->
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
             <label for="dosage">Dosage *</label>
             <input 
               type="text" 
@@ -299,9 +331,7 @@
               required
             >
           </div>
-        </div>
-
-        <div class="form-row">
+          
           <div class="form-group">
             <label for="frequency">Frequency *</label>
             <select 
@@ -322,7 +352,9 @@
               <option value="As needed">As needed</option>
             </select>
           </div>
-          
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label for="duration">Duration *</label>
             <input 
@@ -335,9 +367,7 @@
               required
             >
           </div>
-        </div>
-
-        <div class="form-row">
+          
           <div class="form-group">
             <label for="quantity">Quantity</label>
             <input 
@@ -350,7 +380,9 @@
               min="1"
             >
           </div>
-          
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label for="refills">Refills</label>
             <input 
@@ -363,9 +395,7 @@
               min="0"
             >
           </div>
-        </div>
-
-        <div class="form-row">
+          
           <div class="form-group">
             <label for="prescribedAt">Prescribed Date</label>
             <input 
@@ -376,7 +406,9 @@
               class="form-control"
             >
           </div>
-          
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label for="expiresAt">Expiration Date</label>
             <input 
@@ -386,6 +418,10 @@
               name="expiresAt"
               class="form-control"
             >
+          </div>
+          
+          <div class="form-group">
+            <!-- Empty div for layout balance -->
           </div>
         </div>
 

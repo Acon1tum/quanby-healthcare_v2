@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { WebRTCService } from '../../../services/webrtc.service';
 import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
+import { PrescriptionsService, CreatePrescriptionRequest, Prescription, Patient } from '../../../services/prescriptions.service';
+import { ConsultationsService, CreateDirectConsultationRequest, Consultation } from '../../../services/consultations.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -41,6 +43,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   // Prescription properties
   showPrescriptionModal: boolean = false;
   prescriptionForm: any = {
+    patientId: null, // Will be auto-populated from consultation context
+    consultationId: null, // Will be auto-populated from consultation context
     medicationName: '',
     dosage: '',
     frequency: '',
@@ -52,14 +56,24 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     expiresAt: null,
     notes: ''
   };
-  prescriptions: any[] = [];
+  prescriptions: Prescription[] = [];
   isSubmittingPrescription: boolean = false;
+  prescriptionError: string = '';
+  prescriptionSuccess: string = '';
+  
+  // Consultation context properties
+  currentConsultation: any = null;
+  currentPatient: any = null;
+  consultationId: number | null = null;
+  patientId: number | null = null;
   
   private remoteStreamSubscription: any;
 
   constructor(
     public webrtc: WebRTCService,
     private faceScanService: FaceScanService,
+    private prescriptionsService: PrescriptionsService,
+    private consultationsService: ConsultationsService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -621,17 +635,223 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Prescription methods
   openPrescriptionModal(): void {
+    // Check if patient is connected
+    if (!this.remoteStream) {
+      this.prescriptionError = 'Patient must be connected to create a prescription.';
+      return;
+    }
+
+    // Check if doctor is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.role !== 'DOCTOR') {
+      this.prescriptionError = 'Only doctors can create prescriptions.';
+      return;
+    }
+
+    // Initialize consultation context
+    this.initializeConsultationContext();
+
     this.showPrescriptionModal = true;
     this.resetPrescriptionForm();
+    this.prescriptionError = '';
+    this.prescriptionSuccess = '';
+  }
+
+  // Initialize consultation context for prescription
+  private initializeConsultationContext(): void {
+    // In a real implementation, this would come from:
+    // 1. URL parameters (consultation ID)
+    // 2. Route state
+    // 3. Service call to get current consultation
+    // 4. WebRTC data channel communication with patient
+    
+    // For now, we'll create a real consultation
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    this.patientId = this.getPatientIdFromContext();
+    
+    // Set initial patient info
+    this.currentPatient = {
+      id: this.patientId,
+      fullName: 'Emily Anderson', // Will be updated when we load patient data
+      email: 'patient.anderson@email.com'
+    };
+    
+    // Load patient data first, then create consultation
+    this.loadPatientDataAndCreateConsultation();
+  }
+
+  // Load patient data and create consultation
+  private loadPatientDataAndCreateConsultation(): void {
+    console.log('🔍 Loading patient data and creating consultation...');
+    
+    this.prescriptionsService.getAvailablePatients().subscribe({
+      next: (response) => {
+        console.log('📊 Patient data response:', response);
+        
+        if (response.success && response.data && response.data.length > 0) {
+          // Use the first available patient
+          const firstPatient: Patient = response.data[0];
+          console.log('👤 First patient data:', firstPatient);
+          
+          this.patientId = firstPatient.id;
+          this.currentPatient = {
+            id: firstPatient.id,
+            fullName: firstPatient.fullName || 'Unknown Patient',
+            email: firstPatient.email
+          };
+          
+          // Update the prescription form with the actual patient ID
+          this.prescriptionForm.patientId = this.patientId;
+          
+          console.log('✅ Loaded actual patient data:', this.currentPatient);
+          console.log('📋 Updated prescription form patientId:', this.prescriptionForm.patientId);
+          
+          // Now create a consultation
+          this.createConsultation();
+        } else {
+          console.warn('⚠️ No patients available, using fallback data');
+          console.log('📊 Response data:', response.data);
+          this.createConsultation(); // Still try to create consultation with fallback data
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error loading patient data:', error);
+        console.warn('⚠️ Using fallback patient data');
+        
+        // Ensure we still have a valid patient ID for testing
+        if (!this.patientId) {
+          this.patientId = 4; // Fallback to first seeded patient
+          this.prescriptionForm.patientId = this.patientId;
+          console.log('🔄 Using fallback patient ID:', this.patientId);
+        }
+        
+        // Still try to create consultation
+        this.createConsultation();
+      }
+    });
+  }
+
+  // Create a consultation for the prescription
+  private createConsultation(): void {
+    console.log('🏥 Creating consultation for prescription...');
+    
+    const consultationData: CreateDirectConsultationRequest = {
+      patientId: this.patientId!,
+      startTime: new Date(),
+      notes: 'Direct consultation from doctor-meet for prescription',
+      diagnosis: 'Consultation for prescription management',
+      treatment: 'Prescription-based treatment'
+    };
+
+    this.consultationsService.createDirectConsultation(consultationData).subscribe({
+      next: (response) => {
+        console.log('📊 Consultation creation response:', response);
+        
+        if (response.success && response.data) {
+          this.consultationId = response.data.id;
+          this.currentConsultation = {
+            id: this.consultationId,
+            doctorId: response.data.doctorId,
+            patientId: response.data.patientId,
+            startTime: new Date(response.data.startTime),
+            status: 'active'
+          };
+          
+          // Update the prescription form with the consultation ID
+          this.prescriptionForm.consultationId = this.consultationId;
+          
+          console.log('✅ Consultation created successfully:', this.currentConsultation);
+          console.log('📋 Updated prescription form consultationId:', this.prescriptionForm.consultationId);
+        } else {
+          console.warn('⚠️ Failed to create consultation:', response.message);
+          this.consultationId = null;
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error creating consultation:', error);
+        this.consultationId = null;
+        console.warn('⚠️ Will proceed without consultation ID');
+      }
+    });
+  }
+
+  // Load actual patient data from database (legacy method - kept for compatibility)
+  private loadPatientData(): void {
+    console.log('🔍 Loading patient data from database...');
+    
+    this.prescriptionsService.getAvailablePatients().subscribe({
+      next: (response) => {
+        console.log('📊 Patient data response:', response);
+        
+        if (response.success && response.data && response.data.length > 0) {
+          // Use the first available patient
+          const firstPatient: Patient = response.data[0];
+          console.log('👤 First patient data:', firstPatient);
+          
+          this.patientId = firstPatient.id;
+          this.currentPatient = {
+            id: firstPatient.id,
+            fullName: firstPatient.fullName || 'Unknown Patient',
+            email: firstPatient.email
+          };
+          
+          // Update the prescription form with the actual patient ID
+          this.prescriptionForm.patientId = this.patientId;
+          
+          console.log('✅ Loaded actual patient data:', this.currentPatient);
+          console.log('📋 Updated prescription form patientId:', this.prescriptionForm.patientId);
+        } else {
+          console.warn('⚠️ No patients available, using fallback data');
+          console.log('📊 Response data:', response.data);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error loading patient data:', error);
+        console.warn('⚠️ Using fallback patient data');
+        
+        // Ensure we still have a valid patient ID for testing
+        if (!this.patientId) {
+          this.patientId = 4; // Fallback to first seeded patient
+          this.prescriptionForm.patientId = this.patientId;
+          console.log('🔄 Using fallback patient ID:', this.patientId);
+        }
+      }
+    });
+  }
+
+  // Generate a consultation ID (in real app, this would come from consultation service)
+  private generateConsultationId(): number {
+    // In production, this should be the actual consultation ID from the database
+    // Generate a smaller integer that fits in INT4 (32-bit signed integer)
+    // Using a simple counter or smaller timestamp
+    return Math.floor(Math.random() * 1000000) + 1; // Random ID between 1 and 1000000
+  }
+
+  // Get patient ID from context (in real app, this would come from consultation data)
+  private getPatientIdFromContext(): number {
+    // In production, this should be extracted from:
+    // 1. Consultation data
+    // 2. WebRTC connection context
+    // 3. Route parameters
+    // 4. Service call
+    
+    // For now, return the first available patient ID from seeded data
+    // Based on seed.ts: Admin(1), Doctors(2,3), Patients(4,5,6)
+    // In real implementation, this would be the actual patient ID from the consultation
+    return 4; // First patient ID from seeded data
   }
 
   closePrescriptionModal(): void {
     this.showPrescriptionModal = false;
     this.resetPrescriptionForm();
+    this.prescriptionError = '';
+    this.prescriptionSuccess = '';
   }
 
   resetPrescriptionForm(): void {
     this.prescriptionForm = {
+      patientId: this.patientId, // Auto-populated from consultation context
+      consultationId: this.consultationId || null, // Auto-populated from consultation context (can be null)
       medicationName: '',
       dosage: '',
       frequency: '',
@@ -645,48 +865,96 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     };
   }
 
+
   async submitPrescription(): Promise<void> {
     if (!this.validatePrescriptionForm()) {
       return;
     }
 
+    // Ensure we have valid patient context
+    if (!this.prescriptionForm.patientId) {
+      this.prescriptionError = 'Patient context is required to create a prescription.';
+      return;
+    }
+
+    // Check if consultation was created successfully
+    if (!this.consultationId) {
+      this.prescriptionError = 'Consultation is required to create a prescription. Please wait for consultation to be created.';
+      return;
+    }
+
     this.isSubmittingPrescription = true;
+    this.prescriptionError = '';
+    this.prescriptionSuccess = '';
 
     try {
-      // Create prescription object
-      const prescription = {
-        ...this.prescriptionForm,
-        prescribedAt: new Date(this.prescriptionForm.prescribedAt),
-        expiresAt: this.prescriptionForm.expiresAt ? new Date(this.prescriptionForm.expiresAt) : null,
-        id: Date.now(), // Temporary ID for frontend display
-        createdAt: new Date()
+      // Prepare prescription data for API
+      const prescriptionData: CreatePrescriptionRequest = {
+        patientId: this.prescriptionForm.patientId,
+        consultationId: this.prescriptionForm.consultationId, // Now we always have a consultation ID
+        medicationName: this.prescriptionForm.medicationName,
+        dosage: this.prescriptionForm.dosage,
+        frequency: this.prescriptionForm.frequency,
+        duration: this.prescriptionForm.duration,
+        instructions: this.prescriptionForm.instructions,
+        quantity: this.prescriptionForm.quantity,
+        refills: this.prescriptionForm.refills,
+        expiresAt: this.prescriptionForm.expiresAt ? new Date(this.prescriptionForm.expiresAt) : undefined,
+        notes: this.prescriptionForm.notes
       };
 
-      // Add to prescriptions list
-      this.prescriptions.push(prescription);
+      console.log('📋 Submitting prescription with data:', prescriptionData);
+      console.log('👤 Current patient ID:', this.patientId);
+      console.log('🏥 Current consultation ID:', this.consultationId);
 
-      // Send prescription to patient via WebRTC data channel
-      this.webrtc.sendFaceScanStatus({
-        type: 'face-scan-status',
-        status: `Prescription: ${prescription.medicationName} - ${prescription.dosage}`,
-        timestamp: Date.now()
+      // Validate prescription data
+      const validation = this.prescriptionsService.validatePrescriptionData(prescriptionData);
+      if (!validation.isValid) {
+        this.prescriptionError = validation.errors.join(', ');
+        return;
+      }
+
+      // Create prescription via API
+      this.prescriptionsService.createPrescription(prescriptionData).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            // Add to local prescriptions list
+            this.prescriptions.push(response.data as Prescription);
+
+            // Send prescription notification to patient via WebRTC data channel
+            this.webrtc.sendFaceScanStatus({
+              type: 'face-scan-status',
+              status: `Prescription Created: ${prescriptionData.medicationName} - ${prescriptionData.dosage}`,
+              timestamp: Date.now()
+            });
+            
+            console.log('✅ Prescription created successfully:', response.data);
+            
+            // Close modal and reset form
+            this.closePrescriptionModal();
+            
+            // Show success message
+            this.prescriptionSuccess = 'Prescription created and saved successfully!';
+            setTimeout(() => {
+              this.prescriptionSuccess = '';
+            }, 5000);
+            
+          } else {
+            this.prescriptionError = response.message || 'Failed to create prescription';
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error creating prescription:', error);
+          this.prescriptionError = error.error?.message || 'Error creating prescription. Please try again.';
+        },
+        complete: () => {
+          this.isSubmittingPrescription = false;
+        }
       });
-      
-      // Store prescription data for patient access
-      console.log('📋 Prescription data for patient:', prescription);
-
-      console.log('✅ Prescription submitted:', prescription);
-      
-      // Close modal and reset form
-      this.closePrescriptionModal();
-      
-      // Show success message (you could add a toast notification here)
-      alert('Prescription submitted successfully!');
       
     } catch (error) {
       console.error('❌ Error submitting prescription:', error);
-      alert('Error submitting prescription. Please try again.');
-    } finally {
+      this.prescriptionError = 'Error submitting prescription. Please try again.';
       this.isSubmittingPrescription = false;
     }
   }
