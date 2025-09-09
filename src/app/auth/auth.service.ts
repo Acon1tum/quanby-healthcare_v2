@@ -53,6 +53,30 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterPatientPayload {
+  email: string;
+  password: string;
+  role: 'PATIENT';
+  fullName: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER' | string;
+  dateOfBirth: string;
+  contactNumber: string;
+  address: string;
+  weight: number;
+  height: number;
+  bloodType: string;
+  medicalHistory?: string;
+  allergies?: string;
+  medications?: string;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactNumber?: string;
+  emergencyContactAddress?: string;
+  insuranceProviderName?: string;
+  insurancePolicyNumber?: string;
+  insuranceContact?: string;
+}
+
 export interface BackendLoginResponse {
   success: boolean;
   message: string;
@@ -88,6 +112,19 @@ export class AuthService {
     
     if (savedUser && savedToken) {
       this.currentUserSubject.next(JSON.parse(savedUser));
+    }
+  }
+
+  async registerPatient(payload: RegisterPatientPayload): Promise<{ success: boolean; message: string }>{
+    try {
+      const response = await firstValueFrom(this.http.post<any>(`${this.API_URL}/auth/register`, payload, {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+      }));
+
+      const ok = response?.success !== false;
+      return { success: ok, message: response?.message || (ok ? 'Registration successful' : 'Registration failed') };
+    } catch (e: any) {
+      return { success: false, message: e?.error?.message || 'Registration failed' };
     }
   }
 

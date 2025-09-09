@@ -17,10 +17,12 @@
     <main class="flex flex-1 items-center justify-center p-4 sm:p-6 md:p-8">
       <div class="flex flex-col w-full max-w-md space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-2xl bg-opacity-80 backdrop-blur-sm border border-gray-200">
         <div class="text-center">
-          <h2 class="text-3xl font-bold text-[var(--color-text)] tracking-tight">Create Account</h2>
-          <p class="mt-2 text-sm text-[var(--color-muted)]">Join Quanby Health and start your wellness journey today</p>
+          <h2 *ngIf="step === 1" class="text-3xl font-bold text-[var(--color-text)] tracking-tight">Create Account</h2>
+          <h2 *ngIf="step === 2" class="text-3xl font-bold text-[var(--color-text)] tracking-tight">Complete Your Profile</h2>
+          <p *ngIf="step === 1" class="mt-2 text-sm text-[var(--color-muted)]">Join Quanby Health and start your wellness journey today</p>
+          <p *ngIf="step === 2" class="mt-2 text-sm text-[var(--color-muted)]">Tell us a bit more so your doctor can better assist you</p>
         </div>
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <form *ngIf="step === 1" [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="space-y-2">
             <label class="text-sm font-medium text-[var(--color-text)]" for="fullName">Full Name</label>
             <input 
@@ -117,7 +119,97 @@
             </span>
           </button>
         </form>
-        <p class="text-center text-sm text-[var(--color-muted)]">
+
+        <!-- Step 2: Patient Details -->
+        <form *ngIf="step === 2" [formGroup]="patientForm" (ngSubmit)="submitPatientInfo()" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[var(--color-text)]" for="gender">Gender</label>
+              <select id="gender" formControlName="gender" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300">
+                <option value="" disabled>Select gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[var(--color-text)]" for="dateOfBirth">Date of Birth</label>
+              <input id="dateOfBirth" type="date" formControlName="dateOfBirth" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="contactNumber">Contact Number</label>
+            <input id="contactNumber" type="tel" formControlName="contactNumber" placeholder="e.g., +1 555 123 4567" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--color-text)]" for="address">Address</label>
+            <textarea id="address" rows="2" formControlName="address" placeholder="Street, City, State, ZIP" class="form-input w-full rounded-lg bg-gray-50 border-gray-300 px-4 py-3"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[var(--color-text)]" for="weight">Weight (kg)</label>
+              <input id="weight" type="number" min="1" step="0.1" formControlName="weight" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[var(--color-text)]" for="height">Height (cm)</label>
+              <input id="height" type="number" min="1" step="0.1" formControlName="height" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[var(--color-text)]" for="bloodType">Blood Type</label>
+              <select id="bloodType" formControlName="bloodType" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300">
+                <option value="" disabled>Select blood type</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-md font-semibold text-[var(--color-text)]">Emergency Contact</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input placeholder="Name" formControlName="emergencyContactName" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+              <input placeholder="Relationship" formControlName="emergencyContactRelationship" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+              <input placeholder="Contact Number" formControlName="emergencyContactNumber" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+              <input placeholder="Address (optional)" formControlName="emergencyContactAddress" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-md font-semibold text-[var(--color-text)]">Medical Information</h3>
+            <textarea rows="3" placeholder="Medical history" formControlName="medicalHistory" class="form-input w-full rounded-lg bg-gray-50 border-gray-300 px-4 py-3"></textarea>
+            <textarea rows="2" placeholder="Allergies" formControlName="allergies" class="form-input w-full rounded-lg bg-gray-50 border-gray-300 px-4 py-3"></textarea>
+            <textarea rows="2" placeholder="Current medications" formControlName="medications" class="form-input w-full rounded-lg bg-gray-50 border-gray-300 px-4 py-3"></textarea>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-md font-semibold text-[var(--color-text)]">Insurance</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <input placeholder="Provider name" formControlName="insuranceProviderName" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+              <input placeholder="Policy number" formControlName="insurancePolicyNumber" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+              <input placeholder="Contact" formControlName="insuranceContact" class="form-input w-full h-12 rounded-lg bg-gray-50 border-gray-300 px-4" />
+            </div>
+          </div>
+
+          <button 
+            type="submit"
+            [disabled]="patientForm.invalid || isSubmitting"
+            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[var(--color-primary)] hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            <span *ngIf="!isSubmitting">Save Details</span>
+            <span *ngIf="isSubmitting" class="flex items-center gap-2">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Saving...
+            </span>
+          </button>
+        </form>
+
+        <p *ngIf="step === 1" class="text-center text-sm text-[var(--color-muted)]">
           Already have an account? 
           <a routerLink="/login" class="font-medium text-[var(--color-primary)] hover:underline">Sign In</a>
         </p>

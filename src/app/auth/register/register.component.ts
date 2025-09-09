@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../shared/header/header.component';
+import { AuthService, RegisterPatientPayload } from '../auth.service';
 
 @Component({
   selector: 'app-register',
@@ -13,8 +14,10 @@ import { HeaderComponent } from '../../shared/header/header.component';
 export class RegisterComponent {
   registerForm: FormGroup;
   isSubmitting = false;
+  step: 1 | 2 = 1;
+  patientForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(private fb: FormBuilder, private router: Router, private authService: AuthService) {
     this.registerForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -26,6 +29,33 @@ export class RegisterComponent {
       confirmPassword: ['', [Validators.required]],
       agreeToTerms: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordMatchValidator });
+
+    this.patientForm = this.fb.group({
+      // Basic demographics
+      gender: ['', [Validators.required]],
+      dateOfBirth: ['', [Validators.required]],
+      contactNumber: ['', [Validators.required]],
+      address: ['', [Validators.required, Validators.minLength(5)]],
+      weight: [null, [Validators.required, Validators.min(1)]],
+      height: [null, [Validators.required, Validators.min(1)]],
+      bloodType: ['', [Validators.required]],
+
+      // Emergency contact
+      emergencyContactName: ['', [Validators.required]],
+      emergencyContactRelationship: ['', [Validators.required]],
+      emergencyContactNumber: ['', [Validators.required]],
+      emergencyContactAddress: [''],
+
+      // Medical history
+      medicalHistory: [''],
+      allergies: [''],
+      medications: [''],
+
+      // Insurance
+      insuranceProviderName: [''],
+      insurancePolicyNumber: [''],
+      insuranceContact: ['']
+    });
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -46,9 +76,8 @@ export class RegisterComponent {
       setTimeout(() => {
         console.log('Registration form submitted:', this.registerForm.value);
         this.isSubmitting = false;
-        
-        // Navigate to login page or dashboard after successful registration
-        this.router.navigate(['/login']);
+        // Proceed to step 2 (patient details)
+        this.step = 2;
       }, 2000);
     } else {
       // Mark all fields as touched to show validation errors
@@ -56,9 +85,52 @@ export class RegisterComponent {
     }
   }
 
-  private markFormGroupTouched() {
-    Object.keys(this.registerForm.controls).forEach(key => {
-      const control = this.registerForm.get(key);
+  async submitPatientInfo() {
+    if (this.patientForm.invalid) {
+      this.markFormGroupTouched(this.patientForm);
+      return;
+    }
+
+    this.isSubmitting = true;
+    const account = this.registerForm.value;
+    const patient = this.patientForm.value;
+
+    const payload: RegisterPatientPayload = {
+      email: account.email,
+      password: account.password,
+      role: 'PATIENT',
+      fullName: account.fullName,
+      gender: patient.gender,
+      dateOfBirth: patient.dateOfBirth,
+      contactNumber: patient.contactNumber,
+      address: patient.address,
+      weight: Number(patient.weight),
+      height: Number(patient.height),
+      bloodType: patient.bloodType,
+      medicalHistory: patient.medicalHistory || undefined,
+      allergies: patient.allergies || undefined,
+      medications: patient.medications || undefined,
+      emergencyContactName: patient.emergencyContactName || undefined,
+      emergencyContactRelationship: patient.emergencyContactRelationship || undefined,
+      emergencyContactNumber: patient.emergencyContactNumber || undefined,
+      emergencyContactAddress: patient.emergencyContactAddress || undefined,
+      insuranceProviderName: patient.insuranceProviderName || undefined,
+      insurancePolicyNumber: patient.insurancePolicyNumber || undefined,
+      insuranceContact: patient.insuranceContact || undefined,
+    };
+
+    const res = await this.authService.registerPatient(payload);
+    this.isSubmitting = false;
+    if (res.success) {
+      this.router.navigate(['/login']);
+    } else {
+      alert(res.message);
+    }
+  }
+
+  private markFormGroupTouched(group: FormGroup = this.registerForm) {
+    Object.keys(group.controls).forEach(key => {
+      const control = group.get(key);
       control?.markAsTouched();
     });
   }
