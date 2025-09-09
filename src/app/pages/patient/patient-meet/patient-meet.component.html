@@ -187,14 +187,37 @@
       <div *ngIf="isFaceScanComplete && faceScanResults" class="scan-results">
         <div class="results-header">
           <h4>✅ Face Scan Complete!</h4>
-          <button 
-            (click)="showRawResults = !showRawResults" 
-            class="btn btn-sm btn-outline-secondary"
-            title="Toggle between formatted and raw results"
-          >
-            {{ showRawResults ? 'Show Formatted' : 'Show Raw Data' }}
-          </button>
+          <div class="results-actions">
+            <button 
+              (click)="showRawResults = !showRawResults" 
+              class="btn btn-sm btn-outline-secondary"
+              title="Toggle between formatted and raw results"
+            >
+              {{ showRawResults ? 'Show Formatted' : 'Show Raw Data' }}
+            </button>
+            <button 
+              (click)="saveHealthScanResultsManually()" 
+              class="btn btn-sm btn-success"
+              [disabled]="isSavingToDatabase"
+              title="Save health data to your profile"
+            >
+              <span *ngIf="!isSavingToDatabase">💾 Save to Profile</span>
+              <span *ngIf="isSavingToDatabase">💾 Saving...</span>
+            </button>
+          </div>
         </div>
+        
+        <!-- Save Status -->
+        <div *ngIf="saveStatus" class="save-status" [ngClass]="{'success': showSaveSuccessModal, 'error': showSaveErrorModal}">
+          <span *ngIf="isSavingToDatabase" class="saving-indicator">
+            <div class="spinner"></div>
+            {{ saveStatus }}
+          </span>
+          <span *ngIf="!isSavingToDatabase" class="save-message">
+            {{ saveStatus }}
+          </span>
+        </div>
+        
         <div class="results-content">
           <div *ngIf="!showRawResults">
             <app-health-report-display [results]="faceScanResults"></app-health-report-display>
@@ -220,6 +243,38 @@
         >
           {{ isFaceScanComplete ? 'Close' : 'Cancel' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Success Modal -->
+  <div *ngIf="showSaveSuccessModal" class="save-success-modal">
+    <div class="save-success-content">
+      <div class="save-success-header">
+        <h3>✅ Success!</h3>
+      </div>
+      <div class="save-success-message">
+        <p>{{ saveStatus }}</p>
+        <p>Your health data has been saved to your profile and can be accessed by your doctor.</p>
+      </div>
+      <div class="save-success-actions">
+        <button (click)="closeSaveSuccessModal()" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Error Modal -->
+  <div *ngIf="showSaveErrorModal" class="save-error-modal">
+    <div class="save-error-content">
+      <div class="save-error-header">
+        <h3>❌ Save Failed</h3>
+      </div>
+      <div class="save-error-message">
+        <p>{{ saveStatus }}</p>
+      </div>
+      <div class="save-error-actions">
+        <button (click)="retrySaveHealthScanResults()" class="btn btn-warning">Retry</button>
+        <button (click)="closeSaveErrorModal()" class="btn btn-secondary">Cancel</button>
       </div>
     </div>
   </div>

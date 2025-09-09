@@ -243,6 +243,22 @@
               Face Scan Complete
             </h2>
             <p class="text-green-600 mb-4 text-lg">Your health analysis has been completed successfully!</p>
+            
+            <!-- Save Status Indicator -->
+            <div *ngIf="isSavingToDatabase || saveStatus" class="save-status-container mb-4">
+              <div *ngIf="isSavingToDatabase" class="bg-blue-100 border border-blue-300 rounded-lg px-4 py-3 inline-block">
+                <div class="flex items-center gap-2">
+                  <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-blue-800 font-semibold">{{ saveStatus }}</span>
+                </div>
+              </div>
+              <div *ngIf="!isSavingToDatabase && saveStatus && !showSaveSuccessModal && !showSaveErrorModal" class="bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 inline-block">
+                <span class="text-gray-800 font-semibold">{{ saveStatus }}</span>
+              </div>
+            </div>
           </div>
 
           <div class="results-header text-center mb-8">
@@ -413,6 +429,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Health Report Display Component -->
+        <div *ngIf="healthScanResults" class="health-report-container mt-8">
+          <app-health-report-display [results]="healthScanResults"></app-health-report-display>
+        </div>
+
         <div class="action-buttons flex justify-center gap-4 mt-6">
           <button 
             (click)="navigateToHome()" 
@@ -523,5 +545,36 @@
       }}
     </div>
     <div *ngIf="selectedMetric?.normalRange" class="modal-range text-sm text-gray-500 mb-2">Normal Range: {{ selectedMetric.normalRange }}</div>
+  </div>
+</div>
+
+<!-- Save Success Modal -->
+<div *ngIf="showSaveSuccessModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+  <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
+    <div class="modal-icon bg-green-100 rounded-full p-4 mb-4">
+      <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <div class="modal-title text-2xl font-bold text-green-700 mb-2 text-center">Health Data Saved!</div>
+    <div class="modal-message text-gray-600 mb-6 text-center">Your face scan results have been successfully saved to your health profile.</div>
+    <button (click)="closeSaveSuccessModal()" class="modal-close-btn bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold shadow transition-colors duration-200">Great!</button>
+  </div>
+</div>
+
+<!-- Save Error Modal -->
+<div *ngIf="showSaveErrorModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+  <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
+    <div class="modal-icon bg-red-100 rounded-full p-4 mb-4">
+      <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+    </div>
+    <div class="modal-title text-2xl font-bold text-red-700 mb-2 text-center">Save Failed</div>
+    <div class="modal-message text-gray-600 mb-6 text-center">{{ saveStatus || 'We couldn\'t save your health data. Your results are still available here, but they won\'t be saved to your profile.' }}</div>
+    <div class="modal-buttons flex gap-3">
+      <button (click)="retrySaveHealthScanResults()" class="modal-retry-btn bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow transition-colors duration-200">Retry</button>
+      <button (click)="closeSaveErrorModal()" class="modal-close-btn bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold shadow transition-colors duration-200">Close</button>
+    </div>
   </div>
 </div> 

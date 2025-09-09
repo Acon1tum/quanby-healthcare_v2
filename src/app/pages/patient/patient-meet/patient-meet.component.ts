@@ -1,10 +1,12 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { WebRTCService } from '../../../services/webrtc.service';
 import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
+import { HealthScanService, FaceScanResult } from '../../../services/health-scan.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HealthReportDisplayComponent, HealthScanResults } from '../../../shared/components/health-report-display/health-report-display.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-patient-meet',
@@ -39,12 +41,21 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   showRawResults: boolean = false;
   scanTimeRemaining: number = 0;
   
+  // Health scan save properties
+  isSavingToDatabase: boolean = false;
+  saveStatus: string = '';
+  showSaveSuccessModal: boolean = false;
+  showSaveErrorModal: boolean = false;
+  faceScanResultsForSave: FaceScanResult[] = [];
+  
   private remoteStreamSubscription: any;
   private dataChannelSubscription: any;
+  private healthScanSubscription: Subscription = new Subscription();
 
   constructor(
     public webrtc: WebRTCService,
     private faceScanService: FaceScanService,
+    private healthScanService: HealthScanService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -92,6 +103,9 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (this.dataChannelSubscription) {
       this.dataChannelSubscription.unsubscribe();
+    }
+    if (this.healthScanSubscription) {
+      this.healthScanSubscription.unsubscribe();
     }
     this.leave();
   }
@@ -420,8 +434,14 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.isFaceScanComplete = true;
             this.isFaceScanning = false;
             
+            // Convert results to FaceScanResult format for saving
+            this.faceScanResultsForSave = this.convertHealthScanResultsToFaceScanResults(data.analysisData);
+            
             // Automatically send results to doctor via WebRTC data channel
             this.webrtc.sendFaceScanResults(data.analysisData, 'Face scan completed successfully!');
+            
+            // Automatically save results to database
+            this.saveHealthScanResults();
             break;
           case 'failedToGetHealthAnalysisResult':
             this.faceScanStatus = 'Failed to get scan results.';
@@ -472,5 +492,469 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   // Method to receive face scan results from doctor (can be called via WebRTC data channel)
   receiveFaceScanResults(results: any): void {
     this.showFaceScanResultsModal(results, 'Face scan completed successfully!');
+  }
+
+  /**
+   * Convert HealthScanResults to FaceScanResult array for saving
+   */
+  private convertHealthScanResultsToFaceScanResults(healthScanResults: HealthScanResults): FaceScanResult[] {
+    const results: FaceScanResult[] = [];
+
+    // Convert vital signs
+    if (healthScanResults.vitalSigns) {
+      const vs = healthScanResults.vitalSigns;
+      
+      if (vs.heartRate && vs.heartRate > 0) {
+        results.push({
+          title: 'Heart Rate',
+          description: 'Heart rate measurement from facial blood flow analysis.',
+          score: Math.round(vs.heartRate),
+          value: `${vs.heartRate.toFixed(1)} bpm`,
+          category: 'heartRate',
+          status: this.getHeartRateStatus(vs.heartRate),
+          color: this.getHeartRateColor(vs.heartRate),
+          normalRange: '60-100 bpm'
+        });
+      }
+
+      if (vs.bloodPressureSystolic && vs.bloodPressureSystolic > 0) {
+        results.push({
+          title: 'Blood Pressure (Systolic)',
+          description: 'Systolic blood pressure assessment.',
+          score: Math.round(vs.bloodPressureSystolic),
+          value: `${Math.round(vs.bloodPressureSystolic)} mmHg`,
+          category: 'systolicPressure',
+          status: this.getBloodPressureStatus(vs.bloodPressureSystolic, 'systolic'),
+          color: this.getBloodPressureColor(vs.bloodPressureSystolic, 'systolic'),
+          normalRange: '90-120 mmHg'
+        });
+      }
+
+      if (vs.bloodPressureDiastolic && vs.bloodPressureDiastolic > 0) {
+        results.push({
+          title: 'Blood Pressure (Diastolic)',
+          description: 'Diastolic blood pressure assessment.',
+          score: Math.round(vs.bloodPressureDiastolic),
+          value: `${Math.round(vs.bloodPressureDiastolic)} mmHg`,
+          category: 'diastolicPressure',
+          status: this.getBloodPressureStatus(vs.bloodPressureDiastolic, 'diastolic'),
+          color: this.getBloodPressureColor(vs.bloodPressureDiastolic, 'diastolic'),
+          normalRange: '60-80 mmHg'
+        });
+      }
+
+      if (vs.spo2 && vs.spo2 > 0) {
+        results.push({
+          title: 'Oxygen Saturation',
+          description: 'Blood oxygen level estimation.',
+          score: Math.round(vs.spo2),
+          value: `${vs.spo2.toFixed(1)}%`,
+          category: 'oxygenSaturation',
+          status: this.getOxygenSaturationStatus(vs.spo2),
+          color: this.getOxygenSaturationColor(vs.spo2),
+          normalRange: '95-100%'
+        });
+      }
+
+      if (vs.respiratoryRate && vs.respiratoryRate > 0) {
+        results.push({
+          title: 'Respiratory Rate',
+          description: 'Breathing rate detected through facial monitoring.',
+          score: Math.round(vs.respiratoryRate),
+          value: `${vs.respiratoryRate.toFixed(1)} bpm`,
+          category: 'respiratoryRate',
+          status: this.getRespiratoryRateStatus(vs.respiratoryRate),
+          color: this.getRespiratoryRateColor(vs.respiratoryRate),
+          normalRange: '12-20 bpm'
+        });
+      }
+
+      if (vs.stress && vs.stress > 0) {
+        results.push({
+          title: 'Stress Level',
+          description: 'Assessment of stress levels based on facial indicators.',
+          score: Math.round(vs.stress),
+          value: `${vs.stress.toFixed(2)}`,
+          category: 'stress',
+          status: this.getStressStatus(vs.stress),
+          color: this.getStressColor(vs.stress)
+        });
+      }
+
+      if (vs.stressScore && vs.stressScore > 0) {
+        results.push({
+          title: 'Stress Score',
+          description: 'Composite stress score from facial analysis.',
+          score: Math.round(vs.stressScore),
+          value: `${vs.stressScore.toFixed(1)}`,
+          category: 'stressScore',
+          status: this.getStressScoreStatus(vs.stressScore),
+          color: this.getStressScoreColor(vs.stressScore)
+        });
+      }
+
+      if (vs.hrvSdnn && vs.hrvSdnn > 0) {
+        results.push({
+          title: 'HRV SDNN',
+          description: 'Standard deviation of NN intervals (HRV).',
+          score: Math.round(vs.hrvSdnn),
+          value: `${vs.hrvSdnn.toFixed(2)} ms`,
+          category: 'hrvSdnn',
+          status: this.getHrvStatus(vs.hrvSdnn),
+          color: this.getHrvColor(vs.hrvSdnn)
+        });
+      }
+
+      if (vs.hrvRmssd && vs.hrvRmssd > 0) {
+        results.push({
+          title: 'HRV RMSSD',
+          description: 'Root mean square of successive differences (HRV).',
+          score: Math.round(vs.hrvRmssd),
+          value: `${vs.hrvRmssd.toFixed(2)} ms`,
+          category: 'hrvRmssd',
+          status: this.getHrvStatus(vs.hrvRmssd),
+          color: this.getHrvColor(vs.hrvRmssd)
+        });
+      }
+    }
+
+    // Convert holistic health
+    if (healthScanResults.holisticHealth) {
+      const hh = healthScanResults.holisticHealth;
+      
+      if (hh.generalWellness && hh.generalWellness > 0) {
+        results.push({
+          title: 'Overall Health Score',
+          description: 'Your comprehensive health assessment based on facial analysis.',
+          score: Math.round(hh.generalWellness),
+          value: `${hh.generalWellness.toFixed(1)}%`,
+          category: 'overall',
+          status: this.getOverallStatus(hh.generalWellness),
+          color: this.getOverallColor(hh.generalWellness)
+        });
+      }
+    }
+
+    // Convert risks
+    if (healthScanResults.risks) {
+      const risks = healthScanResults.risks;
+      
+      if (risks.cardiovascularRisks) {
+        const cvr = risks.cardiovascularRisks;
+        
+        if (cvr.coronaryHeartDisease && cvr.coronaryHeartDisease > 0) {
+          results.push({
+            title: 'Risk of Coronary Heart Disease',
+            description: 'Coronary artery disease risk assessment.',
+            score: cvr.coronaryHeartDisease * 100,
+            value: `${(cvr.coronaryHeartDisease * 100).toFixed(2)}%`,
+            category: 'coronaryRisk',
+            status: this.getRiskStatus(cvr.coronaryHeartDisease * 100),
+            color: this.getRiskColor(cvr.coronaryHeartDisease * 100),
+            normalRange: '< 5%'
+          });
+        }
+
+        if (cvr.congestiveHeartFailure && cvr.congestiveHeartFailure > 0) {
+          results.push({
+            title: 'Risk of Congestive Heart Failure',
+            description: 'Cardiovascular risk assessment.',
+            score: cvr.congestiveHeartFailure * 100,
+            value: `${(cvr.congestiveHeartFailure * 100).toFixed(2)}%`,
+            category: 'heartFailureRisk',
+            status: this.getRiskStatus(cvr.congestiveHeartFailure * 100),
+            color: this.getRiskColor(cvr.congestiveHeartFailure * 100),
+            normalRange: '< 2%'
+          });
+        }
+
+        if (cvr.stroke && cvr.stroke > 0) {
+          results.push({
+            title: 'Risk of Stroke',
+            description: 'Stroke risk assessment based on cardiovascular indicators.',
+            score: cvr.stroke * 100,
+            value: `${(cvr.stroke * 100).toFixed(2)}%`,
+            category: 'strokeRisk',
+            status: this.getRiskStatus(cvr.stroke * 100),
+            color: this.getRiskColor(cvr.stroke * 100),
+            normalRange: '< 2%'
+          });
+        }
+
+        if (cvr.generalRisk && cvr.generalRisk > 0) {
+          results.push({
+            title: 'General Cardiovascular Risk',
+            description: 'Overall cardiovascular disease risk assessment.',
+            score: cvr.generalRisk * 100,
+            value: `${(cvr.generalRisk * 100).toFixed(2)}%`,
+            category: 'cvdRisk',
+            status: this.getRiskStatus(cvr.generalRisk * 100),
+            color: this.getRiskColor(cvr.generalRisk * 100),
+            normalRange: '< 2%'
+          });
+        }
+
+        if (cvr.intermittentClaudication && cvr.intermittentClaudication > 0) {
+          results.push({
+            title: 'Risk of Intermittent Claudication',
+            description: 'Peripheral artery disease risk assessment.',
+            score: cvr.intermittentClaudication * 100,
+            value: `${(cvr.intermittentClaudication * 100).toFixed(2)}%`,
+            category: 'intermittentClaudication',
+            status: this.getRiskStatus(cvr.intermittentClaudication * 100),
+            color: this.getRiskColor(cvr.intermittentClaudication * 100),
+            normalRange: '< 2%'
+          });
+        }
+      }
+
+      if (risks.covidRisk && risks.covidRisk.covidRisk && risks.covidRisk.covidRisk > 0) {
+        results.push({
+          title: 'COVID-19 Risk',
+          description: 'COVID-19 risk assessment based on health indicators.',
+          score: risks.covidRisk.covidRisk * 100,
+          value: `${(risks.covidRisk.covidRisk * 100).toFixed(2)}%`,
+          category: 'covidRisk',
+          status: this.getRiskStatus(risks.covidRisk.covidRisk * 100),
+          color: this.getRiskColor(risks.covidRisk.covidRisk * 100),
+          normalRange: '< 5%'
+        });
+      }
+    }
+
+    console.log('✅ Converted health scan results to face scan results:', results);
+    return results;
+  }
+
+  /**
+   * Save health scan results to database
+   */
+  private saveHealthScanResults(): void {
+    if (!this.faceScanResultsForSave || this.faceScanResultsForSave.length === 0) {
+      console.log('⚠️ No face scan results to save');
+      return;
+    }
+
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.log('⚠️ User not logged in, cannot save health scan results');
+      this.saveStatus = 'Please log in to save your health data.';
+      this.showSaveErrorModal = true;
+      setTimeout(() => {
+        this.showSaveErrorModal = false;
+      }, 5000);
+      return;
+    }
+
+    console.log('💾 Saving health scan results to database from patient-meet...');
+    console.log('📊 Face scan results to save:', this.faceScanResultsForSave);
+    console.log('🔑 Auth token present:', !!token);
+    
+    this.isSavingToDatabase = true;
+    this.saveStatus = 'Saving your health data...';
+
+    this.healthScanSubscription.add(
+      this.healthScanService.saveFaceScanResults(this.faceScanResultsForSave).subscribe({
+        next: (response) => {
+          console.log('✅ Health scan results saved successfully from patient-meet:', response);
+          this.isSavingToDatabase = false;
+          this.saveStatus = 'Health data submitted successfully!';
+          this.showSaveSuccessModal = true;
+          
+          // Auto-hide success modal after 3 seconds
+          setTimeout(() => {
+            this.showSaveSuccessModal = false;
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('❌ Failed to save health scan results from patient-meet:', error);
+          console.error('❌ Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error,
+            url: error.url
+          });
+          this.isSavingToDatabase = false;
+          
+          // Provide more specific error messages
+          let errorMessage = 'Failed to save health data. Please try again.';
+          if (error.status === 401) {
+            errorMessage = 'Please log in to save your health data.';
+          } else if (error.status === 403) {
+            errorMessage = 'Only patients can save health scan results.';
+          } else if (error.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+          
+          this.saveStatus = errorMessage;
+          this.showSaveErrorModal = true;
+          
+          // Auto-hide error modal after 5 seconds
+          setTimeout(() => {
+            this.showSaveErrorModal = false;
+          }, 5000);
+        }
+      })
+    );
+  }
+
+  /**
+   * Manual save method (can be called from UI)
+   */
+  saveHealthScanResultsManually(): void {
+    this.saveHealthScanResults();
+  }
+
+  /**
+   * Close save success modal
+   */
+  closeSaveSuccessModal(): void {
+    this.showSaveSuccessModal = false;
+    this.saveStatus = '';
+  }
+
+  /**
+   * Close save error modal
+   */
+  closeSaveErrorModal(): void {
+    this.showSaveErrorModal = false;
+    this.saveStatus = '';
+  }
+
+  /**
+   * Retry saving health scan results
+   */
+  retrySaveHealthScanResults(): void {
+    this.closeSaveErrorModal();
+    this.saveHealthScanResults();
+  }
+
+  // Helper methods for status and color determination
+  private getHeartRateStatus(hr: number): string {
+    if (hr >= 60 && hr <= 100) return 'Excellent';
+    if ((hr >= 50 && hr < 60) || (hr > 100 && hr <= 120)) return 'Good';
+    return 'Poor';
+  }
+
+  private getHeartRateColor(hr: number): string {
+    if (hr >= 60 && hr <= 100) return 'green';
+    if ((hr >= 50 && hr < 60) || (hr > 100 && hr <= 120)) return 'orange';
+    return 'red';
+  }
+
+  private getBloodPressureStatus(bp: number, type: 'systolic' | 'diastolic'): string {
+    if (type === 'systolic') {
+      if (bp >= 90 && bp <= 120) return 'Excellent';
+      if (bp > 120 && bp <= 140) return 'Good';
+      return 'Poor';
+    } else {
+      if (bp >= 60 && bp <= 80) return 'Excellent';
+      if (bp > 80 && bp <= 90) return 'Good';
+      return 'Poor';
+    }
+  }
+
+  private getBloodPressureColor(bp: number, type: 'systolic' | 'diastolic'): string {
+    if (type === 'systolic') {
+      if (bp >= 90 && bp <= 120) return 'green';
+      if (bp > 120 && bp <= 140) return 'orange';
+      return 'red';
+    } else {
+      if (bp >= 60 && bp <= 80) return 'green';
+      if (bp > 80 && bp <= 90) return 'orange';
+      return 'red';
+    }
+  }
+
+  private getOxygenSaturationStatus(spo2: number): string {
+    if (spo2 >= 98) return 'Excellent';
+    if (spo2 >= 95) return 'Good';
+    return 'Poor';
+  }
+
+  private getOxygenSaturationColor(spo2: number): string {
+    if (spo2 >= 98) return 'green';
+    if (spo2 >= 95) return 'orange';
+    return 'red';
+  }
+
+  private getRespiratoryRateStatus(rr: number): string {
+    if (rr >= 12 && rr <= 20) return 'Excellent';
+    if (rr >= 10 && rr <= 24) return 'Good';
+    return 'Poor';
+  }
+
+  private getRespiratoryRateColor(rr: number): string {
+    if (rr >= 12 && rr <= 20) return 'green';
+    if (rr >= 10 && rr <= 24) return 'orange';
+    return 'red';
+  }
+
+  private getStressStatus(stress: number): string {
+    if (stress <= 2) return 'Excellent';
+    if (stress <= 4) return 'Good';
+    if (stress <= 6) return 'Average';
+    return 'Poor';
+  }
+
+  private getStressColor(stress: number): string {
+    if (stress <= 2) return 'green';
+    if (stress <= 4) return 'orange';
+    if (stress <= 6) return 'yellow';
+    return 'red';
+  }
+
+  private getStressScoreStatus(score: number): string {
+    if (score < 30) return 'Excellent';
+    if (score < 60) return 'Good';
+    return 'Poor';
+  }
+
+  private getStressScoreColor(score: number): string {
+    if (score < 30) return 'green';
+    if (score < 60) return 'orange';
+    return 'red';
+  }
+
+  private getHrvStatus(hrv: number): string {
+    if (hrv >= 50) return 'Excellent';
+    if (hrv >= 30) return 'Good';
+    return 'Poor';
+  }
+
+  private getHrvColor(hrv: number): string {
+    if (hrv >= 50) return 'green';
+    if (hrv >= 30) return 'orange';
+    return 'red';
+  }
+
+  private getOverallStatus(score: number): string {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Average';
+    return 'Poor';
+  }
+
+  private getOverallColor(score: number): string {
+    if (score >= 80) return 'green';
+    if (score >= 60) return 'orange';
+    return 'red';
+  }
+
+  private getRiskStatus(risk: number): string {
+    if (risk < 2) return 'Excellent';
+    if (risk < 5) return 'Good';
+    if (risk < 10) return 'Average';
+    return 'Poor';
+  }
+
+  private getRiskColor(risk: number): string {
+    if (risk < 2) return 'green';
+    if (risk < 5) return 'orange';
+    return 'red';
   }
 }

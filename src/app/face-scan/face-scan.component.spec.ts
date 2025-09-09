@@ -202,6 +202,76 @@ describe('FaceScanComponent', () => {
 
     expect(component['subscription'].unsubscribe).toHaveBeenCalled();
   });
+
+  it('should convert face scan results to health scan results format', () => {
+    const mockScanResults = [
+      {
+        title: 'Heart Rate',
+        description: 'Heart rate measurement',
+        score: 75,
+        value: '75 bpm',
+        category: 'heartRate',
+        status: 'Good',
+        color: 'green'
+      },
+      {
+        title: 'Overall Health Score',
+        description: 'Overall health assessment',
+        score: 85,
+        value: '85%',
+        category: 'overall',
+        status: 'Excellent',
+        color: 'green'
+      },
+      {
+        title: 'Risk of Coronary Heart Disease',
+        description: 'Coronary heart disease risk',
+        score: 2.5,
+        value: '2.5%',
+        category: 'coronaryRisk',
+        status: 'Good',
+        color: 'green'
+      }
+    ];
+
+    component.scanResults = mockScanResults;
+    component.healthScanResults = component['convertToHealthScanResults'](mockScanResults);
+
+    expect(component.healthScanResults).toBeTruthy();
+    expect(component.healthScanResults?.vitalSigns.heartRate).toBe(75);
+    expect(component.healthScanResults?.holisticHealth.generalWellness).toBe(85);
+    expect(component.healthScanResults?.risks.cardiovascularRisks.coronaryHeartDisease).toBe(0.025);
+  });
+
+  it('should handle blood pressure conversion correctly', () => {
+    const mockScanResults = [
+      {
+        title: 'Systolic Pressure',
+        description: 'Systolic blood pressure',
+        score: 120,
+        value: '120 mmHg',
+        category: 'systolicPressure',
+        status: 'Good',
+        color: 'green'
+      },
+      {
+        title: 'Diastolic Pressure',
+        description: 'Diastolic blood pressure',
+        score: 80,
+        value: '80 mmHg',
+        category: 'diastolicPressure',
+        status: 'Good',
+        color: 'green'
+      }
+    ];
+
+    component.scanResults = mockScanResults;
+    component.healthScanResults = component['convertToHealthScanResults'](mockScanResults);
+
+    expect(component.healthScanResults).toBeTruthy();
+    expect(component.healthScanResults?.vitalSigns.bloodPressureSystolic).toBe(120);
+    expect(component.healthScanResults?.vitalSigns.bloodPressureDiastolic).toBe(80);
+  });
 });
 
 describe('SafePipe', () => {

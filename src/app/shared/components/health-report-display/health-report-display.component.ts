@@ -38,36 +38,36 @@ export interface HealthScanResults {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="health-report">
+    <div class="health-report" *ngIf="results">
       <div class="report-header">
         <h2>HEALTH REPORT</h2>
       </div>
       
       <!-- Cardiovascular Section -->
-      <div class="report-section">
+      <div class="report-section" *ngIf="results.risks?.cardiovascularRisks">
         <h3>Cardiovascular</h3>
-        <div class="risk-item">
+        <div class="risk-item" *ngIf="results.risks.cardiovascularRisks.congestiveHeartFailure !== undefined">
           <span class="risk-label">Risk of Congestive Heart Failure</span>
           <span class="risk-value" [ngClass]="getRiskClass(results.risks.cardiovascularRisks.congestiveHeartFailure)">
             {{ getRiskText(results.risks.cardiovascularRisks.congestiveHeartFailure) }}
           </span>
           <span class="risk-percentage">{{ (results.risks.cardiovascularRisks.congestiveHeartFailure * 100).toFixed(1) }}%</span>
         </div>
-        <div class="risk-item">
+        <div class="risk-item" *ngIf="results.risks.cardiovascularRisks.coronaryHeartDisease !== undefined">
           <span class="risk-label">Risk of Coronary Heart Disease</span>
           <span class="risk-value" [ngClass]="getRiskClass(results.risks.cardiovascularRisks.coronaryHeartDisease)">
             {{ getRiskText(results.risks.cardiovascularRisks.coronaryHeartDisease) }}
           </span>
           <span class="risk-percentage">{{ (results.risks.cardiovascularRisks.coronaryHeartDisease * 100).toFixed(1) }}%</span>
         </div>
-        <div class="risk-item">
+        <div class="risk-item" *ngIf="results.risks.cardiovascularRisks.intermittentClaudication !== undefined">
           <span class="risk-label">Risk of Intermittent Claudication</span>
           <span class="risk-value" [ngClass]="getRiskClass(results.risks.cardiovascularRisks.intermittentClaudication)">
             {{ getRiskText(results.risks.cardiovascularRisks.intermittentClaudication) }}
           </span>
           <span class="risk-percentage">{{ (results.risks.cardiovascularRisks.intermittentClaudication * 100).toFixed(1) }}%</span>
         </div>
-        <div class="risk-item">
+        <div class="risk-item" *ngIf="results.risks.cardiovascularRisks.stroke !== undefined">
           <span class="risk-label">Risk of Stroke</span>
           <span class="risk-value" [ngClass]="getRiskClass(results.risks.cardiovascularRisks.stroke)">
             {{ getRiskText(results.risks.cardiovascularRisks.stroke) }}
@@ -77,23 +77,23 @@ export interface HealthScanResults {
       </div>
 
       <!-- Heart Section -->
-      <div class="report-section">
+      <div class="report-section" *ngIf="results.vitalSigns">
         <h3>Heart</h3>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.heartRate !== undefined">
           <span class="vital-value">{{ results.vitalSigns.heartRate.toFixed(2) }} bpm</span>
           <span class="vital-label">Heart Rate</span>
           <span class="vital-status" [ngClass]="getHeartRateClass(results.vitalSigns.heartRate)">
             {{ getHeartRateStatus(results.vitalSigns.heartRate) }}
           </span>
         </div>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.hrvRmssd !== undefined">
           <span class="vital-value">{{ results.vitalSigns.hrvRmssd.toFixed(2) }} ms</span>
           <span class="vital-label">RMSSD</span>
           <span class="vital-status" [ngClass]="getHrvClass(results.vitalSigns.hrvRmssd)">
             {{ getHrvStatus(results.vitalSigns.hrvRmssd) }}
           </span>
         </div>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.hrvSdnn !== undefined">
           <span class="vital-value">{{ results.vitalSigns.hrvSdnn.toFixed(2) }} ms</span>
           <span class="vital-label">SDNN</span>
           <span class="vital-status excellent">Excellent</span>
@@ -101,19 +101,19 @@ export interface HealthScanResults {
       </div>
 
       <!-- Blood Section -->
-      <div class="report-section">
+      <div class="report-section" *ngIf="results.vitalSigns">
         <h3>Blood</h3>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.bloodPressureSystolic !== undefined">
           <span class="vital-value">{{ results.vitalSigns.bloodPressureSystolic.toFixed(2) }} mmHg</span>
           <span class="vital-label">Systolic Pressure</span>
           <span class="vital-status excellent">Excellent</span>
         </div>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.bloodPressureDiastolic !== undefined">
           <span class="vital-value">{{ results.vitalSigns.bloodPressureDiastolic.toFixed(2) }} mmHg</span>
           <span class="vital-label">Diastolic Pressure</span>
           <span class="vital-status good">Good</span>
         </div>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.spo2 !== undefined">
           <span class="vital-value">{{ results.vitalSigns.spo2.toFixed(2) }}%</span>
           <span class="vital-label">Oxygen in Blood</span>
           <span class="vital-status excellent">Excellent</span>
@@ -121,14 +121,14 @@ export interface HealthScanResults {
       </div>
 
       <!-- Other Section -->
-      <div class="report-section">
+      <div class="report-section" *ngIf="results.vitalSigns">
         <h3>Other</h3>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.respiratoryRate !== undefined">
           <span class="vital-value">{{ results.vitalSigns.respiratoryRate.toFixed(2) }} bpm</span>
           <span class="vital-label">Respiratory Rate</span>
           <span class="vital-status excellent">Excellent</span>
         </div>
-        <div class="vital-item">
+        <div class="vital-item" *ngIf="results.vitalSigns.stressScore !== undefined">
           <span class="vital-label">Stress Level</span>
           <span class="vital-status" [ngClass]="getStressClass(results.vitalSigns.stressScore)">
             {{ getStressStatus(results.vitalSigns.stressScore) }}
@@ -137,9 +137,9 @@ export interface HealthScanResults {
       </div>
 
       <!-- General Wellness -->
-      <div class="report-section">
+      <div class="report-section" *ngIf="results.holisticHealth">
         <h3>Overall Health</h3>
-        <div class="wellness-item">
+        <div class="wellness-item" *ngIf="results.holisticHealth.generalWellness !== undefined">
           <span class="wellness-label">General Wellness Score</span>
           <span class="wellness-value">{{ results.holisticHealth.generalWellness.toFixed(1) }}%</span>
           <span class="wellness-status excellent">Excellent</span>
@@ -150,7 +150,7 @@ export interface HealthScanResults {
   styleUrls: ['./health-report-display.component.scss']
 })
 export class HealthReportDisplayComponent {
-  @Input() results!: HealthScanResults;
+  @Input() results: HealthScanResults | null = null;
 
   getRiskClass(risk: number): string {
     if (risk < 0.001) return 'excellent';

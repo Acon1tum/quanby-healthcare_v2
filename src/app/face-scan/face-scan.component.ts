@@ -7,8 +7,10 @@ import { environment } from '../../environments/environment';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { FaceScanService, FaceScanRequest } from '../services/face-scan.service';
+import { HealthScanService, FaceScanResult } from '../services/health-scan.service';
 import { Subscription } from 'rxjs';
 import { HeaderComponent } from '../shared/header/header.component';
+import { HealthReportDisplayComponent, HealthScanResults } from '../shared/components/health-report-display/health-report-display.component';
 @Pipe({
   name: 'safe',
   standalone: true
@@ -24,7 +26,7 @@ export class SafePipe implements PipeTransform {
 @Component({
   selector: 'app-face-scan',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, SafePipe, HeaderComponent],
+  imports: [CommonModule, FormsModule, HttpClientModule, SafePipe, HeaderComponent, HealthReportDisplayComponent],
   templateUrl: './face-scan.component.html',
   styleUrl: './face-scan.component.scss'
 })
@@ -42,11 +44,18 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   
   iframeUrl = '';
   scanStatus: any = null;
-  scanResults: any[] = [];
+  scanResults: FaceScanResult[] = [];
+  healthScanResults: HealthScanResults | null = null;
   
   recipientEmail: string = '';
   emailStatus: string = '';
   showEmailSuccessModal: boolean = false;
+
+  // Health scan save status
+  isSavingToDatabase: boolean = false;
+  saveStatus: string = '';
+  showSaveSuccessModal: boolean = false;
+  showSaveErrorModal: boolean = false;
 
   // Modal state for metric details
   showMetricModal: boolean = false;
@@ -55,7 +64,8 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
   constructor(
-    private faceScanService: FaceScanService, 
+    private faceScanService: FaceScanService,
+    private healthScanService: HealthScanService,
     private router: Router, 
     private cdr: ChangeDetectorRef, 
     private http: HttpClient
@@ -179,6 +189,12 @@ export class FaceScanComponent implements OnInit, OnDestroy {
       if (processedResults.length > 0) {
         console.log('🎉 Successfully extracted real health results from VSE Plugin!');
         this.scanResults = processedResults;
+        
+        // Convert to HealthScanResults format for health-report-display
+        this.healthScanResults = this.convertToHealthScanResults(processedResults);
+        
+        // Save results to database
+        this.saveHealthScanResults();
       } else {
         console.log('⚠️ Failed to process VSE Plugin results, showing mock data');
         // this.showMockResults(); // REMOVED
@@ -526,6 +542,12 @@ export class FaceScanComponent implements OnInit, OnDestroy {
     if (results.length > 0) {
       console.log('✅ Successfully extracted results from health analysis message');
       this.scanResults = results;
+      
+      // Convert to HealthScanResults format for health-report-display
+      this.healthScanResults = this.convertToHealthScanResults(results);
+      
+      // Save results to database
+      this.saveHealthScanResults();
     } else {
       console.log('⚠️ No results found in health analysis message, showing mock results');
       console.log('📊 Raw health analysis data keys:', Object.keys(data));
@@ -1744,6 +1766,245 @@ export class FaceScanComponent implements OnInit, OnDestroy {
     if (bmi >= 18.5 && bmi <= 24.9) return 'green';
     if (bmi >= 17 && bmi < 30) return 'orange';
     return 'red';
+  }
+
+  /**
+   * Convert FaceScanResult array to HealthScanResults format for health-report-display component
+   */
+  private convertToHealthScanResults(scanResults: FaceScanResult[]): HealthScanResults {
+    const results: HealthScanResults = {
+      vitalSigns: {
+        heartRate: 0,
+        spo2: 0,
+        respiratoryRate: 0,
+        stress: 0,
+        stressScore: 0,
+        hrvSdnn: 0,
+        hrvRmssd: 0,
+        bloodPressure: '',
+        bloodPressureSystolic: 0,
+        bloodPressureDiastolic: 0
+      },
+      holisticHealth: {
+        generalWellness: 0
+      },
+      risks: {
+        cardiovascularRisks: {
+          generalRisk: 0,
+          coronaryHeartDisease: 0,
+          congestiveHeartFailure: 0,
+          intermittentClaudication: 0,
+          stroke: 0
+        },
+        covidRisk: {
+          covidRisk: 0
+        },
+        diabetesRisk: null,
+        hypertensionRisk: null
+      }
+    };
+
+    // Process each scan result and map to the appropriate structure
+    scanResults.forEach(result => {
+      const category = result.category;
+      const value = this.extractNumericValue(result.value);
+
+      switch (category) {
+        case 'heartRate':
+          results.vitalSigns.heartRate = value;
+          break;
+        
+        case 'systolicPressure':
+          results.vitalSigns.bloodPressureSystolic = value;
+          // Update blood pressure string if we have both systolic and diastolic
+          if (results.vitalSigns.bloodPressureDiastolic > 0) {
+            results.vitalSigns.bloodPressure = `${value}/${results.vitalSigns.bloodPressureDiastolic}`;
+          }
+          break;
+        
+        case 'diastolicPressure':
+          results.vitalSigns.bloodPressureDiastolic = value;
+          // Update blood pressure string if we have both systolic and diastolic
+          if (results.vitalSigns.bloodPressureSystolic > 0) {
+            results.vitalSigns.bloodPressure = `${results.vitalSigns.bloodPressureSystolic}/${value}`;
+          }
+          break;
+        
+        case 'oxygenSaturation':
+          results.vitalSigns.spo2 = value;
+          break;
+        
+        case 'respiratoryRate':
+          results.vitalSigns.respiratoryRate = value;
+          break;
+        
+        case 'stress':
+        case 'stressLevel':
+          results.vitalSigns.stress = value;
+          break;
+        
+        case 'stressScore':
+          results.vitalSigns.stressScore = value;
+          break;
+        
+        case 'hrvSdnn':
+          results.vitalSigns.hrvSdnn = value;
+          break;
+        
+        case 'hrvRmssd':
+          results.vitalSigns.hrvRmssd = value;
+          break;
+        
+        case 'overall':
+          results.holisticHealth.generalWellness = value;
+          break;
+        
+        case 'coronaryRisk':
+        case 'coronaryHeartDisease':
+          results.risks.cardiovascularRisks.coronaryHeartDisease = value / 100; // Convert percentage to decimal
+          break;
+        
+        case 'heartFailureRisk':
+        case 'congestiveHeartFailure':
+          results.risks.cardiovascularRisks.congestiveHeartFailure = value / 100; // Convert percentage to decimal
+          break;
+        
+        case 'strokeRisk':
+          results.risks.cardiovascularRisks.stroke = value / 100; // Convert percentage to decimal
+          break;
+        
+        case 'cvdRisk':
+        case 'generalRisk':
+          results.risks.cardiovascularRisks.generalRisk = value / 100; // Convert percentage to decimal
+          break;
+        
+        case 'intermittentClaudication':
+          results.risks.cardiovascularRisks.intermittentClaudication = value / 100; // Convert percentage to decimal
+          break;
+        
+        case 'covidRisk':
+          results.risks.covidRisk.covidRisk = value / 100; // Convert percentage to decimal
+          break;
+      }
+    });
+
+    console.log('✅ Converted face scan results to HealthScanResults format:', results);
+    return results;
+  }
+
+  /**
+   * Extract numeric value from result value string
+   */
+  private extractNumericValue(valueString: string): number {
+    // Remove units and extract number
+    const match = valueString.match(/(\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  }
+
+  /**
+   * Save health scan results to database
+   */
+  private saveHealthScanResults(): void {
+    if (!this.scanResults || this.scanResults.length === 0) {
+      console.log('⚠️ No scan results to save');
+      return;
+    }
+
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.log('⚠️ User not logged in, cannot save health scan results');
+      this.saveStatus = 'Please log in to save your health data.';
+      this.showSaveErrorModal = true;
+      setTimeout(() => {
+        this.showSaveErrorModal = false;
+      }, 5000);
+      return;
+    }
+
+    console.log('💾 Saving health scan results to database...');
+    console.log('📊 Scan results to save:', this.scanResults);
+    console.log('👤 User age:', this.userAge);
+    console.log('👤 User gender:', this.userGender);
+    console.log('🔑 Auth token present:', !!token);
+    
+    this.isSavingToDatabase = true;
+    this.saveStatus = 'Saving your health data...';
+
+    this.subscription.add(
+      this.healthScanService.saveFaceScanResults(
+        this.scanResults,
+        this.userAge,
+        this.userGender
+      ).subscribe({
+        next: (response) => {
+          console.log('✅ Health scan results saved successfully:', response);
+          this.isSavingToDatabase = false;
+          this.saveStatus = 'Health data submitted successfully!';
+          this.showSaveSuccessModal = true;
+          
+          // Auto-hide success modal after 3 seconds
+          setTimeout(() => {
+            this.showSaveSuccessModal = false;
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('❌ Failed to save health scan results:', error);
+          console.error('❌ Error details:', {
+            status: error.status,
+            statusText: error.statusText,
+            message: error.message,
+            error: error.error,
+            url: error.url
+          });
+          this.isSavingToDatabase = false;
+          
+          // Provide more specific error messages
+          let errorMessage = 'Failed to save health data. Please try again.';
+          if (error.status === 401) {
+            errorMessage = 'Please log in to save your health data.';
+          } else if (error.status === 403) {
+            errorMessage = 'Only patients can save health scan results.';
+          } else if (error.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+          
+          this.saveStatus = errorMessage;
+          this.showSaveErrorModal = true;
+          
+          // Auto-hide error modal after 5 seconds
+          setTimeout(() => {
+            this.showSaveErrorModal = false;
+          }, 5000);
+        }
+      })
+    );
+  }
+
+  /**
+   * Close save success modal
+   */
+  closeSaveSuccessModal(): void {
+    this.showSaveSuccessModal = false;
+    this.saveStatus = '';
+  }
+
+  /**
+   * Close save error modal
+   */
+  closeSaveErrorModal(): void {
+    this.showSaveErrorModal = false;
+    this.saveStatus = '';
+  }
+
+  /**
+   * Retry saving health scan results
+   */
+  retrySaveHealthScanResults(): void {
+    this.closeSaveErrorModal();
+    this.saveHealthScanResults();
   }
 
 }
