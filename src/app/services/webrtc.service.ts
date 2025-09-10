@@ -21,6 +21,8 @@ export interface FaceScanStatus {
   type: 'face-scan-status';
   status: string;
   timestamp: number;
+  prescriptionData?: any; // Optional prescription data
+  diagnosisData?: any; // Optional diagnosis data
 }
 
 export interface FaceScanRequest {

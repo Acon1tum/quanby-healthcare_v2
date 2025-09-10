@@ -1,33 +1,43 @@
 <div class="meet-container">
   <!-- Join Meeting Interface (shown when not joined) -->
   <div *ngIf="!isJoined" class="join-interface">
+    
     <div class="join-card">
+      <!-- Medical Animation -->
+    <div class="medical-animation-container">
+      <div #medicalAnimation class="medical-animation"></div>
+    </div>
       <h2>Join Patient Meeting</h2>
-      <p>Enter a room ID to join a video consultation with your doctor</p>
       
-      <div class="input-group">
-        <input 
-          type="text" 
-          [(ngModel)]="roomId" 
-          placeholder="Enter Room ID" 
-          class="room-input"
-          [disabled]="isJoining"
-        >
-      </div>
-      
-      <div class="button-group">
-        <button 
-          (click)="join()" 
-          class="btn btn-primary"
-          [disabled]="!roomId.trim() || isJoining"
-        >
-          <span *ngIf="!isJoining">Join Meeting</span>
-          <span *ngIf="isJoining">Joining...</span>
-        </button>
-      </div>
-      
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
+      <div class="room-id-section">
+        <div class="room-id-display">
+          <div class="room-code">
+            <input 
+              type="text" 
+              [(ngModel)]="roomId" 
+              placeholder="Enter Room ID" 
+              class="room-input"
+              [disabled]="isJoining"
+            >
+          </div>
+        </div>
+        <!-- Join Meeting Button on the right -->
+        <div class="start-meeting-container">
+          <button 
+            (click)="join()" 
+            class="btn btn-primary start-meeting-btn"
+            [disabled]="!roomId.trim() || isJoining"
+          >
+            <span *ngIf="!isJoining">Join Meeting</span>
+            <span *ngIf="isJoining">Joining...</span>
+          </button>
+        </div>
+        <p>Enter a room ID to join a video consultation with your doctor</p>
+        <p class="room-instructions">Ask your doctor for the room code to join the meeting</p>
+        
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
       </div>
     </div>
   </div>
@@ -61,8 +71,8 @@
 
     <!-- Video Container -->
     <div class="video-container">
-      <!-- Local Video -->
-      <div class="video-wrapper">
+      <!-- Local Video (overlay preview) -->
+      <div class="video-wrapper local-preview">
         <h3>Local Video (You - Patient)</h3>
         <div class="video-container-relative">
           <video 
@@ -84,17 +94,41 @@
         </div>
       </div>
 
-      <!-- Remote Video -->
-      <div class="video-wrapper">
+      <!-- Remote Video (main) -->
+      <div class="video-wrapper remote-main">
         <h3>Remote Video (Doctor)</h3>
         <div class="video-container-relative">
           <video 
             #remoteVideo 
             autoplay 
             playsinline
-            class="video-element local-video"
+            class="video-element"
             *ngIf="remoteStream"
           ></video>
+          <!-- In-video overlay actions dropdown -->
+          <div class="remote-overlay-actions" *ngIf="isJoined">
+            <button class="overlay-toggle" (click)="toggleOverlayMenu()" title="More actions">⋮</button>
+            <div class="overlay-menu" *ngIf="showOverlayMenu" (click)="closeOverlayMenu()">
+              <button (click)="toggleCamera(); closeOverlayMenu()" class="btn btn-ghost">
+                <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
+                <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
+              </button>
+              <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
+              <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
+              <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
+              <button 
+                (click)="openPrescriptionDiagnosisModal(); closeOverlayMenu()" 
+                class="btn btn-ghost btn-info"
+                title="View prescriptions and diagnoses from doctor"
+              >
+                Prescriptions & Diagnoses
+              </button>
+            </div>
+          </div>
+          <!-- Bottom-center Leave/End Call button -->
+          <div class="remote-overlay-leave" *ngIf="isJoined">
+            <button (click)="leave()" class="btn btn-danger end-call-btn" title="End call">End Call</button>
+          </div>
           <div *ngIf="!remoteStream" class="waiting-message">
             <p>Waiting for doctor to join...</p>
           </div>
@@ -103,21 +137,7 @@
     </div>
 
     <!-- Meeting Footer Controls (minimalist) -->
-    <div class="meeting-footer">
-      <div class="footer-actions">
-        <button (click)="toggleCamera()" class="btn btn-ghost">
-          <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
-          <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
-        </button>
-        <button (click)="refreshRemoteStream()" class="btn btn-ghost">Refresh Remote</button>
-        <button (click)="refreshLocalVideo()" class="btn btn-ghost">Refresh Local</button>
-        <button (click)="debugRemoteStream()" class="btn btn-ghost">Debug</button>
-        
-        <span class="spacer"></span>
-        
-        <button (click)="leave()" class="btn btn-danger">Leave</button>
-      </div>
-    </div>
+    
   </div>
 
   <!-- Face Scan Request Modal -->
@@ -275,6 +295,177 @@
       <div class="save-error-actions">
         <button (click)="retrySaveHealthScanResults()" class="btn btn-warning">Retry</button>
         <button (click)="closeSaveErrorModal()" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div *ngIf="showNotification" class="notification-toast" [ngClass]="'notification-' + notificationType">
+    <div class="notification-content">
+      <div class="notification-icon">
+        <span *ngIf="notificationType === 'prescription'">💊</span>
+        <span *ngIf="notificationType === 'diagnosis'">🔍</span>
+        <span *ngIf="notificationType === 'info'">ℹ️</span>
+      </div>
+      <div class="notification-message">
+        <h4>{{ notificationMessage }}</h4>
+        <p *ngIf="notificationData && notificationData.status">{{ notificationData.status }}</p>
+      </div>
+      <div class="notification-actions">
+        <button 
+          (click)="hideNotification()" 
+          class="btn btn-sm btn-secondary"
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div *ngIf="showDetailsModal" class="details-modal">
+    <div class="details-modal-content">
+      <div class="details-header">
+        <h3>
+          <span *ngIf="detailsType === 'prescription'">💊 Prescription Details</span>
+          <span *ngIf="detailsType === 'diagnosis'">🔍 Diagnosis Details</span>
+        </h3>
+        <button (click)="closeDetailsModal()" class="btn-close">&times;</button>
+      </div>
+      
+      <div class="details-content">
+        <div *ngIf="detailsType === 'prescription'" class="prescription-details">
+          <div class="detail-item">
+            <strong>Medication:</strong> {{ detailsData?.medicationName || 'Not specified' }}
+          </div>
+          <div class="detail-item">
+            <strong>Dosage:</strong> {{ detailsData?.dosage || 'Not specified' }}
+          </div>
+          <div class="detail-item">
+            <strong>Frequency:</strong> {{ detailsData?.frequency || 'Not specified' }}
+          </div>
+          <div class="detail-item">
+            <strong>Duration:</strong> {{ detailsData?.duration || 'Not specified' }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.instructions">
+            <strong>Instructions:</strong> {{ detailsData.instructions }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.quantity">
+            <strong>Quantity:</strong> {{ detailsData.quantity }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.refills !== undefined && detailsData?.refills !== null">
+            <strong>Refills:</strong> {{ detailsData.refills }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.notes">
+            <strong>Doctor's Notes:</strong> {{ detailsData.notes }}
+          </div>
+        </div>
+        
+        <div *ngIf="detailsType === 'diagnosis'" class="diagnosis-details">
+          <div class="detail-item">
+            <strong>Diagnosis Name:</strong> {{ detailsData?.diagnosisName || 'Not specified' }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.diagnosisCode">
+            <strong>Code:</strong> {{ detailsData.diagnosisCode }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.severity">
+            <strong>Severity:</strong> {{ detailsData.severity }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.status">
+            <strong>Status:</strong> {{ detailsData.status }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.description">
+            <strong>Description:</strong> {{ detailsData.description }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.treatmentPlan">
+            <strong>Treatment Plan:</strong> {{ detailsData.treatmentPlan }}
+          </div>
+          <div class="detail-item" *ngIf="detailsData?.notes">
+            <strong>Notes:</strong> {{ detailsData.notes }}
+          </div>
+        </div>
+        
+        <div *ngIf="!detailsData" class="no-details">
+          <p>No detailed information available.</p>
+        </div>
+      </div>
+      
+      <div class="details-actions">
+        <button (click)="closeDetailsModal()" class="btn btn-primary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescription and Diagnosis Modal -->
+  <div *ngIf="showPrescriptionDiagnosisModal" class="prescription-diagnosis-modal">
+    <div class="prescription-diagnosis-modal-content">
+      <div class="prescription-diagnosis-header">
+        <h3>Prescriptions & Diagnoses</h3>
+        <button (click)="closePrescriptionDiagnosisModal()" class="btn-close">&times;</button>
+      </div>
+      
+      <div class="prescription-diagnosis-content">
+        <!-- Prescriptions Section -->
+        <div class="section">
+          <h4>Prescriptions</h4>
+          <div *ngIf="isLoadingPrescriptions" class="loading-section">
+            <div class="loading-spinner"></div>
+            <p>Loading prescriptions...</p>
+          </div>
+          <div *ngIf="!isLoadingPrescriptions && prescriptions.length === 0" class="empty-section">
+            <p>N/A</p>
+          </div>
+          <div *ngIf="!isLoadingPrescriptions && prescriptions.length > 0" class="items-list">
+            <div *ngFor="let prescription of prescriptions" class="item-card prescription-card" (click)="viewPrescriptionDetails(prescription)">
+              <div class="item-header">
+                <h5>{{ prescription.doctor.doctorInfo.firstName }} {{ prescription.doctor.doctorInfo.lastName }}</h5>
+                <span class="item-date">{{ prescription.prescribedAt | date:'short' }}</span>
+              </div>
+              <div class="item-details">
+                <p><strong>Medication Name:</strong> {{ prescription.medicationName }}</p>
+                <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                <p><strong>Frequency:</strong> {{ prescription.frequency }}</p>
+                <p><strong>Duration:</strong> {{ prescription.duration }}</p>
+                <p *ngIf="prescription.quantity"><strong>Quantity:</strong> {{ prescription.quantity }}</p>
+                <p *ngIf="prescription.refills !== undefined && prescription.refills !== null"><strong>Refills:</strong> {{ prescription.refills }}</p>
+                <p *ngIf="prescription.instructions"><strong>Instructions:</strong> {{ prescription.instructions }}</p>
+                <p *ngIf="prescription.notes"><strong>Doctor's Notes:</strong> {{ prescription.notes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagnoses Section -->
+        <div class="section">
+          <h4>Diagnoses</h4>
+          <div *ngIf="isLoadingDiagnoses" class="loading-section">
+            <div class="loading-spinner"></div>
+            <p>Loading diagnoses...</p>
+          </div>
+          <div *ngIf="!isLoadingDiagnoses && diagnoses.length === 0" class="empty-section">
+            <p>N/A</p>
+          </div>
+          <div *ngIf="!isLoadingDiagnoses && diagnoses.length > 0" class="items-list">
+            <div *ngFor="let diagnosis of diagnoses" class="item-card diagnosis-card" (click)="viewDiagnosisDetails(diagnosis)">
+              <div class="item-header">
+                <h5>{{ diagnosis.doctor.doctorInfo.firstName }} {{ diagnosis.doctor.doctorInfo.lastName }}</h5>
+                <span class="item-severity" [ngClass]="'severity-' + diagnosis.severity.toLowerCase()">{{ diagnosis.severity }}</span>
+              </div>
+              <div class="item-details">
+                <p><strong>Diagnosis Name:</strong> {{ diagnosis.diagnosisName }}</p>
+                <p><strong>Severity:</strong> {{ diagnosis.severity }}</p>
+                <p *ngIf="diagnosis.diagnosisCode"><strong>Code:</strong> {{ diagnosis.diagnosisCode }}</p>
+                <p *ngIf="diagnosis.status"><strong>Status:</strong> {{ diagnosis.status }}</p>
+                <p *ngIf="diagnosis.description"><strong>Description:</strong> {{ diagnosis.description }}</p>
+                <p *ngIf="diagnosis.notes"><strong>Notes:</strong> {{ diagnosis.notes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="prescription-diagnosis-actions">
+        <button (click)="closePrescriptionDiagnosisModal()" class="btn btn-primary">Close</button>
       </div>
     </div>
   </div>

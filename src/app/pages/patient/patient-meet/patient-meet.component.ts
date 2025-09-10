@@ -8,6 +8,9 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HealthReportDisplayComponent, HealthScanResults } from '../../../shared/components/health-report-display/health-report-display.component';
 import { Subscription } from 'rxjs';
 
+// Type declaration for lottie-web
+declare const lottie: any;
+
 @Component({
   selector: 'app-patient-meet',
   standalone: true,
@@ -19,6 +22,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('faceScanIframe') faceScanIframe!: ElementRef<HTMLIFrameElement>;
+  @ViewChild('medicalAnimation') medicalAnimationRef!: ElementRef<HTMLDivElement>;
   
   roomId: string = '';
   localStream: MediaStream | null = null;
@@ -47,6 +51,37 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   showSaveSuccessModal: boolean = false;
   showSaveErrorModal: boolean = false;
   faceScanResultsForSave: FaceScanResult[] = [];
+  
+  // Notification properties
+  showNotification: boolean = false;
+  notificationMessage: string = '';
+  notificationType: 'prescription' | 'diagnosis' | 'info' = 'info';
+  notificationData: any = null;
+  notificationTimeout: any = null;
+
+  // Mobile dropdown properties
+  showMobileDropdown: boolean = false;
+  // In-video overlay menu
+  showOverlayMenu: boolean = false;
+  
+  // Prescription and Diagnosis details modal
+  showDetailsModal: boolean = false;
+  detailsType: 'prescription' | 'diagnosis' | null = null;
+  detailsData: any = null;
+  
+  // Prescription and Diagnosis list modal
+  showPrescriptionDiagnosisModal: boolean = false;
+  prescriptions: any[] = [];
+  diagnoses: any[] = [];
+  isLoadingPrescriptions: boolean = false;
+  isLoadingDiagnoses: boolean = false;
+  
+  // Store received prescriptions and diagnoses from doctor
+  receivedPrescriptions: any[] = [];
+  receivedDiagnoses: any[] = [];
+  
+  // Lottie animation
+  private lottieAnimation: any = null;
   
   private remoteStreamSubscription: any;
   private dataChannelSubscription: any;
@@ -81,7 +116,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    // Subscribe to data channel messages for face scan requests and results
+    // Subscribe to data channel messages for face scan requests, results, prescriptions, and diagnoses
     this.dataChannelSubscription = this.webrtc.dataChannel$.subscribe(data => {
       if (data && data.type === 'face-scan-request') {
         console.log('📡 Face scan request received via data channel:', data);
@@ -89,12 +124,17 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       } else if (data && data.type === 'face-scan-results') {
         console.log('📡 Face scan results received via data channel:', data);
         this.showFaceScanResultsModal(data.results, data.status);
+      } else if (data && data.type === 'face-scan-status') {
+        console.log('📡 Status message received via data channel:', data);
+        this.handleStatusMessage(data);
       }
     });
   }
 
   ngAfterViewInit() {
     // Don't bind local video here - wait until joining
+    // Load the medical animation
+    this.loadMedicalAnimation();
   }
 
   ngOnDestroy() {
@@ -106,6 +146,10 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (this.healthScanSubscription) {
       this.healthScanSubscription.unsubscribe();
+    }
+    // Destroy lottie animation
+    if (this.lottieAnimation) {
+      this.lottieAnimation.destroy();
     }
     this.leave();
   }
@@ -956,5 +1000,170 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (risk < 2) return 'green';
     if (risk < 5) return 'orange';
     return 'red';
+  }
+
+  // Load Medical Lottie Animation
+  private async loadMedicalAnimation(): Promise<void> {
+    try {
+      // Dynamically import lottie-web
+      const lottieModule = await import('lottie-web');
+      const lottieInstance = lottieModule.default;
+      
+      if (this.medicalAnimationRef && this.medicalAnimationRef.nativeElement) {
+        // Load the medical animation from the public folder
+        this.lottieAnimation = lottieInstance.loadAnimation({
+          container: this.medicalAnimationRef.nativeElement,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: '/Doctor.json'
+        });
+        
+        console.log('✅ Medical animation loaded successfully in patient-meet');
+      }
+    } catch (error) {
+      console.error('❌ Error loading medical animation in patient-meet:', error);
+      // Fallback: show a simple medical icon or text
+      if (this.medicalAnimationRef && this.medicalAnimationRef.nativeElement) {
+        this.medicalAnimationRef.nativeElement.innerHTML = '<div class="medical-fallback">🏥</div>';
+      }
+    }
+  }
+
+  // Handle status messages from doctor (prescriptions, diagnoses, etc.)
+  private handleStatusMessage(data: any): void {
+    console.log('📨 Handling status message:', data);
+    
+    if (data.status) {
+      const status = data.status.toLowerCase();
+      
+      if (status.includes('prescription created')) {
+        // Store the prescription data if available
+        if (data.prescriptionData) {
+          this.receivedPrescriptions.push(data.prescriptionData);
+        }
+        this.showNotificationMessage('💊 New Prescription Received', 'prescription', data);
+      } else if (status.includes('diagnosis created')) {
+        // Store the diagnosis data if available
+        if (data.diagnosisData) {
+          this.receivedDiagnoses.push(data.diagnosisData);
+        }
+        this.showNotificationMessage('🔍 New Diagnosis Received', 'diagnosis', data);
+      } else {
+        this.showNotificationMessage(data.status, 'info', data);
+      }
+    }
+  }
+
+  // Show notification message
+  private showNotificationMessage(message: string, type: 'prescription' | 'diagnosis' | 'info', data?: any): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.notificationData = data;
+    this.showNotification = true;
+    
+    // Auto-hide notification after 5 seconds
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+    }
+    
+    this.notificationTimeout = setTimeout(() => {
+      this.hideNotification();
+    }, 5000);
+    
+    console.log('🔔 Notification shown:', { message, type, data });
+  }
+
+  // Hide notification
+  hideNotification(): void {
+    this.showNotification = false;
+    this.notificationMessage = '';
+    this.notificationType = 'info';
+    this.notificationData = null;
+    
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+      this.notificationTimeout = null;
+    }
+  }
+
+  // Mobile dropdown methods
+  toggleMobileDropdown(): void {
+    this.showMobileDropdown = !this.showMobileDropdown;
+  }
+
+  closeMobileDropdown(): void {
+    this.showMobileDropdown = false;
+  }
+
+  // Overlay menu controls
+  toggleOverlayMenu(): void {
+    this.showOverlayMenu = !this.showOverlayMenu;
+  }
+
+  closeOverlayMenu(): void {
+    this.showOverlayMenu = false;
+  }
+
+  // View details of prescription or diagnosis
+  viewDetails(): void {
+    if (this.notificationData && (this.notificationType === 'prescription' || this.notificationType === 'diagnosis')) {
+      this.detailsType = this.notificationType;
+      this.detailsData = this.notificationData;
+      this.showDetailsModal = true;
+      this.hideNotification();
+    }
+  }
+
+  // Close details modal
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.detailsType = null;
+    this.detailsData = null;
+  }
+
+  // Open prescription and diagnosis modal
+  openPrescriptionDiagnosisModal(): void {
+    this.showPrescriptionDiagnosisModal = true;
+    this.loadPrescriptionsAndDiagnoses();
+  }
+
+  // Close prescription and diagnosis modal
+  closePrescriptionDiagnosisModal(): void {
+    this.showPrescriptionDiagnosisModal = false;
+    this.prescriptions = [];
+    this.diagnoses = [];
+  }
+
+  // Load prescriptions and diagnoses
+  private loadPrescriptionsAndDiagnoses(): void {
+    this.isLoadingPrescriptions = true;
+    this.isLoadingDiagnoses = true;
+
+    // Simulate loading delay
+    setTimeout(() => {
+      // Use received prescriptions and diagnoses from doctor
+      this.prescriptions = [...this.receivedPrescriptions];
+      this.diagnoses = [...this.receivedDiagnoses];
+
+      this.isLoadingPrescriptions = false;
+      this.isLoadingDiagnoses = false;
+    }, 500);
+  }
+
+  // View specific prescription details
+  viewPrescriptionDetails(prescription: any): void {
+    this.detailsType = 'prescription';
+    this.detailsData = prescription;
+    this.showDetailsModal = true;
+    this.closePrescriptionDiagnosisModal();
+  }
+
+  // View specific diagnosis details
+  viewDiagnosisDetails(diagnosis: any): void {
+    this.detailsType = 'diagnosis';
+    this.detailsData = diagnosis;
+    this.showDetailsModal = true;
+    this.closePrescriptionDiagnosisModal();
   }
 }

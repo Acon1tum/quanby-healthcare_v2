@@ -9,6 +9,9 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HealthReportDisplayComponent, HealthScanResults } from '../../../shared/components/health-report-display/health-report-display.component';
 
+// Type declaration for lottie-web
+declare const lottie: any;
+
 @Component({
   selector: 'app-doctor-meet',
   standalone: true,
@@ -20,6 +23,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('localVideo') localVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('remoteVideo') remoteVideoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('faceScanIframe') faceScanIframe!: ElementRef<HTMLIFrameElement>;
+  @ViewChild('medicalAnimation') medicalAnimationRef!: ElementRef<HTMLDivElement>;
   
   roomId: string = '';
   localStream: MediaStream | null = null;
@@ -88,10 +92,24 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isSubmittingDiagnosis: boolean = false;
   diagnosisError: string = '';
   diagnosisSuccess: string = '';
+
+  // Notification properties
+  showNotification: boolean = false;
+  notificationMessage: string = '';
+  notificationType: 'success' | 'error' | 'info' = 'success';
+  notificationTimeout: any = null;
+
+  // Mobile dropdown properties
+  showMobileDropdown: boolean = false;
+  // In-video overlay menu
+  showOverlayMenu: boolean = false;
   
   // Enums for template
   DiagnosisSeverity = DiagnosisSeverity;
   DiagnosisStatus = DiagnosisStatus;
+  
+  // Lottie animation
+  private lottieAnimation: any = null;
   
   private remoteStreamSubscription: any;
 
@@ -204,13 +222,67 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     // Don't bind local video here - wait until joining
+    // Load the medical animation
+    this.loadMedicalAnimation();
   }
 
   ngOnDestroy() {
     if (this.remoteStreamSubscription) {
       this.remoteStreamSubscription.unsubscribe();
     }
+    // Destroy lottie animation
+    if (this.lottieAnimation) {
+      this.lottieAnimation.destroy();
+    }
+    // Clear notification timeout
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+    }
     this.leave();
+  }
+
+  // Notification management methods
+  private showNotificationMessage(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+    
+    // Clear any existing timeout
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+    }
+    
+    // Auto-hide notification after 5 seconds
+    this.notificationTimeout = setTimeout(() => {
+      this.hideNotification();
+    }, 5000);
+  }
+
+  hideNotification(): void {
+    this.showNotification = false;
+    this.notificationMessage = '';
+    if (this.notificationTimeout) {
+      clearTimeout(this.notificationTimeout);
+      this.notificationTimeout = null;
+    }
+  }
+
+  // Mobile dropdown methods
+  toggleMobileDropdown(): void {
+    this.showMobileDropdown = !this.showMobileDropdown;
+  }
+
+  closeMobileDropdown(): void {
+    this.showMobileDropdown = false;
+  }
+
+  // Overlay menu controls
+  toggleOverlayMenu(): void {
+    this.showOverlayMenu = !this.showOverlayMenu;
+  }
+
+  closeOverlayMenu(): void {
+    this.showOverlayMenu = false;
   }
 
   private bindLocalVideo() {
@@ -919,12 +991,14 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // Ensure we have valid patient context
     if (!this.prescriptionForm.patientId) {
       this.prescriptionError = 'Patient context is required to create a prescription.';
+      this.showNotificationMessage('❌ Patient context is required to create a prescription.', 'error');
       return;
     }
 
     // Check if consultation was created successfully
     if (!this.consultationId) {
       this.prescriptionError = 'Consultation is required to create a prescription. Please wait for consultation to be created.';
+      this.showNotificationMessage('❌ Consultation is required. Please wait for consultation to be created.', 'error');
       return;
     }
 
@@ -956,6 +1030,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       const validation = this.prescriptionsService.validatePrescriptionData(prescriptionData);
       if (!validation.isValid) {
         this.prescriptionError = validation.errors.join(', ');
+        this.showNotificationMessage('❌ Please fix validation errors before submitting.', 'error');
         return;
       }
 
@@ -970,7 +1045,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.webrtc.sendFaceScanStatus({
               type: 'face-scan-status',
               status: `Prescription Created: ${prescriptionData.medicationName} - ${prescriptionData.dosage}`,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              prescriptionData: response.data // Send the complete prescription data
             });
             
             console.log('✅ Prescription created successfully:', response.data);
@@ -978,11 +1054,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             // Close modal and reset form
             this.closePrescriptionModal();
             
-            // Show success message
-            this.prescriptionSuccess = 'Prescription created and saved successfully!';
-            setTimeout(() => {
-              this.prescriptionSuccess = '';
-            }, 5000);
+            // Show success notification
+            this.showNotificationMessage('✅ Prescription created and saved successfully!', 'success');
             
           } else {
             this.prescriptionError = response.message || 'Failed to create prescription';
@@ -991,6 +1064,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         error: (error) => {
           console.error('❌ Error creating prescription:', error);
           this.prescriptionError = error.error?.message || 'Error creating prescription. Please try again.';
+          this.showNotificationMessage('❌ Failed to create prescription. Please try again.', 'error');
         },
         complete: () => {
           this.isSubmittingPrescription = false;
@@ -1009,26 +1083,27 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     
     for (const field of requiredFields) {
       if (!this.prescriptionForm[field] || this.prescriptionForm[field].trim() === '') {
-        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+        this.showNotificationMessage(`❌ Please fill in the ${fieldName} field.`, 'error');
         return false;
       }
     }
 
     // Validate quantity if provided
     if (this.prescriptionForm.quantity && (isNaN(this.prescriptionForm.quantity) || this.prescriptionForm.quantity <= 0)) {
-      alert('Quantity must be a positive number.');
+      this.showNotificationMessage('❌ Quantity must be a positive number.', 'error');
       return false;
     }
 
     // Validate refills
     if (this.prescriptionForm.refills < 0) {
-      alert('Refills cannot be negative.');
+      this.showNotificationMessage('❌ Refills cannot be negative.', 'error');
       return false;
     }
 
     // Validate expiration date if provided
     if (this.prescriptionForm.expiresAt && new Date(this.prescriptionForm.expiresAt) <= new Date()) {
-      alert('Expiration date must be in the future.');
+      this.showNotificationMessage('❌ Expiration date must be in the future.', 'error');
       return false;
     }
 
@@ -1112,6 +1187,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // Ensure we have valid patient context
     if (!this.diagnosisForm.patientId) {
       this.diagnosisError = 'Patient context is required to create a diagnosis.';
+      this.showNotificationMessage('❌ Patient context is required to create a diagnosis.', 'error');
       return;
     }
 
@@ -1143,6 +1219,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       const validation = this.diagnosesService.validateDiagnosisData(diagnosisData);
       if (!validation.isValid) {
         this.diagnosisError = validation.errors.join(', ');
+        this.showNotificationMessage('❌ Please fix validation errors before submitting.', 'error');
         return;
       }
 
@@ -1157,7 +1234,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.webrtc.sendFaceScanStatus({
               type: 'face-scan-status',
               status: `Diagnosis Created: ${diagnosisData.diagnosisName} - ${diagnosisData.severity}`,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              diagnosisData: response.data // Send the complete diagnosis data
             });
             
             console.log('✅ Diagnosis created successfully:', response.data);
@@ -1165,11 +1243,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             // Close modal and reset form
             this.closeDiagnosisModal();
             
-            // Show success message
-            this.diagnosisSuccess = 'Diagnosis created and saved successfully!';
-            setTimeout(() => {
-              this.diagnosisSuccess = '';
-            }, 5000);
+            // Show success notification
+            this.showNotificationMessage('✅ Diagnosis created and saved successfully!', 'success');
             
           } else {
             this.diagnosisError = response.message || 'Failed to create diagnosis';
@@ -1178,6 +1253,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         error: (error) => {
           console.error('❌ Error creating diagnosis:', error);
           this.diagnosisError = error.error?.message || 'Error creating diagnosis. Please try again.';
+          this.showNotificationMessage('❌ Failed to create diagnosis. Please try again.', 'error');
         },
         complete: () => {
           this.isSubmittingDiagnosis = false;
@@ -1196,27 +1272,28 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     
     for (const field of requiredFields) {
       if (!this.diagnosisForm[field] || this.diagnosisForm[field].trim() === '') {
-        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`);
+        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+        this.showNotificationMessage(`❌ Please fill in the ${fieldName} field.`, 'error');
         return false;
       }
     }
 
     // Validate onset date if provided
     if (this.diagnosisForm.onsetDate && new Date(this.diagnosisForm.onsetDate) > new Date()) {
-      alert('Onset date cannot be in the future.');
+      this.showNotificationMessage('❌ Onset date cannot be in the future.', 'error');
       return false;
     }
 
     // Validate resolved date if provided
     if (this.diagnosisForm.resolvedAt && new Date(this.diagnosisForm.resolvedAt) > new Date()) {
-      alert('Resolved date cannot be in the future.');
+      this.showNotificationMessage('❌ Resolved date cannot be in the future.', 'error');
       return false;
     }
 
     // Validate onset date vs resolved date
     if (this.diagnosisForm.onsetDate && this.diagnosisForm.resolvedAt && 
         new Date(this.diagnosisForm.onsetDate) > new Date(this.diagnosisForm.resolvedAt)) {
-      alert('Onset date cannot be after resolved date.');
+      this.showNotificationMessage('❌ Onset date cannot be after resolved date.', 'error');
       return false;
     }
 
@@ -1239,6 +1316,34 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (data.type === 'diagnosis') {
       console.log('🔍 Diagnosis received:', data.diagnosis);
       // You could add diagnosis to a received diagnoses list here
+    }
+  }
+
+  // Load Medical Lottie Animation
+  private async loadMedicalAnimation(): Promise<void> {
+    try {
+      // Dynamically import lottie-web
+      const lottieModule = await import('lottie-web');
+      const lottieInstance = lottieModule.default;
+      
+      if (this.medicalAnimationRef && this.medicalAnimationRef.nativeElement) {
+        // Load the medical animation from the public folder
+        this.lottieAnimation = lottieInstance.loadAnimation({
+          container: this.medicalAnimationRef.nativeElement,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: '/Medical.json'
+        });
+        
+        console.log('✅ Medical animation loaded successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error loading medical animation:', error);
+      // Fallback: show a simple medical icon or text
+      if (this.medicalAnimationRef && this.medicalAnimationRef.nativeElement) {
+        this.medicalAnimationRef.nativeElement.innerHTML = '<div class="medical-fallback">🏥</div>';
+      }
     }
   }
 }
