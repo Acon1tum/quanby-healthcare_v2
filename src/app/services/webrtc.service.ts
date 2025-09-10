@@ -95,10 +95,13 @@ export class WebRTCService {
 
   async initPeer(config?: RTCConfiguration): Promise<void> {
     if (this.peer) return;
+    const defaultIceServers: RTCIceServer[] = [
+      { urls: 'stun:stun.l.google.com:19302' },
+    ];
+    // Allow optional TURN/STUN overrides via environment
+    const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
     const defaultConfig: RTCConfiguration = config ?? {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-      ],
+      iceServers: envIceServers?.length ? envIceServers : defaultIceServers,
     };
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
@@ -146,8 +149,17 @@ export class WebRTCService {
     };
 
     // Add connection state change handler
-    this.peer.onconnectionstatechange = () => {
-      console.log('🔗 Peer connection state changed:', this.peer?.connectionState);
+    this.peer.onconnectionstatechange = async () => {
+      const state = this.peer?.connectionState;
+      console.log('🔗 Peer connection state changed:', state);
+      if (state === 'failed' || state === 'disconnected') {
+        console.warn('⚠️ Connection degraded. Attempting ICE restart...');
+        try {
+          await this.attemptIceRestart();
+        } catch (e) {
+          console.error('❌ ICE restart failed:', e);
+        }
+      }
     };
 
     // Add ICE connection state change handler
@@ -393,10 +405,35 @@ export class WebRTCService {
 
   private async createAndSendOffer(): Promise<void> {
     if (!this.peer) return;
-    const offer = await this.peer.createOffer();
+    const offer = await this.peer.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
     await this.peer.setLocalDescription(offer);
     if (this.currentRoomId) {
       this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+    }
+  }
+
+  /**
+   * Attempt an ICE restart to recover broken connections without tearing down the peer.
+   */
+  async attemptIceRestart(): Promise<void> {
+    if (!this.peer) return;
+    console.log('🧊 Starting ICE restart...');
+    const offer = await this.peer.createOffer({ iceRestart: true });
+    await this.peer.setLocalDescription(offer);
+    if (this.currentRoomId) {
+      this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+    }
+    console.log('🧊 ICE restart offer sent.');
+  }
+
+  /**
+   * Expose a manual refresh that triggers ICE restart (used by UI "Refresh Remote").
+   */
+  async restartIce(): Promise<void> {
+    try {
+      await this.attemptIceRestart();
+    } catch (e) {
+      console.error('❌ Manual ICE restart failed:', e);
     }
   }
 

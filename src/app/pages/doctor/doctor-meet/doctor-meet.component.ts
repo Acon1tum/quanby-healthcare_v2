@@ -469,6 +469,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       this.bindRemoteVideo();
     } else {
       console.log('❌ No remote stream available for refresh');
+      // Attempt ICE restart for reconnection
+      if (this.webrtc.getPeerStatus() !== 'Not Ready') {
+        console.log('🧊 Attempting ICE restart to recover remote stream...');
+        this.webrtc.restartIce();
+      }
     }
   }
 
