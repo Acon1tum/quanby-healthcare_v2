@@ -8,6 +8,7 @@
   </div>
   
   <div class="card">
+    <!-- Desktop Table View -->
     <table class="appointments-table">
       <thead>
         <tr>
@@ -43,6 +44,48 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+      <div class="mobile-card" *ngFor="let appt of paginatedAppointments">
+        <div class="mobile-card-header">
+          <div class="mobile-card-id">Appointment #{{ appt.id }}</div>
+          <div class="mobile-card-status">
+            <span class="badge" [ngClass]="getStatusColor(appt.status)">{{ appt.status }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-content">
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Doctor:</span>
+            <span class="mobile-card-value">{{ appt.doctor }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Specialty:</span>
+            <span class="mobile-card-value">{{ appt.specialty }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Reason:</span>
+            <span class="mobile-card-value">{{ appt.reason }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Scheduled:</span>
+            <span class="mobile-card-value">{{ appt.scheduledAt | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Start:</span>
+            <span class="mobile-card-value">{{ appt.start | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">End:</span>
+            <span class="mobile-card-value">{{ appt.end | date:'MMM d, h:mm a' }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-actions">
+          <button class="btn btn-reschedule" (click)="rescheduleAppointment(appt)" [disabled]="appt.status === 'cancelled' || appt.status === 'completed'">Reschedule</button>
+          <button class="btn btn-cancel" (click)="cancelAppointment(appt)" [disabled]="appt.status === 'cancelled' || appt.status === 'completed'">Cancel</button>
+        </div>
+      </div>
+    </div>
     
     <!-- Pagination Controls -->
     <div class="pagination-container" *ngIf="totalPages > 1">
@@ -115,12 +158,22 @@
       <button class="btn btn-ghost" (click)="closeRescheduleModal()">✕</button>
     </div>
     <div class="modal-body">
-      <label>New date</label>
-      <input type="date" [(ngModel)]="rescheduleDate" />
-      <label>New time</label>
-      <input type="time" [(ngModel)]="rescheduleTime" />
-      <label>Reason</label>
-      <textarea [(ngModel)]="rescheduleReason" rows="3"></textarea>
+      <div class="form-section">
+        <div class="form-row">
+          <div class="form-group">
+            <label>New Date</label>
+            <input type="date" [(ngModel)]="rescheduleDate" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>New Time</label>
+            <input type="time" [(ngModel)]="rescheduleTime" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason for Reschedule</label>
+          <textarea [(ngModel)]="rescheduleReason" rows="3" class="form-textarea" placeholder="Please provide a reason for rescheduling..."></textarea>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeRescheduleModal()">Cancel</button>
@@ -136,8 +189,12 @@
       <button class="btn btn-ghost" (click)="closeCancelModal()">✕</button>
     </div>
     <div class="modal-body">
-      <label>Reason (optional)</label>
-      <textarea [(ngModel)]="cancelReason" rows="3"></textarea>
+      <div class="form-section">
+        <div class="form-group">
+          <label>Reason for Cancellation (optional)</label>
+          <textarea [(ngModel)]="cancelReason" rows="3" class="form-textarea" placeholder="Please provide a reason for cancelling this appointment..."></textarea>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeCancelModal()">Close</button>
@@ -153,36 +210,55 @@
       <button class="btn btn-ghost" (click)="closeNewAppointmentModal()">✕</button>
     </div>
     <div class="modal-body">
-      <label>Select Doctor</label>
-      <select [(ngModel)]="newApptDoctorId" (change)="onDoctorSelected()">
-        <option value="">Choose a doctor...</option>
-        <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
-          {{ doctor.name }} - {{ doctor.specialization }}
-        </option>
-      </select>
-      <label>Date</label>
-      <input 
-        type="date" 
-        [(ngModel)]="newApptDate" 
-        [min]="getMinDate()"
-        [max]="getMaxDate()"
-        (change)="onDateSelected()"
-        [class.invalid-date]="newApptDate && !isDateAvailable(newApptDate)"
-      />
-      <small *ngIf="newApptDate && !isDateAvailable(newApptDate)" class="error-text">
-        Doctor is not available on this date
-      </small>
-      <label>Time</label>
-      <input type="time" [(ngModel)]="newApptTime" />
-      <label>Reason</label>
-      <textarea [(ngModel)]="newApptReason" rows="3"></textarea>
-      <label>Priority</label>
-      <select [(ngModel)]="newApptPriority">
-        <option value="NORMAL">Normal</option>
-        <option value="LOW">Low</option>
-        <option value="HIGH">High</option>
-        <option value="URGENT">Urgent</option>
-      </select>
+      <div class="form-section">
+        <div class="form-group">
+          <label>Select Doctor</label>
+          <select [(ngModel)]="newApptDoctorId" (change)="onDoctorSelected()" class="form-select">
+            <option value="">Choose a doctor...</option>
+            <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+              {{ doctor.name }} - {{ doctor.specialization }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input 
+              type="date" 
+              [(ngModel)]="newApptDate" 
+              [min]="getMinDate()"
+              [max]="getMaxDate()"
+              (change)="onDateSelected()"
+              [class.invalid-date]="newApptDate && !isDateAvailable(newApptDate)"
+              class="form-input"
+            />
+            <small *ngIf="newApptDate && !isDateAvailable(newApptDate)" class="error-text">
+              Doctor is not available on this date
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" [(ngModel)]="newApptTime" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Reason for Appointment</label>
+          <textarea [(ngModel)]="newApptReason" rows="3" class="form-textarea" placeholder="Please describe the reason for your appointment..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Priority Level</label>
+          <select [(ngModel)]="newApptPriority" class="form-select">
+            <option value="NORMAL">Normal</option>
+            <option value="LOW">Low</option>
+            <option value="HIGH">High</option>
+            <option value="URGENT">Urgent</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeNewAppointmentModal()">Cancel</button>

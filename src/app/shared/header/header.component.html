@@ -1,10 +1,88 @@
-<header class="fixed top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-gray-200/60 bg-white/80 px-4 md:px-6 lg:px-10 py-3 md:py-4 backdrop-blur-sm" 
+<header class="fixed top-0 z-50 flex items-center whitespace-nowrap border-b border-solid border-b-gray-200/60 bg-white/80 px-4 md:px-6 lg:px-10 py-3 md:py-4 backdrop-blur-sm" 
         [class.with-sidebar]="hasSidebar"
-        [class.logged-in]="isLoggedIn">
+        [class.logged-in]="isLoggedIn"
+        [class.justify-between]="!isLoggedIn"
+        [class.justify-evenly]="isLoggedIn">
   <!-- Logo Section - Only show when not logged in -->
   <div *ngIf="!isLoggedIn" class="flex items-center gap-2 md:gap-3 text-slate-800">
     <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="h-6 w-6 md:h-8 md:w-8">
     <h2 class="header-title text-slate-800 text-lg md:text-xl font-bold leading-tight tracking-tight">Quanby Health</h2>
+  </div>
+
+  <!-- Mobile Sidebar Button - Only show when logged in on mobile -->
+  <div *ngIf="isLoggedIn" class="lg:hidden relative">
+    <button 
+      (click)="toggleSidebar()" 
+      class="mobile-sidebar-button flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
+      aria-label="Toggle sidebar"
+    >
+      <svg class="w-6 h-6 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+
+      <!-- Mobile Sidebar Dropdown -->
+      <div 
+        #sidebarDropdown
+        [class.hidden]="!isSidebarOpen"
+        class="mobile-sidebar-dropdown absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+      >
+      <!-- Mobile Sidebar Header -->
+      <div class="px-4 py-2 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="h-6 w-6">
+          <span class="text-sm font-bold text-slate-800">Quanby Health</span>
+        </div>
+      </div>
+
+      <!-- Mobile Sidebar Navigation -->
+      <div class="max-h-80 overflow-y-auto">
+        <ng-container *ngFor="let item of navigationItems">
+          <!-- Regular navigation item -->
+          <div *ngIf="!item.children">
+            <a 
+              [routerLink]="item.route" 
+              routerLinkActive="active"
+              (click)="closeSidebar()"
+              class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <i class="material-icons text-base">{{ item.icon }}</i>
+              <span>{{ item.label }}</span>
+            </a>
+          </div>
+          
+          <!-- Navigation item with children -->
+          <div *ngIf="item.children">
+            <button 
+              (click)="toggleSection(item)"
+              class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <div class="flex items-center gap-2">
+                <i class="material-icons text-base">{{ item.icon }}</i>
+                <span>{{ item.label }}</span>
+              </div>
+              <i class="material-icons text-base transition-transform" [class.rotate-180]="item.expanded">
+                expand_more
+              </i>
+            </button>
+            
+            <div *ngIf="item.expanded" class="ml-6">
+              <ng-container *ngFor="let child of item.children">
+                <a 
+                  [routerLink]="child.route" 
+                  routerLinkActive="active"
+                  (click)="closeSidebar()"
+                  class="flex items-center gap-2 px-4 py-1 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <i class="material-icons text-sm">{{ child.icon }}</i>
+                  <span>{{ child.label }}</span>
+                </a>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
   </div>
 
   <!-- Desktop Navigation -->
@@ -46,8 +124,54 @@
     </div>
   </div>
 
-  <!-- Mobile Menu Button -->
+  <!-- Mobile Profile Button for Logged In Users -->
+  <div *ngIf="isLoggedIn" class="lg:hidden relative">
+    <button 
+      (click)="toggleProfileDropdown()" 
+      class="mobile-profile-button flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+      aria-label="Toggle profile menu"
+    >
+      <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
+        <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
+      </div>
+      <svg class="w-4 h-4 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
+
+    <!-- Profile Dropdown Menu -->
+    <div 
+      #profileDropdown
+      *ngIf="isProfileDropdownOpen"
+      class="mobile-profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+    >
+      <div class="px-4 py-2 border-b border-gray-100">
+        <p class="text-sm font-medium text-slate-800">{{ getUserDisplayName() }}</p>
+        <p class="text-xs text-gray-500 capitalize">{{ currentUser?.role }}</p>
+      </div>
+      <button 
+        (click)="navigateToProfile(); closeProfileDropdown()"
+        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+      >
+        <i class="material-icons text-base mr-2">person</i>
+        My Profile
+      </button>
+      <!-- Mobile Sidebar Footer -->
+      <div class="px-4 py-2 border-t border-gray-100">
+        <button 
+          (click)="logout(); closeSidebar()"
+          class="w-full flex items-center gap-2 px-0 py-0 text-sm text-red-600 hover:bg-red-50 transition-colors"
+        >
+          <i class="material-icons text-base">logout</i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Button for Non-Logged In Users -->
   <button 
+    *ngIf="!isLoggedIn"
     (click)="toggleMobileMenu()" 
     class="mobile-menu-button lg:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors"
     aria-label="Toggle mobile menu"
@@ -61,6 +185,7 @@
 
   <!-- Mobile Menu Overlay -->
   <div 
+    #mobileMenu
     [class.hidden]="!isMobileMenuOpen"
     class="mobile-menu-overlay lg:hidden fixed inset-0 top-16 border-t border-gray-200 z-40"
     style="background-color: #ffffff;"

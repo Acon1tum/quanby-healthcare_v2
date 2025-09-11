@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppointmentsService } from '../../../services/appointments.service';
@@ -31,7 +31,7 @@ interface AvailabilityDto {
   templateUrl: './doctor-schedule.component.html',
   styleUrl: './doctor-schedule.component.scss'
 })
-export class DoctorScheduleComponent {
+export class DoctorScheduleComponent implements OnInit {
   days: AvailabilityDto[] = [
     { dayOfWeek: 'Monday', isAvailable: false, startTime: '09:00', endTime: '17:00' },
     { dayOfWeek: 'Tuesday', isAvailable: false, startTime: '09:00', endTime: '17:00' },
@@ -72,6 +72,36 @@ export class DoctorScheduleComponent {
     this.buildCalendar();
     this.loadAvailability();
     this.loadRequests();
+  }
+
+  ngOnInit() {
+    // Add some sample data for testing if no data is loaded
+    setTimeout(() => {
+      if (this.requests.length === 0) {
+        this.requests = [
+          {
+            id: '1',
+            patient: 'John Doe',
+            reason: 'Regular checkup',
+            requestedAt: new Date().toISOString(),
+            start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(),
+            status: 'pending'
+          },
+          {
+            id: '2',
+            patient: 'Jane Smith',
+            reason: 'Follow-up consultation',
+            requestedAt: new Date().toISOString(),
+            start: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(),
+            status: 'pending'
+          }
+        ];
+        this.updatePendingPagination();
+        this.updateConfirmedPagination();
+      }
+    }, 1000);
   }
 
   accept(req: ScheduleRequest) {

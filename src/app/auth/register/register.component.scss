@@ -10,7 +10,7 @@
 
 :host .relative {
   font-family: Lexend, "Noto Sans", sans-serif;
-  background: linear-gradient(-45deg, #667eea, #764ba2, #6a82fb, #fc5c7d);
+  background: linear-gradient(120deg, #0b1e3a, #0f2d57 40%, #114a8b);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   position: relative;
@@ -23,7 +23,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="p" width="100" height="100" patternUnits="userSpaceOnUse"%3E%3Ccircle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.1"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%" height="100%" fill="url(%23p)"/%3E%3C/svg%3E');
+    background: url('data:image/svg+xml,%3Csvg width="120" height="120" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="p" width="120" height="120" patternUnits="userSpaceOnUse"%3E%3Ccircle cx="60" cy="60" r="2" fill="%23ffffff" opacity="0.08"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%" height="100%" fill="url(%23p)"/%3E%3C/svg%3E');
     opacity: 0.3;
     animation: patternMove 20s linear infinite;
   }
@@ -225,4 +225,59 @@ a {
 main {
   position: relative;
   z-index: 10;
+}
+
+/* Card and brand tweaks */
+.auth-card {
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.brand h2 {
+  margin-top: 8px;
+}
+
+/* Fixed brand bar */
+.brand-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #e5e7eb;
+  padding: 8px 12px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+}
+
+.brand-bar .home-btn {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.brand-bar .brand-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-bar .brand-left:hover {
+  cursor: pointer;
+}
+
+.brand-bar .logo {
+  height: 40px;
+  width: 40px;
+  border-radius: 4px;
+}
+
+.brand-bar .brand-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }

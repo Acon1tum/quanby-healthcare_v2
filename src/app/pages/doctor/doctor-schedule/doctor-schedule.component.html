@@ -10,6 +10,8 @@
   <!-- Pending Appointments -->
   <div class="card" *ngIf="getPendingRequests().length > 0">
     <h3>Pending Requests</h3>
+    
+    <!-- Desktop Table View -->
     <table class="requests-table">
       <thead>
         <tr>
@@ -43,6 +45,44 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+      <div class="mobile-card" *ngFor="let r of paginatedPendingRequests">
+        <div class="mobile-card-header">
+          <div class="mobile-card-id">Request #{{ r.id }}</div>
+          <div class="mobile-card-status">
+            <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-content">
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Patient:</span>
+            <span class="mobile-card-value">{{ r.patient }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Reason:</span>
+            <span class="mobile-card-value">{{ r.reason }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Requested:</span>
+            <span class="mobile-card-value">{{ r.requestedAt | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Start:</span>
+            <span class="mobile-card-value">{{ r.start | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">End:</span>
+            <span class="mobile-card-value">{{ r.end | date:'MMM d, h:mm a' }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-actions">
+          <button class="btn btn-accept" (click)="accept(r)">Accept</button>
+          <button class="btn btn-reject" (click)="reject(r)">Reject</button>
+        </div>
+      </div>
+    </div>
     
     <!-- Pagination Controls for Pending Requests -->
     <div class="pagination-container" *ngIf="pendingTotalPages > 1">
@@ -81,6 +121,8 @@
   <!-- Confirmed Appointments -->
   <div class="card" *ngIf="getConfirmedRequests().length > 0">
     <h3>Confirmed Appointments</h3>
+    
+    <!-- Desktop Table View -->
     <table class="requests-table">
       <thead>
         <tr>
@@ -111,6 +153,43 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+      <div class="mobile-card" *ngFor="let r of paginatedConfirmedRequests">
+        <div class="mobile-card-header">
+          <div class="mobile-card-id">Request #{{ r.id }}</div>
+          <div class="mobile-card-status">
+            <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-content">
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Patient:</span>
+            <span class="mobile-card-value">{{ r.patient }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Reason:</span>
+            <span class="mobile-card-value">{{ r.reason }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Requested:</span>
+            <span class="mobile-card-value">{{ r.requestedAt | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">Start:</span>
+            <span class="mobile-card-value">{{ r.start | date:'MMM d, h:mm a' }}</span>
+          </div>
+          <div class="mobile-card-row">
+            <span class="mobile-card-label">End:</span>
+            <span class="mobile-card-value">{{ r.end | date:'MMM d, h:mm a' }}</span>
+          </div>
+        </div>
+        <div class="mobile-card-actions">
+          <span class="confirmed-text">✓ Confirmed</span>
+        </div>
+      </div>
+    </div>
     
     <!-- Pagination Controls for Confirmed Requests -->
     <div class="pagination-container" *ngIf="confirmedTotalPages > 1">
@@ -172,6 +251,7 @@
       <button class="btn btn-ghost" (click)="closeAvailabilityModal()">✕</button>
     </div>
     <div class="modal-body">
+      <!-- Desktop Table View -->
       <table class="availability-table">
         <thead>
           <tr>
@@ -199,6 +279,41 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Mobile Card View -->
+      <div class="mobile-availability-cards">
+        <div class="availability-card" *ngFor="let d of days">
+          <div class="availability-card-header">
+            <h4>{{ d.dayOfWeek }}</h4>
+            <div class="availability-toggle">
+              <input type="checkbox" [(ngModel)]="d.isAvailable" id="available-{{ d.dayOfWeek }}" />
+              <label for="available-{{ d.dayOfWeek }}" class="toggle-label">
+                <span class="toggle-text">{{ d.isAvailable ? 'Available' : 'Not Available' }}</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="availability-card-content" [class.disabled]="!d.isAvailable">
+            <div class="time-inputs">
+              <div class="time-input-group">
+                <label>Start Time</label>
+                <input type="time" [(ngModel)]="d.startTime" [disabled]="!d.isAvailable" />
+              </div>
+              <div class="time-input-group">
+                <label>End Time</label>
+                <input type="time" [(ngModel)]="d.endTime" [disabled]="!d.isAvailable" />
+              </div>
+            </div>
+            
+            <div class="appointment-warning" *ngIf="d.hasExistingAppointments">
+              <span class="warning-icon">⚠️</span>
+              <span class="warning-text">
+                {{ d.existingAppointments?.length }} existing appointment(s)
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div *ngIf="conflictError" class="conflict-warning">
@@ -235,12 +350,12 @@
       <label>Reason for reschedule:</label>
       <textarea [(ngModel)]="rescheduleReason" placeholder="Please provide a reason for the reschedule request..." rows="3"></textarea>
 
-      <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
+      <div class="reschedule-inputs">
+        <div class="reschedule-input-group">
           <label>Proposed new date (optional)</label>
           <input type="date" [(ngModel)]="rescheduleNewDate" />
         </div>
-        <div>
+        <div class="reschedule-input-group">
           <label>Proposed new time (optional)</label>
           <input type="time" [(ngModel)]="rescheduleNewTime" />
         </div>

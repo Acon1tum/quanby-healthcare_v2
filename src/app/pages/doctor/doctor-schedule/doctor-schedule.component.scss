@@ -271,3 +271,365 @@ h3 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 8px;
+  }
+
+  .top-actions {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .top-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  // Convert tables to cards on mobile
+  .requests-table {
+    display: none !important;
+  }
+
+  .mobile-cards {
+    display: block !important;
+  }
+
+  .mobile-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .mobile-card-id {
+    font-weight: 600;
+    color: #111827;
+    font-size: 16px;
+  }
+
+  .mobile-card-status {
+    margin-left: 8px;
+  }
+
+  .mobile-card-content {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .mobile-card-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+    min-width: 80px;
+  }
+
+  .mobile-card-value {
+    color: #4b5563;
+    font-size: 14px;
+    text-align: right;
+    flex: 1;
+  }
+
+  .mobile-card-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 8px;
+  }
+
+  .mobile-card-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px; // Touch-friendly minimum size
+    font-size: 14px;
+  }
+
+  // Calendar mobile adjustments
+  .calendar-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .calendar-header h3 {
+    font-size: 18px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-grid .day {
+    min-height: 60px;
+  }
+
+  .calendar-grid .day .num {
+    font-size: 11px;
+  }
+
+  .calendar-grid .day {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .calendar-grid .day:active {
+    transform: scale(0.95);
+  }
+
+  // Modal mobile adjustments
+  .modal {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+  }
+
+  .modal-body {
+    padding: 0 12px 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  // Availability table mobile adjustments
+  .availability-table {
+    display: none;
+  }
+
+  .mobile-availability-cards {
+    display: block;
+  }
+
+  .availability-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .availability-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .availability-card-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .availability-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .availability-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .toggle-text {
+    color: #374151;
+  }
+
+  .availability-card-content {
+    transition: opacity 0.2s ease;
+  }
+
+  .availability-card-content.disabled {
+    opacity: 0.5;
+  }
+
+  .time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .time-input-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .time-input-group input {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 16px; // Prevent zoom on iOS
+    background: #ffffff;
+    min-height: 44px; // Touch-friendly minimum size
+  }
+
+  .time-input-group input:disabled {
+    background: #f9fafb;
+    color: #9ca3af;
+  }
+
+  .appointment-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .warning-icon {
+    font-size: 14px;
+  }
+
+  .warning-text {
+    color: #92400e;
+    font-weight: 500;
+  }
+
+  // Conflict warning mobile adjustments
+  .conflict-warning {
+    margin: 12px 0;
+    padding: 12px;
+  }
+
+  .conflict-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .conflict-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  // Reschedule modal mobile adjustments
+  .reschedule-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .reschedule-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .reschedule-input-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .reschedule-input-group input {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 16px; // Prevent zoom on iOS
+    min-height: 44px; // Touch-friendly minimum size
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  // Pagination mobile adjustments
+  .pagination-container {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .pagination-info {
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+}
+
+// Hide mobile cards on desktop by default
+.mobile-cards {
+  display: none;
+}
+
+// Show mobile cards only on mobile
+@media (max-width: 768px) {
+  .mobile-cards {
+    display: block !important;
+  }
+  
+  .mobile-availability-cards {
+    display: block !important;
+  }
+}
+
+// Hide mobile availability cards on desktop
+.mobile-availability-cards {
+  display: none;
+}
+

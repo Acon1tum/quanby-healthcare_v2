@@ -46,7 +46,14 @@ header {
 
 /* Adjust header layout when logged in (no logo) */
 header.logged-in {
-  justify-content: flex-end;
+  justify-content: space-between;
+}
+
+/* Override for desktop - keep original layout */
+@media (min-width: 1024px) {
+  header.logged-in {
+    justify-content: space-between;
+  }
 }
 
 /* Ensure proper spacing when logo is hidden */
@@ -140,4 +147,65 @@ header.logged-in .hidden.lg\:flex {
     background-color: rgba(15, 23, 42, 0.05);
     border-radius: 0.375rem;
   }
+}
+
+/* Mobile Profile Dropdown Styles */
+.mobile-profile-dropdown {
+  animation: slideDown 0.2s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-profile-button {
+  position: relative;
+}
+
+/* Mobile Sidebar Dropdown Styles */
+.mobile-sidebar-dropdown {
+  animation: slideDown 0.2s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile button hover states */
+.mobile-sidebar-button:hover,
+.mobile-profile-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Profile dropdown arrow rotation */
+.mobile-profile-button svg {
+  transition: transform 0.2s ease;
+}
+
+.mobile-profile-button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Navigation item active states for mobile sidebar dropdown */
+.mobile-sidebar-dropdown .active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Rotate animation for expand icons */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Ensure proper z-index stacking */
+.mobile-sidebar-dropdown,
+.mobile-profile-dropdown {
+  z-index: 60;
 } 
