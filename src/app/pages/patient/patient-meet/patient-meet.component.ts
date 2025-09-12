@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } fr
 import { WebRTCService } from '../../../services/webrtc.service';
 import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
 import { HealthScanService, FaceScanResult } from '../../../services/health-scan.service';
+import { AuthService } from '../../../auth/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -33,6 +34,11 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isJoining: boolean = false;
   errorMessage: string = '';
   isCameraOn: boolean = true;
+  
+  // Doctor details sidebar state
+  showDoctorSidebar: boolean = true;
+  connectedDoctorName: string = '';
+  doctorDetails: { name?: string; specialization?: string; bio?: string } | null = null;
   
   // Face scanning properties
   showFaceScanRequest: boolean = false;
@@ -91,6 +97,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     public webrtc: WebRTCService,
     private faceScanService: FaceScanService,
     private healthScanService: HealthScanService,
+    private authService: AuthService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -116,17 +123,22 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    // Subscribe to data channel messages for face scan requests, results, prescriptions, and diagnoses
+    // Listen for data channel messages (face scan, status, doctor info)
     this.dataChannelSubscription = this.webrtc.dataChannel$.subscribe(data => {
-      if (data && data.type === 'face-scan-request') {
-        console.log('📡 Face scan request received via data channel:', data);
-        this.handleFaceScanRequest(data);
-      } else if (data && data.type === 'face-scan-results') {
-        console.log('📡 Face scan results received via data channel:', data);
-        this.showFaceScanResultsModal(data.results, data.status);
-      } else if (data && data.type === 'face-scan-status') {
-        console.log('📡 Status message received via data channel:', data);
-        this.handleStatusMessage(data);
+      if (!data) return;
+      if ((data as any).type === 'face-scan-request') {
+        this.handleFaceScanRequest(data as any);
+      } else if ((data as any).type === 'face-scan-status') {
+        this.handleStatusMessage(data as any);
+      } else if ((data as any).type === 'doctor-info') {
+        const d = data as any;
+        this.connectedDoctorName = d.doctorName;
+        this.doctorDetails = {
+          name: d.doctorName,
+          specialization: d.specialization,
+          bio: d.bio
+        };
+        console.log('👨‍⚕️ Doctor info received:', this.doctorDetails);
       }
     });
   }
@@ -197,20 +209,41 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.remoteVideoRef && this.remoteVideoRef.nativeElement && this.remoteStream) {
       try {
         const videoElement = this.remoteVideoRef.nativeElement;
-        videoElement.srcObject = this.remoteStream;
-        console.log('✅ Remote video bound successfully for patient');
-        
-        // Ensure video plays
-        videoElement.play().then(() => {
-          console.log('▶️ Remote video started playing successfully');
-        }).catch(e => {
-          console.warn('⚠️ Remote video autoplay failed:', e);
-          // Try to play without autoplay
-          videoElement.muted = true;
-          videoElement.play().catch(e2 => {
-            console.error('❌ Remote video play failed even with muted:', e2);
+        const newStream = this.remoteStream;
+        const currentStream = videoElement.srcObject as MediaStream | null;
+        const assignStream = () => {
+          try { videoElement.pause(); } catch {}
+          try { (videoElement as any).srcObject = null; } catch {}
+          (videoElement as any).srcObject = newStream;
+          console.log('✅ Remote video srcObject assigned (patient)');
+        };
+        if (!currentStream || currentStream.id !== newStream.id) {
+          assignStream();
+        }
+        const tryPlay = () => {
+          videoElement.play().then(() => {
+            console.log('▶️ Remote video started playing successfully (patient)');
+          }).catch(e => {
+            console.warn('⚠️ Remote video autoplay failed (patient):', e);
+            videoElement.muted = true;
+            videoElement.play().catch(e2 => {
+              console.error('❌ Remote video play failed even with muted (patient):', e2);
+            });
           });
-        });
+        };
+        if (videoElement.readyState >= 2) {
+          tryPlay();
+        } else {
+          videoElement.onloadedmetadata = () => {
+            videoElement.onloadedmetadata = null;
+            tryPlay();
+          };
+          setTimeout(() => {
+            if (videoElement.readyState >= 2) {
+              tryPlay();
+            }
+          }, 100);
+        }
       } catch (error) {
         console.error('❌ Error binding remote video:', error);
       }
@@ -253,6 +286,27 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.errorMessage = '';
 
     try {
+      // Clear any stale video element bindings before (re)joining
+      try {
+        if (this.remoteVideoRef?.nativeElement) {
+          this.remoteVideoRef.nativeElement.srcObject = null as any;
+        }
+        if (this.localVideoRef?.nativeElement) {
+          this.localVideoRef.nativeElement.srcObject = null as any;
+        }
+      } catch {}
+
+      // Ensure clean state before (re)joining
+      try {
+        const existingRoom = this.webrtc.getCurrentRoomId();
+        if (existingRoom) {
+          await this.webrtc.leave();
+          await this.webrtc.initPeer();
+        }
+      } catch (e) {
+        console.warn('⚠️ Cleanup before join failed or not needed:', e);
+      }
+
       // Get user media and wait for the stream
       console.log('📷 Getting user media...');
       const mediaStream = await this.webrtc.getUserMedia();
@@ -285,6 +339,21 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.bindLocalVideo();
           }
         }, 500);
+
+        // Nudge remote stream binding after join
+        setTimeout(() => {
+          this.refreshRemoteStream();
+        }, 1500);
+        setTimeout(() => {
+          this.refreshRemoteStream();
+        }, 3000);
+        // Nudge negotiation in case tracks didn't sync
+        setTimeout(() => {
+          this.webrtc.triggerNegotiation();
+        }, 1800);
+
+        // Send patient information after successful join
+        this.sendPatientInformation();
       } else {
         this.errorMessage = result.error || 'Failed to join room';
         console.error('❌ Failed to join room:', result);
@@ -315,6 +384,55 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.errorMessage = '';
     this.isCameraOn = true;
     console.log('🚪 Patient left the room');
+    try {
+      if (this.remoteVideoRef?.nativeElement) {
+        this.remoteVideoRef.nativeElement.srcObject = null as any;
+      }
+      if (this.localVideoRef?.nativeElement) {
+        this.localVideoRef.nativeElement.srcObject = null as any;
+      }
+    } catch {}
+  }
+
+  // Send patient information to the doctor
+  private sendPatientInformation(): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      console.warn('⚠️ No authenticated user found, cannot send patient information');
+      return;
+    }
+
+    // Wait for data channel to be ready before sending
+    this.waitForDataChannelAndSendInfo(currentUser);
+  }
+
+  // Wait for data channel to be ready and then send patient info
+  private waitForDataChannelAndSendInfo(currentUser: any): void {
+    const checkDataChannel = () => {
+      const dataChannelStatus = this.webrtc.getDataChannelStatus();
+      console.log('🔍 Data channel status for patient info:', dataChannelStatus);
+      
+      if (dataChannelStatus === 'open') {
+        // Data channel is ready, send patient information
+        const patientInfo = {
+          type: 'patient-info' as const,
+          patientName: currentUser.patientInfo?.fullName || currentUser.email || 'Unknown Patient',
+          patientId: currentUser.id,
+          email: currentUser.email,
+          timestamp: Date.now()
+        };
+        
+        console.log('📡 Sending patient information:', patientInfo);
+        this.webrtc.sendPatientInfo(patientInfo);
+      } else {
+        // Data channel not ready yet, retry after a short delay
+        console.log('⏳ Data channel not ready, retrying in 1 second...');
+        setTimeout(checkDataChannel, 1000);
+      }
+    };
+    
+    // Start checking after a short delay to allow connection to establish
+    setTimeout(checkDataChannel, 2000);
   }
 
   refreshRemoteStream() {
@@ -1099,6 +1217,36 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   closeMobileDropdown(): void {
     this.showMobileDropdown = false;
+  }
+
+  // Refresh doctor info similar to doctor's Toggle details menu
+  refreshDoctorDetails(): void {
+    // If we already have details, re-request by nudging doctor via patient-info
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser) {
+      console.warn('⚠️ No authenticated user found, cannot refresh doctor details');
+      return;
+    }
+    // Re-send patient info to prompt doctor to respond with doctor-info
+    // Only when data channel is open
+    const status = this.webrtc.getDataChannelStatus();
+    if (status === 'open') {
+      const patientInfo = {
+        type: 'patient-info' as const,
+        patientName: currentUser.patientInfo?.fullName || currentUser.email || 'Unknown Patient',
+        patientId: currentUser.id,
+        email: currentUser.email,
+        timestamp: Date.now()
+      };
+      try {
+        this.webrtc.sendPatientInfo(patientInfo);
+        console.log('📡 Re-sent patient info to refresh doctor details');
+      } catch (e) {
+        console.warn('Unable to resend patient info for doctor details refresh:', e);
+      }
+    } else {
+      console.warn('📡 Data channel not open; cannot refresh doctor info now');
+    }
   }
 
   // Overlay menu controls

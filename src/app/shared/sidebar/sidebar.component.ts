@@ -110,7 +110,7 @@ export class SidebarComponent implements OnInit {
           {
             label: 'Patient Records',
             icon: 'folder',
-            route: '/doctor/patients'
+            route: '/doctor/patient-records'
           },
         ];
 

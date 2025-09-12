@@ -70,41 +70,41 @@
     </div>
 
     <!-- Video Container -->
-    <div class="video-container">
-      <!-- Local Video (overlay preview) -->
-      <div class="video-wrapper local-preview">
-        <h3>Local Video (You - Patient)</h3>
-        <div class="video-container-relative">
-          <video 
-            #localVideo 
-            autoplay 
-            muted 
-            playsinline
-            class="video-element local-video"
-            *ngIf="localStream"
-          ></video>
-          <div *ngIf="!localStream && isJoined" class="video-loading">
-            <div class="loading-spinner"></div>
-            <p>Initializing camera...</p>
-          </div>
-          <div *ngIf="!isCameraOn && localStream" class="camera-off-overlay">
-            <div class="camera-off-icon">📷</div>
-            <p>Camera Off</p>
-          </div>
-        </div>
-      </div>
+    <div class="meeting-layout">
+      <div class="video-container">
+        <!-- Remote Video (main) -->
+        <div class="video-wrapper remote-main">
+          <h3>Remote Video (Doctor)</h3>
+          <div class="video-container-relative">
+            <video 
+              #remoteVideo 
+              autoplay 
+              playsinline
+              class="video-element"
+              *ngIf="remoteStream"
+            ></video>
 
-      <!-- Remote Video (main) -->
-      <div class="video-wrapper remote-main">
-        <h3>Remote Video (Doctor)</h3>
-        <div class="video-container-relative">
-          <video 
-            #remoteVideo 
-            autoplay 
-            playsinline
-            class="video-element"
-            *ngIf="remoteStream"
-          ></video>
+            <!-- Local Video (overlay preview) - positioned inside remote video -->
+            <div class="video-wrapper local-preview">
+              <div class="video-container-relative">
+                <video 
+                  #localVideo 
+                  autoplay 
+                  muted 
+                  playsinline
+                  class="video-element local-video"
+                  *ngIf="localStream"
+                ></video>
+                <div *ngIf="!localStream && isJoined" class="video-loading">
+                  <div class="loading-spinner"></div>
+                  <p>Initializing camera...</p>
+                </div>
+                <div *ngIf="!isCameraOn && localStream" class="camera-off-overlay">
+                  <div class="camera-off-icon">📷</div>
+                  <p>Camera Off</p>
+                </div>
+              </div>
+            </div>
           <!-- In-video overlay actions dropdown -->
           <div class="remote-overlay-actions" *ngIf="isJoined">
             <button class="overlay-toggle" (click)="toggleOverlayMenu()" title="More actions">⋮</button>
@@ -116,13 +116,6 @@
               <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
               <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
               <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
-              <button 
-                (click)="openPrescriptionDiagnosisModal(); closeOverlayMenu()" 
-                class="btn btn-ghost btn-info"
-                title="View prescriptions and diagnoses from doctor"
-              >
-                Prescriptions & Diagnoses
-              </button>
             </div>
           </div>
           <!-- Bottom-center Leave/End Call button -->
@@ -132,6 +125,54 @@
           <div *ngIf="!remoteStream" class="waiting-message">
             <p>Waiting for doctor to join...</p>
           </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      <!-- Doctor Details Sidebar (moved next to video container) -->
+      <div class="doctor-details-sidebar" *ngIf="isJoined && showDoctorSidebar">
+        <div class="doctor-details-header">
+          <h3>👨‍⚕️ Doctor Details</h3>
+          <div class="mobile-dropdown">
+            <button 
+              class="mobile-dropdown-toggle" 
+              (click)="refreshDoctorDetails()"
+              title="Toggle details"
+            >
+              🔄
+            </button>
+          </div>
+        </div>
+        
+        <div class="doctor-details-content">
+          <div class="doctor-section" *ngIf="doctorDetails">
+            <h4>Basic Information</h4>
+            <div class="doctor-info-grid">
+              <div class="info-item" *ngIf="doctorDetails?.specialization">
+                <span class="info-label">Doctor Name:</span>
+                <span class="info-value">{{ doctorDetails.name }}</span>
+              </div>
+              <div class="info-item" *ngIf="doctorDetails?.specialization">
+                <span class="info-label">Specialization:</span>
+                <span class="info-value">{{ doctorDetails.specialization }}</span>
+              </div>
+              <div class="info-item" *ngIf="doctorDetails?.bio">
+                <span class="info-label">Bio:</span>
+                <span class="info-value">{{ doctorDetails.bio }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doctor-details-actions">
+          <button 
+            class="btn btn-primary"
+            (click)="openPrescriptionDiagnosisModal()"
+            title="View prescriptions and diagnoses from doctor"
+          >
+            Prescriptions & Diagnoses
+          </button>
         </div>
       </div>
     </div>

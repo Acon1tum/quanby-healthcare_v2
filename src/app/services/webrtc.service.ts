@@ -106,6 +106,15 @@ export class WebRTCService {
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
 
+    // If we already have a local stream (from a previous session), attach its tracks to the new peer
+    try {
+      if (this.localStream) {
+        this.localStream.getTracks().forEach((track) => {
+          try { this.peer?.addTrack(track, this.localStream!); } catch {}
+        });
+      }
+    } catch {}
+
     // Create data channel for face scan communication
     this.createDataChannel();
 
@@ -129,21 +138,30 @@ export class WebRTCService {
       });
       
       this.zone.run(() => {
-        // Update the remote stream with the new tracks
         if (event.streams && event.streams[0]) {
+          // Stream provided by browser
           this.remoteStream = event.streams[0];
-          console.log('✅ Remote stream updated:', this.remoteStream);
-          console.log('📹 Remote stream tracks:', this.remoteStream.getTracks().map(t => ({
+          console.log('✅ Remote stream (from event.streams) updated:', this.remoteStream);
+        } else {
+          // Some browsers fire ontrack with no streams; add track to our aggregate stream
+          if (!this.remoteStream) {
+            this.remoteStream = new MediaStream();
+          }
+          try {
+            this.remoteStream.addTrack(event.track);
+            console.log('➕ Added remote track to aggregate stream');
+          } catch (e) {
+            console.warn('⚠️ Failed to add remote track to stream:', e);
+          }
+        }
+        if (this.remoteStream) {
+          console.log('📹 Remote stream tracks now:', this.remoteStream.getTracks().map(t => ({
             id: t.id,
             kind: t.kind,
             enabled: t.enabled,
             readyState: t.readyState
           })));
-          
-          // Emit the stream to subscribers
           this.remoteStreamSubject.next(this.remoteStream);
-        } else {
-          console.warn('⚠️ No streams in track event');
         }
       });
     };
@@ -171,6 +189,16 @@ export class WebRTCService {
     this.peer.ondatachannel = (event) => {
       console.log('📡 Data channel received:', event.channel.label);
       this.handleDataChannel(event.channel);
+    };
+
+    // Renegotiate when needed (e.g., after tracks are (re)added)
+    this.peer.onnegotiationneeded = async () => {
+      try {
+        console.log('🧩 onnegotiationneeded fired, creating offer...');
+        await this.createAndSendOffer();
+      } catch (e) {
+        console.error('❌ Failed to renegotiate onnegotiationneeded:', e);
+      }
     };
   }
 
@@ -315,6 +343,34 @@ export class WebRTCService {
     }
   }
 
+  // Send patient information via data channel
+  sendPatientInfo(patientInfo: { type: 'patient-info'; patientName: string; patientId: number; email?: string; timestamp: number }): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      try {
+        this.dataChannel.send(JSON.stringify(patientInfo));
+        console.log('📡 Patient info sent via data channel:', patientInfo);
+      } catch (error) {
+        console.error('📡 Error sending patient info:', error);
+      }
+    } else {
+      console.warn('📡 Data channel not ready for sending patient info');
+    }
+  }
+
+  // Send doctor information via data channel
+  sendDoctorInfo(doctorInfo: { type: 'doctor-info'; doctorName: string; specialization?: string; bio?: string; doctorId?: number; timestamp: number }): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      try {
+        this.dataChannel.send(JSON.stringify(doctorInfo));
+        console.log('📡 Doctor info sent via data channel:', doctorInfo);
+      } catch (error) {
+        console.error('📡 Error sending doctor info:', error);
+      }
+    } else {
+      console.warn('📡 Data channel not ready for sending doctor info');
+    }
+  }
+
   join(roomId: string): Promise<JoinResponse> {
     this.currentRoomId = roomId;
     console.log('🚪 Attempting to join room:', roomId);
@@ -353,6 +409,19 @@ export class WebRTCService {
       if (!this.peer) await this.initPeer();
       
       try {
+        // Ensure local tracks are attached to current peer before answering
+        try {
+          if (this.localStream && this.peer) {
+            const senders = this.peer.getSenders();
+            this.localStream.getTracks().forEach((track) => {
+              const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
+              if (!hasSender) {
+                try { this.peer!.addTrack(track, this.localStream!); } catch {}
+              }
+            });
+          }
+        } catch {}
+
         await this.peer!.setRemoteDescription(new RTCSessionDescription(sdp));
         console.log('✅ Remote description set successfully');
         
@@ -405,10 +474,39 @@ export class WebRTCService {
 
   private async createAndSendOffer(): Promise<void> {
     if (!this.peer) return;
+    // Ensure local tracks are attached before offering
+    try {
+      if (this.localStream && this.peer) {
+        const senders = this.peer.getSenders();
+        this.localStream.getTracks().forEach((track) => {
+          const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
+          if (!hasSender) {
+            try { this.peer!.addTrack(track, this.localStream!); } catch {}
+          }
+        });
+      }
+    } catch {}
+
     const offer = await this.peer.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
     await this.peer.setLocalDescription(offer);
     if (this.currentRoomId) {
       this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+    }
+  }
+
+  // Public nudge to force negotiation if connection not established
+  async triggerNegotiation(): Promise<void> {
+    try {
+      const peerState = this.getPeerStatus();
+      console.log('🧩 Trigger negotiation check. Peer state:', peerState);
+      if (peerState !== 'connected' && peerState !== 'connecting') {
+        await this.createAndSendOffer();
+      } else {
+        // Even if connected, an explicit offer can help re-sync tracks post-rejoin
+        await this.createAndSendOffer();
+      }
+    } catch (e) {
+      console.error('❌ triggerNegotiation failed:', e);
     }
   }
 
@@ -418,6 +516,18 @@ export class WebRTCService {
   async attemptIceRestart(): Promise<void> {
     if (!this.peer) return;
     console.log('🧊 Starting ICE restart...');
+    // Re-attach local tracks to ensure continuity after restart
+    try {
+      if (this.localStream && this.peer) {
+        const senders = this.peer.getSenders();
+        this.localStream.getTracks().forEach((track) => {
+          const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
+          if (!hasSender) {
+            try { this.peer!.addTrack(track, this.localStream!); } catch {}
+          }
+        });
+      }
+    } catch {}
     const offer = await this.peer.createOffer({ iceRestart: true });
     await this.peer.setLocalDescription(offer);
     if (this.currentRoomId) {

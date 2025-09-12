@@ -21,6 +21,7 @@ import { DoctorDashboardComponent } from './pages/doctor/doctor-dashboard/doctor
 import { DoctorMeetComponent } from './pages/doctor/doctor-meet/doctor-meet.component';
 import { DoctorMyProfileComponent } from './pages/doctor/doctor-my-profile/doctor-my-profile.component';
 import { DoctorScheduleComponent } from './pages/doctor/doctor-schedule/doctor-schedule.component';
+import { PatientRecordsComponent } from './pages/doctor/patient-records/patient-records.component';
 
 // Patient Components
 import { PatientDashboardComponent } from './pages/patient/patient-dashboard/patient-dashboard.component';
@@ -84,7 +85,8 @@ export const appRoutes: Routes = [
           { path: 'dashboard', component: DoctorDashboardComponent },
           { path: 'meet', component: DoctorMeetComponent },
           { path: 'my-profile', component: DoctorMyProfileComponent },
-          { path: 'schedule', component: DoctorScheduleComponent }
+          { path: 'schedule', component: DoctorScheduleComponent },
+          { path: 'patient-records', component: PatientRecordsComponent }
         ]
       },
       

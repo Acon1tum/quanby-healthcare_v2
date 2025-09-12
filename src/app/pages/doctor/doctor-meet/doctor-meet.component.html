@@ -12,7 +12,8 @@
       <div class="room-id-section">
         <div class="room-id-display">
           <div class="room-code">
-            <span class="room-code-text">{{ roomId }}</span>
+            <ng-container *ngIf="!showRejoinInput; else rejoinInputTpl">
+              <span class="room-code-text">{{ roomId }}</span>
             <button 
               (click)="copyRoomIdToClipboard()" 
               class="btn btn-icon btn-outline-primary" style="margin-left: -10px; margin-right: -10px;"
@@ -35,10 +36,28 @@
                 <path d="M3 21v-5h5"></path>
               </svg>
             </button>
+            </ng-container>
+            <ng-template #rejoinInputTpl>
+              <input
+                type="text"
+                class="room-input"
+                [(ngModel)]="rejoinRoomId"
+                placeholder="Enter room code to rejoin"
+                [disabled]="isJoining"
+              >
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="rejoinUsingCode()"
+                [disabled]="!rejoinRoomId.trim() || isJoining"
+              >
+                Join
+              </button>
+            </ng-template>
           </div>
         </div>
         <!-- Start Meeting Button on the right -->
-        <div class="start-meeting-container">
+        <div class="start-meeting-container" *ngIf="!showRejoinInput">
           <button 
             (click)="join()" 
             class="btn btn-primary start-meeting-btn"
@@ -46,6 +65,20 @@
           >
             <span *ngIf="!isJoining">Start Meeting</span>
             <span *ngIf="isJoining">Starting...</span>
+          </button>
+        </div>
+        
+        <!-- Rejoin via code toggle -->
+        <div class="rejoin-section">
+          <button 
+            type="button"
+            class="btn btn-outline-primary"
+            style="font-size: 15px;"
+            (click)="toggleRejoinInput()"
+            [disabled]="isJoining"
+            title="Enter a room code to rejoin an existing meeting"
+          >
+            {{ showRejoinInput ? 'Create Code' : 'Rejoin via Code' }}
           </button>
         </div>
         <p>Generate a room ID to start a video consultation with a patient</p>
@@ -120,104 +153,170 @@
       </button>
     </div>
 
-    <!-- Video Container -->
-    <div class="video-container">
-      <!-- Local Video (overlay preview) -->
-      <div class="video-wrapper local-preview">
-        <h3>Local Video (You - Doctor)</h3>
-        <div class="video-container-relative">
-          <video 
-            #localVideo 
-            autoplay 
-            muted 
-            playsinline
-            class="video-element local-video"
-            *ngIf="localStream"
-          ></video>
-          <div *ngIf="!localStream && isJoined" class="video-loading">
-            <div class="loading-spinner"></div>
-            <p>Initializing camera...</p>
-          </div>
-          <div *ngIf="!isCameraOn && localStream" class="camera-off-overlay">
-            <div class="camera-off-icon">📷</div>
-            <p>Camera Off</p>
+    <!-- Video Container with Patient Details Sidebar -->
+    <div class="meeting-layout">
+      <!-- Main Video Area -->
+      <div class="video-container">
+        <!-- Remote Video (main) -->
+        <div class="video-wrapper remote-main">
+          <h3>Remote Video (Patient)</h3>
+          <div class="video-container-relative">
+            <video 
+              #remoteVideo 
+              autoplay 
+              playsinline
+              class="video-element"
+              *ngIf="remoteStream"
+            ></video>
+            
+            <!-- Local Video (overlay preview) - positioned inside remote video -->
+            <div class="video-wrapper local-preview">
+              <div class="video-container-relative">
+                <video 
+                  #localVideo 
+                  autoplay 
+                  muted 
+                  playsinline
+                  class="video-element local-video"
+                  *ngIf="localStream"
+                ></video>
+                <div *ngIf="!localStream && isJoined" class="video-loading">
+                  <div class="loading-spinner"></div>
+                  <p>Initializing camera...</p>
+                </div>
+                <div *ngIf="!isCameraOn && localStream" class="camera-off-overlay">
+                  <p>Camera Off</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- In-video overlay actions dropdown -->
+            <div class="remote-overlay-actions" *ngIf="isJoined">
+              <button class="overlay-toggle" (click)="toggleOverlayMenu()" title="More actions">⋮</button>
+              <div class="overlay-menu" *ngIf="showOverlayMenu" (click)="closeOverlayMenu()">
+                <button (click)="toggleCamera(); closeOverlayMenu()" class="btn btn-ghost">
+                  <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
+                  <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
+                </button>
+                <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
+                <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
+                <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
+                <button 
+                  *ngIf="remoteStream" 
+                  (click)="startFaceScan(); closeOverlayMenu()" 
+                  class="btn btn-ghost btn-primary"
+                  [disabled]="isFaceScanning"
+                  title="Start face scan for patient health assessment"
+                >
+                  <span *ngIf="!isFaceScanning">🔍 Face Scan</span>
+                  <span *ngIf="isFaceScanning">⏳ Scanning...</span>
+                </button>
+                <button 
+                  *ngIf="remoteStream" 
+                  (click)="openPrescriptionModal(); closeOverlayMenu()" 
+                  class="btn btn-ghost btn-success"
+                  title="Create prescription for patient"
+                >
+                  💊 Prescription
+                </button>
+                <button 
+                  *ngIf="remoteStream" 
+                  (click)="openDiagnosisModal(); closeOverlayMenu()" 
+                  class="btn btn-ghost btn-warning"
+                  title="Create diagnosis for patient"
+                >
+                  🔍 Diagnosis
+                </button>
+              </div>
+            </div>
+            <!-- Bottom-center Leave/End Call button -->
+            <div class="remote-overlay-leave" *ngIf="isJoined">
+              <button (click)="leave()" class="btn btn-danger end-call-btn" title="End call">End Call</button>
+            </div>
+            <div *ngIf="!remoteStream" class="waiting-message">
+              <p>Waiting for patient to join...</p>
+              <!-- Debug connection status -->
+              <div class="connection-status-debug" *ngIf="!remoteStream">
+                <details>
+                  <summary>🔧 Connection Debug (Click to expand)</summary>
+                  <div class="debug-info">
+                    <p><strong>Room:</strong> {{ roomId }}</p>
+                    <p><strong>Status:</strong> {{ getConnectionStatus() }}</p>
+                  </div>
+                </details>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Remote Video (main) -->
-      <div class="video-wrapper remote-main">
-        <h3>Remote Video (Patient)</h3>
-        <div class="video-container-relative">
-          <video 
-            #remoteVideo 
-            autoplay 
-            playsinline
-            class="video-element"
-            *ngIf="remoteStream"
-          ></video>
-          <!-- In-video overlay actions dropdown -->
-          <div class="remote-overlay-actions" *ngIf="isJoined">
-            <button class="overlay-toggle" (click)="toggleOverlayMenu()" title="More actions">⋮</button>
-            <div class="overlay-menu" *ngIf="showOverlayMenu" (click)="closeOverlayMenu()">
-              <button (click)="toggleCamera(); closeOverlayMenu()" class="btn btn-ghost">
-                <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
-                <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
-              </button>
-              <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
-              <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
-              <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
-              <button 
-                *ngIf="remoteStream" 
-                (click)="startFaceScan(); closeOverlayMenu()" 
-                class="btn btn-ghost btn-primary"
-                [disabled]="isFaceScanning"
-                title="Start face scan for patient health assessment"
-              >
-                <span *ngIf="!isFaceScanning">🔍 Face Scan</span>
-                <span *ngIf="isFaceScanning">⏳ Scanning...</span>
-              </button>
-              <button 
-                *ngIf="remoteStream" 
-                (click)="openPrescriptionModal(); closeOverlayMenu()" 
-                class="btn btn-ghost btn-success"
-                title="Create prescription for patient"
-              >
-                💊 Prescription
-              </button>
-              <button 
-                *ngIf="remoteStream" 
-                (click)="openDiagnosisModal(); closeOverlayMenu()" 
-                class="btn btn-ghost btn-warning"
-                title="Create diagnosis for patient"
-              >
-                🔍 Diagnosis
-              </button>
+      <!-- Patient Details Sidebar -->
+      <div class="patient-details-sidebar" *ngIf="isJoined">
+        
+        <div class="patient-details-header">
+          <h3>👤 Patient Details</h3>
+          <button 
+            class="btn btn-sm btn-outline-secondary" 
+            (click)="refreshPatientDetails()"
+            title="Refresh patient information"
+          >
+            🔄
+          </button>
+        </div>
+        
+        <div class="patient-details-content">
+          <!-- Patient Basic Information -->
+          <div class="patient-section" *ngIf="patientDetails">
+            <h4>Basic Information</h4>
+            <div class="patient-info-grid">
+              <div class="info-item">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ patientDetails.fullName || 'Unknown' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Age:</span>
+                <span class="info-value">{{ getPatientAge() || 'Not specified' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Gender:</span>
+                <span class="info-value">{{ patientDetails.gender || 'Not specified' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Height:</span>
+                <span class="info-value">{{ patientDetails.height ? patientDetails.height + ' cm' : 'Not specified' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Weight:</span>
+                <span class="info-value">{{ patientDetails.weight ? patientDetails.weight + ' kg' : 'Not specified' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Blood Type:</span>
+                <span class="info-value">{{ patientDetails.bloodType || 'Not specified' }}</span>
+              </div>
             </div>
           </div>
-          <!-- Bottom-center Leave/End Call button -->
-          <div class="remote-overlay-leave" *ngIf="isJoined">
-            <button (click)="leave()" class="btn btn-danger end-call-btn" title="End call">End Call</button>
-          </div>
-          <div *ngIf="!remoteStream" class="waiting-message">
-            <p>Waiting for patient to join...</p>
-            <!-- Debug connection status -->
-            <div class="connection-status-debug" *ngIf="!remoteStream">
-              <details>
-                <summary>🔧 Connection Debug (Click to expand)</summary>
-                <div class="debug-info">
-                  <p><strong>Room:</strong> {{ roomId }}</p>
-                  <p><strong>Status:</strong> {{ getConnectionStatus() }}</p>
-                </div>
-              </details>
+
+          <!-- Medical Information -->
+          <div class="patient-section" *ngIf="patientDetails">
+            <h4>Medical Information</h4>
+            <div class="patient-info-grid">
+              <div class="info-item">
+                <span class="info-label">Allergies:</span>
+                <span class="info-value">{{ patientDetails.allergies || 'None reported' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Medications:</span>
+                <span class="info-value">{{ patientDetails.medications || 'None' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Medical History:</span>
+                <span class="info-value">{{ patientDetails.medicalHistory || 'None reported' }}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Meeting Footer Controls (minimalist) -->
-    
   </div>
 
   <!-- Face Scan Modal -->

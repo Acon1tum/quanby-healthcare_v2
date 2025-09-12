@@ -6,6 +6,7 @@ import { AuthService, User } from '../../../auth/auth.service';
 import { Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { ApiService, Consultation, MedicalRecordsSummary } from '../../../api/api.service';
 
 interface HealthScan {
   id: number;
@@ -55,25 +56,7 @@ interface HealthScan {
   };
 }
 
-interface Consultation {
-  id: number;
-  startTime: string;
-  endTime?: string;
-  consultationCode: string;
-  isPublic: boolean;
-  notes?: string;
-  diagnosis?: string;
-  treatment?: string;
-  followUpDate?: string;
-  doctor?: {
-    doctorInfo?: {
-      firstName?: string;
-      lastName?: string;
-      specialization?: string;
-    };
-  };
-  healthScan?: HealthScan;
-}
+// Consultation interface is now imported from ApiService
 
 // Medical Record Types from backend schema
 enum MedicalRecordType {
@@ -174,21 +157,7 @@ interface HealthTrends {
   generalWellness: { trend: string; change: number };
 }
 
-interface MedicalRecords {
-  patientInfo: PatientInfo;
-  consultations: Consultation[];
-  healthScans: HealthScan[];
-  medicalHistory: PatientMedicalHistory[];
-  healthTrends: HealthTrends;
-  summary: {
-    totalConsultations: number;
-    totalHealthScans: number;
-    totalMedicalRecords: number;
-    lastConsultation: string | null;
-    lastHealthScan: string | null;
-    lastMedicalRecord: string | null;
-  };
-}
+// MedicalRecords interface is now imported from ApiService as MedicalRecordsSummary
 
 @Component({
   selector: 'app-medical-records',
@@ -199,13 +168,30 @@ interface MedicalRecords {
 })
 export class MedicalRecordsComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
-  medicalRecords: MedicalRecords | null = null;
+  medicalRecords: MedicalRecordsSummary | null = null;
+  patientInfo: PatientInfo | null = null;
+  consultations: Consultation[] = [];
+  healthScans: HealthScan[] = [];
+  medicalHistory: PatientMedicalHistory[] = [];
+  healthTrends: HealthTrends | null = null;
   loading = false;
   error: string | null = null;
   selectedTab = 'overview';
   selectedHealthScan: HealthScan | null = null;
   selectedConsultation: Consultation | null = null;
   selectedMedicalRecord: PatientMedicalHistory | null = null;
+  updatingPrivacy = false;
+  
+  // Filter and sort properties
+  showFilterMenu = false;
+  showSortMenu = false;
+  filteredConsultations: Consultation[] = [];
+  sortBy = 'date-desc';
+  filters = {
+    completed: true,
+    scheduled: true,
+    inProgress: true
+  };
   
   // Graph and trends properties
   selectedMetric = 'heartRate';
@@ -227,7 +213,8 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -256,17 +243,26 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.error = null;
 
     try {
-      const headers = this.authService.getAuthHeaders();
-      const response = await this.http.get<{ success: boolean; data: MedicalRecords }>(
-        `${environment.backendApi}/medical-records/patient/${this.currentUser.id}/summary`,
-        { headers }
-      ).toPromise();
+      // Use the API service to fetch medical records summary
+      const medicalRecordsResponse = await this.apiService.getMedicalRecordsSummary(this.currentUser.id).toPromise();
 
-      if (response?.success) {
-        this.medicalRecords = response.data;
+      // Process the data
+      if (medicalRecordsResponse?.success) {
+        this.medicalRecords = medicalRecordsResponse.data;
+        
+        // Extract data from the summary response
+        this.patientInfo = medicalRecordsResponse.data.patientInfo;
+        this.consultations = medicalRecordsResponse.data.consultations;
+        this.healthScans = medicalRecordsResponse.data.healthScans;
+        this.medicalHistory = medicalRecordsResponse.data.medicalHistory;
+        this.healthTrends = medicalRecordsResponse.data.healthTrends;
+        
+        // Initialize filtered consultations
+        this.applyFilters();
       } else {
-        this.error = 'Failed to load medical records';
+        throw new Error('Failed to load medical records');
       }
+
     } catch (error: any) {
       console.error('Error loading medical records:', error);
       this.error = error.error?.message || 'Failed to load medical records';
@@ -277,6 +273,115 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
 
   onBack(): void {
     this.router.navigate(['/patient/dashboard']);
+  }
+
+  // Helper method to get patient's full name
+  getPatientFullName(): string {
+    return this.patientInfo?.fullName || this.currentUser?.patientInfo?.fullName || 'Unknown Patient';
+  }
+
+  // Helper method to get patient's age
+  getPatientAge(): number {
+    if (!this.patientInfo?.dateOfBirth) return 0;
+    const today = new Date();
+    const birthDate = new Date(this.patientInfo.dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  // Helper method to get BMI
+  getPatientBMI(): number {
+    if (!this.patientInfo?.weight || !this.patientInfo?.height) return 0;
+    const heightInMeters = this.patientInfo.height / 100;
+    return Math.round((this.patientInfo.weight / (heightInMeters * heightInMeters)) * 10) / 10;
+  }
+
+  // Helper method to get BMI category (overloaded for different use cases)
+  getBMICategory(weight?: number, height?: number): string {
+    let bmi: number;
+    
+    if (weight && height) {
+      // Use provided weight and height
+      const heightInMeters = height / 100;
+      bmi = weight / (heightInMeters * heightInMeters);
+    } else {
+      // Use patient info
+      bmi = this.getPatientBMI();
+    }
+    
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25) return 'Normal weight';
+    if (bmi < 30) return 'Overweight';
+    return 'Obese';
+  }
+
+  // Helper method to format date
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // Helper method to format date and time
+  formatDateTime(dateString: string): string {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Helper method to get consultation status
+  getConsultationStatus(consultation: Consultation): string {
+    if (consultation.endTime) return 'Completed';
+    const startTime = new Date(consultation.startTime);
+    const now = new Date();
+    if (startTime > now) return 'Scheduled';
+    return 'In Progress';
+  }
+
+  // Helper method to get health scan risk level
+  getRiskLevel(score: number): { level: string; color: string } {
+    if (score < 30) return { level: 'Low', color: '#10b981' };
+    if (score < 60) return { level: 'Medium', color: '#f59e0b' };
+    return { level: 'High', color: '#ef4444' };
+  }
+
+  // Helper method to format time
+  formatTime(dateString: string): string {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Helper method to calculate duration
+  calculateDuration(startTime: string, endTime: string): string {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.round(diffMs / (1000 * 60));
+    
+    if (diffMins < 60) {
+      return `${diffMins} minutes`;
+    } else {
+      const hours = Math.floor(diffMins / 60);
+      const minutes = diffMins % 60;
+      return `${hours}h ${minutes}m`;
+    }
+  }
+
+  // Navigation method
+  navigateToSchedule(): void {
+    this.router.navigate(['/patient/schedule']);
   }
 
   selectTab(tab: string): void {
@@ -377,6 +482,30 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     this.selectedMedicalRecord = record;
   }
 
+  // Toggle consultation privacy via API using consultationId linked in record
+  async toggleRecordPrivacy(record: PatientMedicalHistory, makePublic: boolean): Promise<void> {
+    try {
+      if (!record.consultationId) {
+        return;
+      }
+      this.updatingPrivacy = true;
+      const res = await this.apiService.setConsultationPrivacy(record.consultationId, makePublic).toPromise();
+      if (res?.success) {
+        // Reflect change locally for UI
+        record.isPublic = makePublic;
+        // Also update consultations array flag if present
+        const idx = this.consultations.findIndex(c => c.id === record.consultationId);
+        if (idx >= 0) {
+          this.consultations[idx].isPublic = makePublic;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update privacy', e);
+    } finally {
+      this.updatingPrivacy = false;
+    }
+  }
+
   closeModal(): void {
     this.selectedHealthScan = null;
     this.selectedConsultation = null;
@@ -401,16 +530,6 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getBMICategory(weight: number, height: number): string {
-    if (!weight || !height) return 'N/A';
-    const heightInMeters = height / 100;
-    const bmi = weight / (heightInMeters * heightInMeters);
-    
-    if (bmi < 18.5) return 'Underweight';
-    if (bmi < 25) return 'Normal weight';
-    if (bmi < 30) return 'Overweight';
-    return 'Obese';
-  }
 
   getBMIValue(weight: number, height: number): string {
     if (!weight || !height) return 'N/A';
@@ -419,41 +538,12 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     return bmi.toFixed(1);
   }
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  formatTime(dateString: string): string {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  getRiskLevel(risk: number | undefined): { level: string; color: string } {
-    if (!risk) return { level: 'N/A', color: 'secondary' };
-    
-    if (risk < 5) return { level: 'Low', color: 'success' };
-    if (risk < 15) return { level: 'Moderate', color: 'warning' };
-    return { level: 'High', color: 'danger' };
-  }
 
   // Helper methods for template
   formatMetricName(metric: string): string {
     return metric.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   }
 
-  calculateDuration(startTime: string, endTime: string): string {
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    const durationMs = end - start;
-    const durationMinutes = Math.round(durationMs / (1000 * 60));
-    return `${durationMinutes} minutes`;
-  }
 
   copyToClipboard(text: string): void {
     if (navigator.clipboard) {
@@ -524,6 +614,20 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     if (isSensitive) return 'Sensitive';
     if (isPublic) return 'Public';
     return 'Private';
+  }
+
+  // Determine record visibility based on linked consultation table state
+  // If consultation is public (sharing active, privacy cleared), return true
+  // If consultation is private (privacy present, sharing cleared), return false
+  isRecordPublic(record: { consultationId?: number; isPublic?: boolean }): boolean {
+    if (record && record.consultationId) {
+      const consultation = this.consultations.find(c => c.id === record.consultationId);
+      if (consultation && typeof consultation.isPublic === 'boolean') {
+        return consultation.isPublic;
+      }
+    }
+    // Fallback to record flag if consultation not found
+    return !!record?.isPublic;
   }
 
   // Parse allergies and medications from strings
@@ -700,6 +804,38 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     return doctor?.doctorInfo?.specialization || 'General Practice';
   }
 
+  // Helper method to format diabetes status
+  getDiabetesStatus(diabetic: number | undefined): string {
+    if (diabetic === undefined || diabetic === null) return 'N/A';
+    switch (diabetic) {
+      case 0: return 'No Diabetes';
+      case 1: return 'Prediabetes';
+      case 2: return 'Diabetic';
+      default: return 'Unknown';
+    }
+  }
+
+  // Helper method to format family history
+  getFamilyHistoryStatus(value: number | undefined, type: 'hypertension' | 'diabetes'): string {
+    if (value === undefined || value === null) return 'N/A';
+    switch (value) {
+      case 0: return 'None';
+      case 1: return type === 'hypertension' ? 'One Parent' : 'One Parent/Sibling';
+      case 2: return type === 'hypertension' ? 'Both Parents' : 'Both Parents/Siblings';
+      default: return 'Unknown';
+    }
+  }
+
+  // Helper method to get health scan summary
+  getHealthScanSummary(scan: HealthScan): string {
+    const metrics = [];
+    if (scan.heartRate) metrics.push(`HR: ${scan.heartRate} bpm`);
+    if (scan.bloodPressure) metrics.push(`BP: ${scan.bloodPressure}`);
+    if (scan.spO2) metrics.push(`SpO2: ${scan.spO2}%`);
+    if (scan.stressLevel) metrics.push(`Stress: ${scan.stressLevel}`);
+    return metrics.length > 0 ? metrics.join(' • ') : 'No vital signs recorded';
+  }
+
   // Calculate health trends from health scan data
   calculateHealthTrends(): HealthTrends {
     if (!this.medicalRecords?.healthScans || this.medicalRecords.healthScans.length < 2) {
@@ -844,6 +980,128 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     } catch {
       // If parsing fails, return original content with basic formatting
       return content.length > 150 ? content.substring(0, 150) + '...' : content;
+    }
+  }
+
+  // New methods for enhanced consultation card functionality
+  
+  // Filter and sort methods
+  toggleFilterMenu(): void {
+    this.showFilterMenu = !this.showFilterMenu;
+    this.showSortMenu = false;
+  }
+
+  toggleSortMenu(): void {
+    this.showSortMenu = !this.showSortMenu;
+    this.showFilterMenu = false;
+  }
+
+  applyFilters(): void {
+    this.filteredConsultations = this.consultations.filter(consultation => {
+      const status = this.getConsultationStatus(consultation).toLowerCase();
+      
+      if (status === 'completed' && !this.filters.completed) return false;
+      if (status === 'scheduled' && !this.filters.scheduled) return false;
+      if (status === 'in progress' && !this.filters.inProgress) return false;
+      
+      return true;
+    });
+    
+    this.applySorting();
+  }
+
+  applySorting(): void {
+    if (!this.filteredConsultations) return;
+    
+    this.filteredConsultations.sort((a, b) => {
+      switch (this.sortBy) {
+        case 'date-desc':
+          return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+        case 'date-asc':
+          return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        case 'doctor':
+          const doctorA = this.getDoctorName(a.doctor);
+          const doctorB = this.getDoctorName(b.doctor);
+          return doctorA.localeCompare(doctorB);
+        case 'status':
+          const statusA = this.getConsultationStatus(a);
+          const statusB = this.getConsultationStatus(b);
+          return statusA.localeCompare(statusB);
+        default:
+          return 0;
+      }
+    });
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      completed: true,
+      scheduled: true,
+      inProgress: true
+    };
+    this.applyFilters();
+  }
+
+  // Track by function for ngFor performance
+  trackByConsultationId(index: number, consultation: Consultation): number {
+    return consultation.id;
+  }
+
+  // Enhanced consultation card methods
+  getDayOfWeek(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+
+  getConsultationStatusIcon(consultation: Consultation): string {
+    const status = this.getConsultationStatus(consultation).toLowerCase();
+    switch (status) {
+      case 'completed': return 'check_circle';
+      case 'scheduled': return 'event';
+      case 'in progress': return 'play_circle';
+      default: return 'help';
+    }
+  }
+
+  getDoctorRating(doctor: any): string | null {
+    // This would typically come from a rating system
+    // For now, return null or a mock rating
+    return null; // or '4.8' for example
+  }
+
+  hasHighPriority(consultation: Consultation): boolean {
+    // Check if consultation has high priority indicators
+    return !!(consultation.diagnosis?.toLowerCase().includes('urgent') ||
+           consultation.treatment?.toLowerCase().includes('immediate') ||
+           consultation.notes?.toLowerCase().includes('priority'));
+  }
+
+  isRecentConsultation(consultation: Consultation): boolean {
+    const consultationDate = new Date(consultation.startTime);
+    const now = new Date();
+    const daysDiff = (now.getTime() - consultationDate.getTime()) / (1000 * 3600 * 24);
+    return daysDiff <= 7; // Recent if within 7 days
+  }
+
+  copyConsultationCode(code: string): void {
+    this.copyToClipboard(code);
+    // You could add a toast notification here
+    console.log('Consultation code copied:', code);
+  }
+
+  async joinConsultation(consultation: Consultation): Promise<void> {
+    try {
+      const response = await this.apiService.joinConsultation(consultation.consultationCode).toPromise();
+      if (response?.success) {
+        // Handle successful join - maybe redirect to video call or show success message
+        console.log('Successfully joined consultation:', response.data);
+        // You could add navigation to video call interface here
+      } else {
+        throw new Error('Failed to join consultation');
+      }
+    } catch (error: any) {
+      console.error('Error joining consultation:', error);
+      this.error = error.message || 'Failed to join consultation';
     }
   }
 }

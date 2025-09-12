@@ -1,0 +1,149 @@
+<div class="patient-records-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+        Back to Dashboard
+      </button>
+      <h1>Patient Records</h1>
+      <div class="header-actions">
+        <button class="action-btn primary" *ngIf="!selectedPatient" (click)="loadPatients()">
+          <i class="material-icons">refresh</i>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner">
+      <i class="material-icons">refresh</i>
+    </div>
+    <p>Loading patient records...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <div class="error-icon">
+      <i class="material-icons">error</i>
+    </div>
+    <h3>Error Loading Records</h3>
+    <p>{{ error }}</p>
+    <button class="cta-btn primary" (click)="loadPatients()">
+      <i class="material-icons">refresh</i>
+      Try Again
+    </button>
+  </div>
+
+  <!-- Patient Selection (if no patient selected) -->
+  <div *ngIf="!selectedPatient && !loading && !error" class="patient-selection">
+    <div class="selection-header">
+      <h2>Select a Patient</h2>
+      <p>Choose a patient to view their medical records</p>
+    </div>
+    
+    <div class="patients-list">
+      <div *ngFor="let patient of patients" class="patient-card" (click)="selectPatient(patient)">
+        <div class="patient-avatar">
+          <i class="material-icons">person</i>
+        </div>
+        <div class="patient-info">
+          <h3>{{ patient.name || 'Unknown Patient' }}</h3>
+          <p>{{ patient.email || 'No email' }}</p>
+          <span class="patient-id">ID: {{ patient.id }}</span>
+        </div>
+        <div class="patient-actions">
+          <i class="material-icons">arrow_forward</i>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="patients.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="material-icons">people</i>
+      </div>
+      <h3>No Patients Found</h3>
+      <p>You don't have access to any patient records yet.</p>
+    </div>
+  </div>
+
+  <!-- Patient Records (if patient selected) -->
+  <div *ngIf="selectedPatient && patientRecords && !loading" class="patient-records-view">
+    <div class="patient-header">
+      <div class="patient-info">
+        <div class="patient-avatar large">
+          <i class="material-icons">person</i>
+        </div>
+        <div class="patient-details">
+          <h2>{{ selectedPatient.name || 'Unknown Patient' }}</h2>
+          <p>{{ selectedPatient.email || 'No email' }}</p>
+          <span class="patient-id">Patient ID: {{ selectedPatient.id }}</span>
+        </div>
+      </div>
+      <button class="back-btn" (click)="selectedPatient = null; patientRecords = null">
+        <i class="material-icons">arrow_back</i>
+        Back to Patients
+      </button>
+    </div>
+
+    <!-- Records Summary -->
+    <div class="records-summary">
+      <div class="summary-card">
+        <div class="summary-icon">
+          <i class="material-icons">event</i>
+        </div>
+        <div class="summary-content">
+          <h3>{{ patientRecords.totalConsultations || 0 }}</h3>
+          <p>Total Consultations</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-icon">
+          <i class="material-icons">favorite</i>
+        </div>
+        <div class="summary-content">
+          <h3>{{ patientRecords.totalHealthScans || 0 }}</h3>
+          <p>Health Scans</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-icon">
+          <i class="material-icons">medical_information</i>
+        </div>
+        <div class="summary-content">
+          <h3>{{ patientRecords.totalMedicalRecords || 0 }}</h3>
+          <p>Medical Records</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical History -->
+    <div class="medical-history-section">
+      <h3>Medical History</h3>
+      <div class="records-list">
+        <div *ngFor="let record of patientRecords.medicalHistory" class="record-card">
+          <div class="record-header">
+            <div class="record-type">
+              <i class="material-icons">description</i>
+              <span>{{ record.recordType || 'Medical Record' }}</span>
+            </div>
+            <div class="record-date">
+              {{ record.createdAt | date:'short' }}
+            </div>
+          </div>
+          <div class="record-content">
+            <h4>{{ record.title || 'Untitled' }}</h4>
+            <p>{{ record.content || 'No content available' }}</p>
+          </div>
+          <div class="record-footer">
+            <span class="creator">Created by: {{ record.creator?.email || 'Unknown' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.se
 import { PrescriptionsService, CreatePrescriptionRequest, Prescription, Patient } from '../../../services/prescriptions.service';
 import { ConsultationsService, CreateDirectConsultationRequest, Consultation } from '../../../services/consultations.service';
 import { DiagnosesService, CreateDiagnosisRequest, Diagnosis, DiagnosisSeverity, DiagnosisStatus } from '../../../services/diagnoses.service';
+import { PatientService, PatientInfo } from '../../../services/patient.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -35,6 +36,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   errorMessage: string = '';
   isCameraOn: boolean = true;
   copySuccessMessage: string = '';
+  showRejoinInput: boolean = false;
+  rejoinRoomId: string = '';
   
   // Face scanning properties
   isFaceScanning: boolean = false;
@@ -71,6 +74,14 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   currentPatient: any = null;
   consultationId: number | null = null;
   patientId: number | null = null;
+  
+  // Patient details properties
+  patientDetails: PatientInfo | null = null;
+  isLoadingPatientDetails: boolean = false;
+  patientDetailsError: string = '';
+  recentActivity: any[] = [];
+  connectedPatientName: string = '';
+  connectedPatientId: number | null = null;
   
   // Diagnosis properties
   showDiagnosisModal: boolean = false;
@@ -112,6 +123,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   private lottieAnimation: any = null;
   
   private remoteStreamSubscription: any;
+  private isBindingRemote: boolean = false;
 
   constructor(
     public webrtc: WebRTCService,
@@ -119,6 +131,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     private prescriptionsService: PrescriptionsService,
     private consultationsService: ConsultationsService,
     private diagnosesService: DiagnosesService,
+    private patientService: PatientService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -142,8 +155,13 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => {
           this.bindRemoteVideo();
         }, 100);
+        
+        // Patient joined - fetch their name
+        this.handlePatientJoined();
       } else {
         console.log('❌ Remote stream cleared');
+        // Patient left - clear their name
+        this.handlePatientLeft();
       }
     });
 
@@ -155,6 +173,28 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       } else if (data && data.type === 'face-scan-status') {
         console.log('📡 Face scan status update received in doctor component:', data);
         this.handleFaceScanStatusUpdate(data.status);
+      } else if (data && (data as any).type === 'patient-info') {
+        console.log('📡 Patient info received in doctor component:', data);
+        this.handlePatientInfo(data);
+        // Ensure doctor info is sent back once data channel is open
+        try {
+          const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          const doctorName = currentUser?.doctorInfo ? `${currentUser.doctorInfo.firstName || ''} ${currentUser.doctorInfo.lastName || ''}`.trim() : (currentUser?.email || 'Doctor');
+          const specialization = currentUser?.doctorInfo?.specialization || undefined;
+          const bio = currentUser?.doctorInfo?.qualifications ? `Qualifications: ${currentUser.doctorInfo.qualifications}` : undefined;
+          if (doctorName) {
+            this.webrtc.sendDoctorInfo({
+              type: 'doctor-info',
+              doctorName,
+              specialization,
+              bio,
+              doctorId: currentUser?.id,
+              timestamp: Date.now()
+            });
+          }
+        } catch (e) {
+          console.warn('Unable to send doctor info after patient-info:', e);
+        }
       }
     });
   }
@@ -173,6 +213,20 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   generateNewRoomId(): void {
     this.generateRoomId();
     console.log('🔄 New room ID generated:', this.roomId);
+  }
+
+  toggleRejoinInput(): void {
+    this.showRejoinInput = !this.showRejoinInput;
+  }
+
+  rejoinUsingCode(): void {
+    if (!this.rejoinRoomId || !this.rejoinRoomId.trim()) {
+      this.errorMessage = 'Please enter a room code to rejoin.';
+      return;
+    }
+    // Set the roomId and reuse join()
+    this.roomId = this.rejoinRoomId.trim();
+    this.join();
   }
 
   copyRoomIdToClipboard(): void {
@@ -327,23 +381,59 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     
     if (this.remoteVideoRef && this.remoteVideoRef.nativeElement && this.remoteStream) {
       try {
+        if (this.isBindingRemote) {
+          console.log('⏳ Skipping bindRemoteVideo: binding in progress');
+          return;
+        }
+        this.isBindingRemote = true;
+
         const videoElement = this.remoteVideoRef.nativeElement;
-        videoElement.srcObject = this.remoteStream;
-        console.log('✅ Remote video bound successfully for doctor');
-        
-        // Ensure video plays
-        videoElement.play().then(() => {
-          console.log('▶️ Remote video started playing successfully');
-        }).catch(e => {
-          console.warn('⚠️ Remote video autoplay failed:', e);
-          // Try to play without autoplay
-          videoElement.muted = true;
-          videoElement.play().catch(e2 => {
-            console.error('❌ Remote video play failed even with muted:', e2);
+        const newStream = this.remoteStream;
+        const currentStream = videoElement.srcObject as MediaStream | null;
+
+        const assignStream = () => {
+          try { videoElement.pause(); } catch {}
+          try { (videoElement as any).srcObject = null; } catch {}
+          (videoElement as any).srcObject = newStream;
+          console.log('✅ Remote video srcObject assigned');
+        };
+
+        if (!currentStream || currentStream.id !== newStream.id) {
+          assignStream();
+        } else {
+          console.log('ℹ️ Remote video already has the correct stream');
+        }
+
+        const tryPlay = () => {
+          videoElement.play().then(() => {
+            console.log('▶️ Remote video started playing successfully');
+          }).catch(e => {
+            console.warn('⚠️ Remote video autoplay failed:', e);
+            videoElement.muted = true;
+            videoElement.play().catch(e2 => {
+              console.error('❌ Remote video play failed even with muted:', e2);
+            });
           });
-        });
+        };
+
+        if (videoElement.readyState >= 2) {
+          tryPlay();
+        } else {
+          videoElement.onloadedmetadata = () => {
+            videoElement.onloadedmetadata = null;
+            tryPlay();
+          };
+          // If metadata already loaded quickly, fallback after a tick
+          setTimeout(() => {
+            if (videoElement.readyState >= 2) {
+              tryPlay();
+            }
+          }, 100);
+        }
       } catch (error) {
         console.error('❌ Error binding remote video:', error);
+      } finally {
+        this.isBindingRemote = false;
       }
     } else {
       console.warn('⚠️ Cannot bind remote video:', {
@@ -384,6 +474,27 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.errorMessage = '';
 
     try {
+      // Clear any stale video element bindings before (re)joining
+      try {
+        if (this.remoteVideoRef?.nativeElement) {
+          this.remoteVideoRef.nativeElement.srcObject = null as any;
+        }
+        if (this.localVideoRef?.nativeElement) {
+          this.localVideoRef.nativeElement.srcObject = null as any;
+        }
+      } catch {}
+
+      // Ensure clean state before (re)joining
+      try {
+        const existingRoom = this.webrtc.getCurrentRoomId();
+        if (existingRoom) {
+          await this.webrtc.leave();
+          await this.webrtc.initPeer();
+        }
+      } catch (e) {
+        console.warn('⚠️ Cleanup before join failed or not needed:', e);
+      }
+
       // Get user media and wait for the stream
       console.log('📷 Getting user media...');
       const mediaStream = await this.webrtc.getUserMedia();
@@ -416,6 +527,21 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             this.bindLocalVideo();
           }
         }, 500);
+        
+        // Nudge remote stream binding after join
+        setTimeout(() => {
+          this.refreshRemoteStream();
+        }, 1500);
+        setTimeout(() => {
+          this.refreshRemoteStream();
+        }, 3000);
+        // Nudge negotiation in case tracks didn't sync
+        setTimeout(() => {
+          this.webrtc.triggerNegotiation();
+        }, 1800);
+
+        // Load patient details when doctor joins
+        this.loadPatientDetails();
       } else {
         this.errorMessage = result.error || 'Failed to join room';
         console.error('❌ Failed to join room:', result);
@@ -446,6 +572,14 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.errorMessage = '';
     this.isCameraOn = true;
     console.log('🚪 Doctor left the room');
+    try {
+      if (this.remoteVideoRef?.nativeElement) {
+        this.remoteVideoRef.nativeElement.srcObject = null as any;
+      }
+      if (this.localVideoRef?.nativeElement) {
+        this.localVideoRef.nativeElement.srcObject = null as any;
+      }
+    } catch {}
   }
 
   refreshRemoteStream() {
@@ -1321,6 +1455,236 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (data.type === 'diagnosis') {
       console.log('🔍 Diagnosis received:', data.diagnosis);
       // You could add diagnosis to a received diagnoses list here
+    }
+  }
+
+  // Patient Details Methods
+  loadPatientDetails(): void {
+    if (!this.connectedPatientId && !this.patientId) {
+      console.warn('⚠️ No patient ID available for loading details');
+      return;
+    }
+
+    this.isLoadingPatientDetails = true;
+    this.patientDetailsError = '';
+
+    // Use connected patient ID if available, otherwise fall back to patientId
+    const targetPatientId = this.connectedPatientId || this.patientId;
+    
+    if (targetPatientId) {
+      this.fetchRealPatientDetails(targetPatientId);
+    } else {
+      // No patient id available; stop loading and show error
+      this.isLoadingPatientDetails = false;
+      this.patientDetailsError = 'No patient ID available to load details.';
+    }
+  }
+
+  // Fetch real patient details from API
+  private fetchRealPatientDetails(patientId: number): void {
+    console.log('🔍 Fetching real patient details for ID:', patientId);
+    
+    this.patientService.getPatientInfoByUserId(patientId).subscribe({
+      next: (response) => {
+        console.log('📊 Real patient data response:', response);
+        
+        if (response.success && response.data) {
+          this.patientDetails = response.data;
+          
+          // Update connected patient name if not already set
+          if (!this.connectedPatientName && response.data.fullName) {
+            this.connectedPatientName = response.data.fullName;
+          }
+          
+          // Update current patient object
+          this.currentPatient = {
+            id: response.data.userId,
+            fullName: response.data.fullName,
+            email: 'Not provided' // Email not included in PatientInfo
+          };
+          
+          // Load recent activity (placeholder)
+          this.loadRecentActivity(patientId);
+          
+          console.log('✅ Real patient details loaded:', this.patientDetails);
+          this.showNotificationMessage(`👤 Patient details loaded: ${response.data.fullName}`, 'success');
+        } else {
+          console.warn('⚠️ Failed to load real patient data:', response.message);
+          this.patientDetailsError = response.message || 'Failed to load patient details';
+          this.patientDetails = null;
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error fetching real patient details:', error);
+        this.patientDetailsError = error?.error?.message || 'Error loading patient details.';
+        this.patientDetails = null;
+      },
+      complete: () => {
+        this.isLoadingPatientDetails = false;
+      }
+    });
+  }
+
+  // Load recent activity for the patient
+  private loadRecentActivity(patientId: number): void {
+    // This would typically fetch from consultations, prescriptions, etc.
+    // For now, we'll use mock data
+    this.recentActivity = [
+      {
+        icon: '💊',
+        title: 'Prescription Created',
+        time: '2 hours ago'
+      },
+      {
+        icon: '🔍',
+        title: 'Face Scan Completed',
+        time: '1 day ago'
+      },
+      {
+        icon: '📋',
+        title: 'Consultation Started',
+        time: '2 days ago'
+      }
+    ];
+  }
+
+  private loadMockPatientDetails(): void {
+    // Mock patient data - in real implementation, this would come from API
+    this.patientDetails = {
+      id: 1,
+      userId: this.connectedPatientId || this.patientId || 5,
+      fullName: this.connectedPatientName || 'Emily Anderson',
+      gender: 'FEMALE',
+      dateOfBirth: new Date('1990-05-15'),
+      contactNumber: '+1-555-0123',
+      address: '123 Health Street, Medical City, MC 12345',
+      weight: 63.5,
+      height: 168.0,
+      bloodType: 'O+',
+      medicalHistory: 'Type 2 Diabetes, Hypertension',
+      allergies: 'Penicillin, Shellfish',
+      medications: 'Metformin 500mg daily, Lisinopril 10mg daily'
+    };
+
+    // Mock recent activity
+    this.recentActivity = [
+      {
+        icon: '💊',
+        title: 'Prescription Created',
+        time: '2 hours ago'
+      },
+      {
+        icon: '🔍',
+        title: 'Face Scan Completed',
+        time: '1 day ago'
+      },
+      {
+        icon: '📋',
+        title: 'Consultation Started',
+        time: '2 days ago'
+      }
+    ];
+
+    this.isLoadingPatientDetails = false;
+    console.log('✅ Mock patient details loaded:', this.patientDetails);
+  }
+
+  refreshPatientDetails(): void {
+    console.log('🔄 Refreshing patient details...');
+    this.loadPatientDetails();
+  }
+
+  // Calculate patient age from date of birth
+  getPatientAge(): string {
+    if (!this.patientDetails?.dateOfBirth) {
+      return 'Not specified';
+    }
+    
+    const today = new Date();
+    const birthDate = new Date(this.patientDetails.dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return `${age} years`;
+  }
+
+  // Handle patient joining the meeting
+  private handlePatientJoined(): void {
+    console.log('👤 Patient joined the meeting');
+    
+    // Patient information will be sent automatically by the patient component
+    // No need to request it manually
+    
+    // Also send basic doctor info to patient if data channel is open
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const doctorName = currentUser?.doctorInfo ? `${currentUser.doctorInfo.firstName || ''} ${currentUser.doctorInfo.lastName || ''}`.trim() : (currentUser?.email || 'Doctor');
+      const specialization = currentUser?.doctorInfo?.specialization || undefined;
+      const bio = currentUser?.doctorInfo?.qualifications ? `Qualifications: ${currentUser.doctorInfo.qualifications}` : undefined;
+      if (doctorName) {
+        this.webrtc.sendDoctorInfo({
+          type: 'doctor-info',
+          doctorName,
+          specialization,
+          bio,
+          doctorId: currentUser?.id,
+          timestamp: Date.now()
+        });
+      }
+    } catch (e) {
+      console.warn('Unable to send doctor info:', e);
+    }
+    
+    // Load patient details (will be updated when patient info is received)
+    this.loadPatientDetails();
+  }
+
+  // Handle patient leaving the meeting
+  private handlePatientLeft(): void {
+    console.log('👤 Patient left the meeting');
+    this.connectedPatientName = '';
+    this.connectedPatientId = null;
+    this.patientDetails = null;
+    this.recentActivity = [];
+  }
+
+
+  // Handle patient information received from data channel
+  private handlePatientInfo(data: any): void {
+    console.log('📊 Processing patient information:', data);
+    
+    if (data.patientName) {
+      this.connectedPatientName = data.patientName;
+      console.log('✅ Patient name set:', this.connectedPatientName);
+    }
+    
+    if (data.patientId) {
+      this.connectedPatientId = data.patientId;
+      this.patientId = data.patientId; // Keep for backward compatibility
+      console.log('✅ Patient ID set:', this.connectedPatientId);
+    }
+    
+    // Update current patient object
+    if (data.patientName || data.patientId) {
+      this.currentPatient = {
+        id: this.connectedPatientId || this.patientId,
+        fullName: this.connectedPatientName || 'Unknown Patient',
+        email: data.email || 'Not provided'
+      };
+    }
+    
+    // Show notification
+    if (this.connectedPatientName) {
+      this.showNotificationMessage(`👤 ${this.connectedPatientName} joined the consultation`, 'info');
+    }
+    
+    // Load real patient details now that we have the patient ID
+    if (this.connectedPatientId) {
+      this.loadPatientDetails();
     }
   }
 
