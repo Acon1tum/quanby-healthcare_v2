@@ -4,6 +4,16 @@ import { RegisterComponent } from './auth/register/register.component';
 import { LandingPageComponent } from './landing-page/landing-page.component';
 import { FaceScanComponent } from './face-scan/face-scan.component';
 
+// Super Admin Components
+import { DashboardSuperadminComponent } from './pages/super-admin/dashboard-superadmin/dashboard-superadmin.component';
+import { OrgManagementComponent } from './pages/super-admin/org-management/org-management.component';
+import { DoctorManagementComponent as DoctorManagementSuperadminComponent } from './pages/super-admin/doctor-management/doctor-management.component';
+import { PatientManagementComponent as PatientManagementSuperadminComponent } from './pages/super-admin/patient-management/patient-management.component';
+import { AuditLogsSuperadminComponent } from './pages/super-admin/audit-logs-superadmin/audit-logs-superadmin.component';
+import { ReportsSuperadminComponent } from './pages/super-admin/reports-superadmin/reports-superadmin.component';
+import { SettingsComponent } from './pages/super-admin/settings/settings.component';
+
+
 // Admin Components
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
 import { ScheduleManagementComponent } from './pages/admin/schedule-management/schedule-management.component';
@@ -50,6 +60,23 @@ export const appRoutes: Routes = [
     component: DashboardLayoutComponent,
     canActivate: [AuthGuard],
     children: [
+
+      // Super Admin Routes - Protected with super admin role requirement 
+      { 
+        path: 'super-admin', 
+        canActivate: [RoleGuard],
+        data: { role: 'SUPER_ADMIN' },
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', component: DashboardSuperadminComponent },
+          { path: 'org-management', component: OrgManagementComponent },
+          { path: 'doctor-management', component: DoctorManagementSuperadminComponent },
+          { path: 'patient-management', component: PatientManagementSuperadminComponent },
+          { path: 'audit-logs', component: AuditLogsSuperadminComponent },
+          { path: 'reports', component: ReportsSuperadminComponent },
+          { path: 'settings', component: SettingsComponent }
+        ]
+      },
       // Admin Routes - Protected with admin role requirement
       { 
         path: 'admin', 

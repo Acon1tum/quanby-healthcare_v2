@@ -102,7 +102,7 @@ export class LoginComponent implements OnInit {
   // Demo login methods for testing
   loginAsAdmin(): void {
     this.loginForm.patchValue({
-      email: 'admin@qhealth.com',
+      email: 'admin@metrogeneral.com',
       password: 'admin123'
     });
     this.onSubmit();
@@ -110,7 +110,7 @@ export class LoginComponent implements OnInit {
 
   loginAsDoctor(): void {
     this.loginForm.patchValue({
-      email: 'dr.williams@qhealth.com',
+      email: 'dr.williams@metrogeneral.com',
       password: 'doctor123'
     });
     this.onSubmit();
@@ -120,6 +120,14 @@ export class LoginComponent implements OnInit {
     this.loginForm.patchValue({
       email: 'patient.anderson@email.com',
       password: 'patient123'
+    });
+    this.onSubmit();
+  }
+
+  loginAsSuperAdmin(): void {
+    this.loginForm.patchValue({
+      email: 'superadmin@qhealth.com',
+      password: 'superadmin123'
     });
     this.onSubmit();
   }

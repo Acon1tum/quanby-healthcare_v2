@@ -19,6 +19,11 @@ interface PatientPersonalInfo {
   allergies: string[];
   medications: string[];
   profileImage?: string;
+  philHealthId?: string;
+  philHealthStatus?: string;
+  philHealthCategory?: string;
+  philHealthExpiry?: string;
+  philHealthMemberSince?: string;
 }
 
 interface EmergencyContact {
@@ -34,6 +39,14 @@ interface InsuranceInfo {
   insuranceContact: string;
 }
 
+interface PhilHealthInfo {
+  philHealthId: string;
+  philHealthStatus: string;
+  philHealthCategory: string;
+  philHealthExpiry: string;
+  philHealthMemberSince: string;
+}
+
 interface PatientPreferences {
   language: string;
   communicationMethod: string;
@@ -43,6 +56,7 @@ interface PatientProfile {
   personalInfo: PatientPersonalInfo;
   emergencyContact?: EmergencyContact;
   insuranceInfo?: InsuranceInfo;
+  philHealthInfo?: PhilHealthInfo;
   preferences: PatientPreferences;
 }
 
@@ -86,6 +100,8 @@ export class PatientMyProfileComponent implements OnInit {
   bloodTypeOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   languageOptions = ['English', 'Spanish', 'French', 'German', 'Chinese', 'Japanese', 'Arabic', 'Hindi'];
   communicationOptions = ['Email', 'Phone', 'SMS', 'In-App'];
+  philHealthStatusOptions = ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED'];
+  philHealthCategoryOptions = ['INDIVIDUAL', 'FAMILY', 'SPONSORED', 'SENIOR_CITIZEN'];
 
   constructor(
     private fb: FormBuilder,
@@ -116,7 +132,12 @@ export class PatientMyProfileComponent implements OnInit {
         medicalHistory: '',
         allergies: [],
         medications: [],
-        profileImage: undefined
+        profileImage: undefined,
+        philHealthId: '',
+        philHealthStatus: '',
+        philHealthCategory: '',
+        philHealthExpiry: '',
+        philHealthMemberSince: ''
       },
       emergencyContact: {
         contactName: '',
@@ -150,7 +171,12 @@ export class PatientMyProfileComponent implements OnInit {
         bloodType: ['', Validators.required],
         medicalHistory: [''],
         allergies: [[]],
-        medications: [[]]
+        medications: [[]],
+        philHealthId: [''],
+        philHealthStatus: [''],
+        philHealthCategory: [''],
+        philHealthExpiry: [''],
+        philHealthMemberSince: ['']
       }),
       emergencyContact: this.fb.group({
         contactName: ['', Validators.required],
@@ -211,7 +237,12 @@ export class PatientMyProfileComponent implements OnInit {
         medicalHistory: p.medicalHistory || '',
         allergies: Array.isArray(p.allergies) ? p.allergies : (p.allergies ? [p.allergies] : []),
         medications: Array.isArray(p.medications) ? p.medications : (p.medications ? [p.medications] : []),
-        profileImage: undefined
+        profileImage: undefined,
+        philHealthId: p.philHealthId || '',
+        philHealthStatus: p.philHealthStatus || '',
+        philHealthCategory: p.philHealthCategory || '',
+        philHealthExpiry: p.philHealthExpiry ? new Date(p.philHealthExpiry).toISOString().split('T')[0] : '',
+        philHealthMemberSince: p.philHealthMemberSince ? new Date(p.philHealthMemberSince).toISOString().split('T')[0] : ''
       },
       emergencyContact: p.emergencyContact ? {
         contactName: p.emergencyContact.contactName,

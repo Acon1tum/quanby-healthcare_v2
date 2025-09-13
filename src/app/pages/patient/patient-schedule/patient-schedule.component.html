@@ -212,13 +212,24 @@
     <div class="modal-body">
       <div class="form-section">
         <div class="form-group">
+          <label>Select Organization</label>
+          <select [(ngModel)]="newApptOrganizationId" (change)="onOrganizationSelected()" class="form-select">
+            <option value="">Choose an organization...</option>
+            <option *ngFor="let org of availableOrganizations" [value]="org.id">
+              {{ org.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label>Select Doctor</label>
-          <select [(ngModel)]="newApptDoctorId" (change)="onDoctorSelected()" class="form-select">
+          <select [(ngModel)]="newApptDoctorId" (change)="onDoctorSelected()" class="form-select" [disabled]="!newApptOrganizationId">
             <option value="">Choose a doctor...</option>
-            <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+            <option *ngFor="let doctor of filteredDoctors" [value]="doctor.id">
               {{ doctor.name }} - {{ doctor.specialization }}
             </option>
           </select>
+          <small *ngIf="!newApptOrganizationId" class="help-text">Please select an organization first</small>
         </div>
 
         <div class="form-row">
@@ -262,7 +273,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeNewAppointmentModal()">Cancel</button>
-      <button class="btn btn-accept" [disabled]="!newApptDoctorId || !newApptDate || !newApptTime || !newApptReason.trim() || (newApptDate && !isDateAvailable(newApptDate))" (click)="submitNewAppointment()">Submit Request</button>
+      <button class="btn btn-accept" [disabled]="!newApptOrganizationId || !newApptDoctorId || !newApptDate || !newApptTime || !newApptReason.trim() || (newApptDate && !isDateAvailable(newApptDate))" (click)="submitNewAppointment()">Submit Request</button>
     </div>
   </div>
 </div>

@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 export interface User {
   id: number;
   email: string;
-  role: 'ADMIN' | 'DOCTOR' | 'PATIENT';
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT';
   token?: string;
   refreshToken?: string;
   doctorInfo?: {
@@ -45,6 +45,11 @@ export interface User {
       policyNumber: string;
       insuranceContact: string;
     };
+    philHealthId?: string;
+    philHealthStatus?: string;
+    philHealthCategory?: string;
+    philHealthExpiry?: string;
+    philHealthMemberSince?: string;
   };
 }
 
@@ -84,7 +89,7 @@ export interface BackendLoginResponse {
     user: {
       id: number;
       email: string;
-      role: 'ADMIN' | 'DOCTOR' | 'PATIENT';
+      role: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT';
       doctorInfo?: any;
       patientInfo?: any;
     };
@@ -171,6 +176,11 @@ export class AuthService {
           medications: userData.patientInfo.medications,
           emergencyContact: userData.patientInfo.emergencyContact,
           insuranceInfo: userData.patientInfo.insuranceInfo,
+          philHealthId: userData.patientInfo.philHealthId,
+          philHealthStatus: userData.patientInfo.philHealthStatus,
+          philHealthCategory: userData.patientInfo.philHealthCategory,
+          philHealthExpiry: userData.patientInfo.philHealthExpiry,
+          philHealthMemberSince: userData.patientInfo.philHealthMemberSince,
         } : (userData.patient ? { // support alternative shape
           fullName: userData.patient.fullName,
           gender: userData.patient.gender,
@@ -185,6 +195,11 @@ export class AuthService {
           medications: userData.patient.medications,
           emergencyContact: userData.patient.emergencyContact,
           insuranceInfo: userData.patient.insuranceInfo,
+          philHealthId: userData.patient.philHealthId,
+          philHealthStatus: userData.patient.philHealthStatus,
+          philHealthCategory: userData.patient.philHealthCategory,
+          philHealthExpiry: userData.patient.philHealthExpiry,
+          philHealthMemberSince: userData.patient.philHealthMemberSince,
         } : undefined),
       };
 
@@ -209,7 +224,7 @@ export class AuthService {
     return !!this.currentUserValue && !!localStorage.getItem('accessToken');
   }
 
-  get userRole(): 'ADMIN' | 'DOCTOR' | 'PATIENT' | null {
+  get userRole(): 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT' | null {
     return this.currentUserValue?.role || null;
   }
 
@@ -343,6 +358,9 @@ export class AuthService {
     }
 
     switch (user.role) {
+      case 'SUPER_ADMIN':
+        this.router.navigate(['/admin/dashboard']); // Super admin uses admin dashboard
+        break;
       case 'ADMIN':
         this.router.navigate(['/admin/dashboard']);
         break;
@@ -358,14 +376,16 @@ export class AuthService {
   }
 
   // Check if user has required role
-  hasRole(requiredRole: 'ADMIN' | 'DOCTOR' | 'PATIENT'): boolean {
+  hasRole(requiredRole: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT'): boolean {
     const user = this.currentUserValue;
     if (!user) return false;
     
-    if (requiredRole === 'ADMIN') {
-      return user.role === 'ADMIN';
+    if (requiredRole === 'SUPER_ADMIN') {
+      return user.role === 'SUPER_ADMIN';
+    } else if (requiredRole === 'ADMIN') {
+      return user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
     } else if (requiredRole === 'DOCTOR') {
-      return user.role === 'ADMIN' || user.role === 'DOCTOR';
+      return user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'DOCTOR';
     } else {
       return true; // All roles can access patient-level features
     }

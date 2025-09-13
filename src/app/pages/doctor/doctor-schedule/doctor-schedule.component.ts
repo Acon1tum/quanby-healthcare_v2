@@ -105,7 +105,7 @@ export class DoctorScheduleComponent implements OnInit {
   }
 
   accept(req: ScheduleRequest) {
-    const id = Number(req.id);
+    const id = String(req.id);
     this.appointments.updateAppointmentStatus(id, 'CONFIRMED').subscribe({
       next: () => {
         req.status = 'accepted';
@@ -118,7 +118,7 @@ export class DoctorScheduleComponent implements OnInit {
     });
   }
   reject(req: ScheduleRequest) {
-    const id = Number(req.id);
+    const id = String(req.id);
     this.appointments.updateAppointmentStatus(id, 'REJECTED').subscribe({
       next: () => {
         req.status = 'rejected';

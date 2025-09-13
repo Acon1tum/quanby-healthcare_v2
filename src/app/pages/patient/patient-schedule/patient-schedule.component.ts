@@ -57,12 +57,15 @@ export class PatientScheduleComponent {
 
   // New appointment
   showNewAppointmentModal = false;
-  newApptDoctorId: number | null = null;
+  newApptOrganizationId: string | null = null;
+  newApptDoctorId: string | null = null;
   newApptDate = '';
   newApptTime = '';
   newApptReason = '';
   newApptPriority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' = 'NORMAL';
-  availableDoctors: Array<{ id: number; name: string; specialization: string }> = [];
+  availableOrganizations: Array<{ id: string; name: string }> = [];
+  availableDoctors: Array<{ id: string; name: string; specialization: string; organizationId?: string }> = [];
+  filteredDoctors: Array<{ id: string; name: string; specialization: string; organizationId?: string }> = [];
   
   // Error modal properties
   showErrorModal = false;
@@ -135,7 +138,7 @@ export class PatientScheduleComponent {
 
   submitReschedule() {
     if (!this.rescheduleApptId || !this.rescheduleDate || !this.rescheduleTime || !this.rescheduleReason.trim()) return;
-    this.appointmentsService.requestReschedule(Number(this.rescheduleApptId), this.rescheduleDate, this.rescheduleTime, this.rescheduleReason).subscribe({
+    this.appointmentsService.requestReschedule(String(this.rescheduleApptId), this.rescheduleDate, this.rescheduleTime, this.rescheduleReason).subscribe({
       next: () => {
         this.showRescheduleModal = false;
         this.rescheduleApptId = '';
@@ -150,7 +153,7 @@ export class PatientScheduleComponent {
 
   submitCancel() {
     if (!this.cancelApptId) return;
-    this.appointmentsService.cancelMyAppointment(Number(this.cancelApptId), this.cancelReason).subscribe({
+    this.appointmentsService.cancelMyAppointment(String(this.cancelApptId), this.cancelReason).subscribe({
       next: () => {
         this.showCancelModal = false;
         this.cancelApptId = '';
@@ -166,14 +169,31 @@ export class PatientScheduleComponent {
 
   openNewAppointmentModal() { 
     this.showNewAppointmentModal = true; 
+    this.loadOrganizations();
     this.loadDoctors();
   }
 
+  loadOrganizations() {
+    this.appointmentsService.getOrganizations().subscribe({
+      next: (resp: any) => {
+        if (resp?.success && Array.isArray(resp.data)) {
+          this.availableOrganizations = resp.data.map((org: any) => ({
+            id: org.id,
+            name: org.name
+          }));
+        }
+      },
+      error: (e) => console.error('Failed to load organizations', e)
+    });
+  }
+
   loadDoctors() {
+    // Load all doctors initially (for when no organization is selected)
     this.appointmentsService.getAvailableDoctors().subscribe({
       next: (resp: any) => {
         if (resp?.success && Array.isArray(resp.data)) {
           this.availableDoctors = resp.data;
+          this.filteredDoctors = [...this.availableDoctors];
         }
       },
       error: (e) => console.error('Failed to load doctors', e)
@@ -181,7 +201,40 @@ export class PatientScheduleComponent {
   }
   closeNewAppointmentModal() {
     this.showNewAppointmentModal = false; 
-    this.newApptDoctorId = null; this.newApptDate = ''; this.newApptTime = ''; this.newApptReason = ''; this.newApptPriority = 'NORMAL';
+    this.newApptOrganizationId = null;
+    this.newApptDoctorId = null; 
+    this.newApptDate = ''; 
+    this.newApptTime = ''; 
+    this.newApptReason = ''; 
+    this.newApptPriority = 'NORMAL';
+    this.filteredDoctors = [...this.availableDoctors];
+  }
+
+  onOrganizationSelected() {
+    console.log('Organization selected:', this.newApptOrganizationId);
+    if (this.newApptOrganizationId) {
+      // Load doctors from the selected organization
+      this.appointmentsService.getDoctorsByOrganization(this.newApptOrganizationId).subscribe({
+        next: (resp: any) => {
+          if (resp?.success && Array.isArray(resp.data)) {
+            this.filteredDoctors = resp.data;
+          } else {
+            this.filteredDoctors = [];
+          }
+        },
+        error: (e) => {
+          console.error('Failed to load doctors for organization', e);
+          this.filteredDoctors = [];
+        }
+      });
+    } else {
+      // Show all doctors if no organization selected
+      this.filteredDoctors = [...this.availableDoctors];
+    }
+    
+    // Reset doctor selection when organization changes
+    this.newApptDoctorId = null;
+    this.selectedDoctorAvailability = {};
   }
 
   showError(message: string) {
@@ -197,15 +250,15 @@ export class PatientScheduleComponent {
   onDoctorSelected() {
     console.log('Doctor selected:', this.newApptDoctorId, 'Type:', typeof this.newApptDoctorId);
     if (this.newApptDoctorId) {
-      // Convert to number if it's a string
-      const doctorId = typeof this.newApptDoctorId === 'string' ? parseInt(this.newApptDoctorId) : this.newApptDoctorId;
+      // Keep as string since backend expects UUID
+      const doctorId = String(this.newApptDoctorId);
       this.loadDoctorAvailability(doctorId);
     } else {
       this.selectedDoctorAvailability = {};
     }
   }
 
-  loadDoctorAvailability(doctorId: number) {
+  loadDoctorAvailability(doctorId: string) {
     console.log('Loading availability for doctor:', doctorId);
     this.appointmentsService.getDoctorAvailability(doctorId).subscribe({
       next: (availability: DoctorAvailability[]) => {
@@ -264,7 +317,7 @@ export class PatientScheduleComponent {
       priority: this.newApptPriority
     });
     
-    if (!this.newApptDoctorId || !this.newApptDate || !this.newApptTime || !this.newApptReason.trim()) {
+    if (!this.newApptOrganizationId || !this.newApptDoctorId || !this.newApptDate || !this.newApptTime || !this.newApptReason.trim()) {
       console.error('Missing required fields');
       return;
     }
@@ -277,7 +330,7 @@ export class PatientScheduleComponent {
     
     const payload = {
       patientId: currentUserId,
-      doctorId: typeof this.newApptDoctorId === 'string' ? parseInt(this.newApptDoctorId) : this.newApptDoctorId,
+      doctorId: String(this.newApptDoctorId),
       requestedDate: this.newApptDate,
       requestedTime: this.newApptTime,
       reason: this.newApptReason,

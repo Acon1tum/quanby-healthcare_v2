@@ -331,6 +331,396 @@
       </div>
     </div>
 
+    <!-- Professional IDs Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Professional IDs</h2>
+        <p>Your PRC ID and PTR ID information</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>PRC ID</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'prcId'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'prcId')"
+              placeholder="e.g., PRC-1234567"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.prcId || 'Not provided' }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'prcId') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>PTR ID</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'ptrId'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'ptrId')"
+              placeholder="e.g., PTR-2024-001234"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.ptrId || 'Not provided' }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'ptrId') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical License Details Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Medical License Details</h2>
+        <p>Your medical license level, accreditation, and validity information</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Medical License Level</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'medicalLicenseLevel'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'medicalLicenseLevel')"
+            >
+              <option value="">Select license level</option>
+              <option *ngFor="let level of medicalLicenseLevelOptions" [value]="level.value">{{ level.label }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">
+              <span *ngIf="profile.professionalInfo.medicalLicenseLevel; else noLicenseLevel">
+                {{ getMedicalLicenseLevelLabel(profile.professionalInfo.medicalLicenseLevel) }}
+              </span>
+              <ng-template #noLicenseLevel>Not specified</ng-template>
+            </p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'medicalLicenseLevel') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>PhilHealth Accreditation</label>
+            <select 
+              *ngIf="isEditing"
+              [formControlName]="'philHealthAccreditation'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'philHealthAccreditation')"
+            >
+              <option value="">Select accreditation status</option>
+              <option *ngFor="let acc of philHealthAccreditationOptions" [value]="acc.value">{{ acc.label }}</option>
+            </select>
+            <p *ngIf="!isEditing" class="info-value">
+              <span *ngIf="profile.professionalInfo.philHealthAccreditation; else noAccreditation">
+                {{ getPhilHealthAccreditationLabel(profile.professionalInfo.philHealthAccreditation) }}
+              </span>
+              <ng-template #noAccreditation>Not specified</ng-template>
+            </p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'philHealthAccreditation') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>License Number</label>
+            <input 
+              *ngIf="isEditing"
+              type="text" 
+              [formControlName]="'licenseNumber'"
+              class="form-control"
+              [class.error]="getFieldError('professionalInfo', 'licenseNumber')"
+              placeholder="e.g., MD-2024-001234"
+            >
+            <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.licenseNumber || 'Not provided' }}</p>
+            <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'licenseNumber') }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>License Status</label>
+            <div *ngIf="!isEditing" class="info-value">
+              <span class="status-badge" [class.active]="profile.professionalInfo.isLicenseActive" [class.inactive]="!profile.professionalInfo.isLicenseActive">
+                {{ profile.professionalInfo.isLicenseActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div *ngIf="isEditing" class="checkbox-group">
+              <label class="checkbox-item">
+                <input 
+                  type="checkbox" 
+                  [formControlName]="'isLicenseActive'"
+                >
+                <span class="checkmark"></span>
+                License is active
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- License Validity Information -->
+        <div class="license-validity-section">
+          <h3>License Validity Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>License Expiry Date</label>
+              <input 
+                *ngIf="isEditing"
+                type="date" 
+                [formControlName]="'licenseExpiry'"
+                class="form-control"
+                [class.error]="getFieldError('professionalInfo', 'licenseExpiry')"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.licenseExpiry | date:'mediumDate' }}</p>
+              <span *ngIf="isEditing" class="error-message">{{ getFieldError('professionalInfo', 'licenseExpiry') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>License Issued By</label>
+              <input 
+                *ngIf="isEditing"
+                type="text" 
+                [formControlName]="'licenseIssuedBy'"
+                class="form-control"
+                placeholder="e.g., Professional Regulation Commission"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.licenseIssuedBy || 'Not specified' }}</p>
+            </div>
+
+            <div class="form-group">
+              <label>License Issued Date</label>
+              <input 
+                *ngIf="isEditing"
+                type="date" 
+                [formControlName]="'licenseIssuedDate'"
+                class="form-control"
+              >
+              <p *ngIf="!isEditing" class="info-value">{{ profile.professionalInfo.licenseIssuedDate | date:'mediumDate' }}</p>
+            </div>
+
+            <div class="form-group">
+              <label>Renewal Required</label>
+              <div *ngIf="!isEditing" class="info-value">
+                <span class="status-badge" [class.active]="profile.professionalInfo.renewalRequired" [class.inactive]="!profile.professionalInfo.renewalRequired">
+                  {{ profile.professionalInfo.renewalRequired ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              <div *ngIf="isEditing" class="checkbox-group">
+                <label class="checkbox-item">
+                  <input 
+                    type="checkbox" 
+                    [formControlName]="'renewalRequired'"
+                  >
+                  <span class="checkmark"></span>
+                  License requires renewal
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Certifications -->
+        <div class="certifications-section">
+          <h3>Additional Certifications</h3>
+          <div class="form-group full-width">
+            <textarea 
+              *ngIf="isEditing"
+              [formControlName]="'additionalCertifications'"
+              class="form-control textarea"
+              rows="4"
+              placeholder="Enter additional certifications (one per line or as JSON array)"
+            ></textarea>
+            <div *ngIf="!isEditing" class="certifications-display">
+              <div *ngIf="profile.professionalInfo.additionalCertifications; else noCertifications" class="certifications-list">
+                <div *ngFor="let cert of getCertificationsList()" class="certification-item">
+                  <i class="material-icons">verified</i>
+                  <span>{{ cert }}</span>
+                </div>
+              </div>
+              <ng-template #noCertifications>
+                <p class="no-certifications">No additional certifications specified</p>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ID Document Uploads Section -->
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>ID Document Uploads</h2>
+        <p>Upload your PRC ID, PTR ID, and medical license documents</p>
+      </div>
+      
+      <div class="section-content">
+        <div class="document-upload-grid">
+          <!-- PRC ID Upload -->
+          <div class="document-upload-card">
+            <div class="document-header">
+              <h3>PRC ID Document</h3>
+              <span class="document-status" [class.uploaded]="profile.idDocuments.prcIdImage" [class.not-uploaded]="!profile.idDocuments.prcIdImage">
+                {{ profile.idDocuments.prcIdImage ? 'Uploaded' : 'Not Uploaded' }}
+              </span>
+            </div>
+            
+            <div class="document-content">
+              <div *ngIf="profile.idDocuments.prcIdImage" class="document-preview">
+                <img [src]="profile.idDocuments.prcIdImage" alt="PRC ID" class="document-image">
+                <div class="document-actions" *ngIf="isEditing">
+                  <button class="action-btn view-btn" (click)="viewDocument('prcId')">
+                    <i class="material-icons">visibility</i>
+                    View
+                  </button>
+                  <button class="action-btn remove-btn" (click)="onRemoveIdDocument('prcId')">
+                    <i class="material-icons">delete</i>
+                    Remove
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="!profile.idDocuments.prcIdImage" class="document-placeholder">
+                <i class="material-icons">description</i>
+                <p>No PRC ID document uploaded</p>
+                <small>Upload a clear image or PDF of your PRC ID</small>
+              </div>
+              
+              <div *ngIf="isEditing" class="document-upload-controls">
+                <input 
+                  type="file" 
+                  #prcIdInput 
+                  (change)="onIdDocumentSelect($event, 'prcId')" 
+                  accept="image/*,.pdf"
+                  class="document-input"
+                >
+                <button class="upload-btn primary" (click)="prcIdInput.click()">
+                  <i class="material-icons">cloud_upload</i>
+                  Upload PRC ID
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PTR ID Upload -->
+          <div class="document-upload-card">
+            <div class="document-header">
+              <h3>PTR ID Document</h3>
+              <span class="document-status" [class.uploaded]="profile.idDocuments.ptrIdImage" [class.not-uploaded]="!profile.idDocuments.ptrIdImage">
+                {{ profile.idDocuments.ptrIdImage ? 'Uploaded' : 'Not Uploaded' }}
+              </span>
+            </div>
+            
+            <div class="document-content">
+              <div *ngIf="profile.idDocuments.ptrIdImage" class="document-preview">
+                <img [src]="profile.idDocuments.ptrIdImage" alt="PTR ID" class="document-image">
+                <div class="document-actions" *ngIf="isEditing">
+                  <button class="action-btn view-btn" (click)="viewDocument('ptrId')">
+                    <i class="material-icons">visibility</i>
+                    View
+                  </button>
+                  <button class="action-btn remove-btn" (click)="onRemoveIdDocument('ptrId')">
+                    <i class="material-icons">delete</i>
+                    Remove
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="!profile.idDocuments.ptrIdImage" class="document-placeholder">
+                <i class="material-icons">description</i>
+                <p>No PTR ID document uploaded</p>
+                <small>Upload a clear image or PDF of your PTR ID</small>
+              </div>
+              
+              <div *ngIf="isEditing" class="document-upload-controls">
+                <input 
+                  type="file" 
+                  #ptrIdInput 
+                  (change)="onIdDocumentSelect($event, 'ptrId')" 
+                  accept="image/*,.pdf"
+                  class="document-input"
+                >
+                <button class="upload-btn primary" (click)="ptrIdInput.click()">
+                  <i class="material-icons">cloud_upload</i>
+                  Upload PTR ID
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical License Upload -->
+          <div class="document-upload-card">
+            <div class="document-header">
+              <h3>Medical License Document</h3>
+              <span class="document-status" [class.uploaded]="profile.idDocuments.medicalLicenseImage" [class.not-uploaded]="!profile.idDocuments.medicalLicenseImage">
+                {{ profile.idDocuments.medicalLicenseImage ? 'Uploaded' : 'Not Uploaded' }}
+              </span>
+            </div>
+            
+            <div class="document-content">
+              <div *ngIf="profile.idDocuments.medicalLicenseImage" class="document-preview">
+                <img [src]="profile.idDocuments.medicalLicenseImage" alt="Medical License" class="document-image">
+                <div class="document-actions" *ngIf="isEditing">
+                  <button class="action-btn view-btn" (click)="viewDocument('medicalLicense')">
+                    <i class="material-icons">visibility</i>
+                    View
+                  </button>
+                  <button class="action-btn remove-btn" (click)="onRemoveIdDocument('medicalLicense')">
+                    <i class="material-icons">delete</i>
+                    Remove
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="!profile.idDocuments.medicalLicenseImage" class="document-placeholder">
+                <i class="material-icons">description</i>
+                <p>No Medical License uploaded</p>
+                <small>Upload a clear image or PDF of your medical license</small>
+              </div>
+              
+              <div *ngIf="isEditing" class="document-upload-controls">
+                <input 
+                  type="file" 
+                  #medicalLicenseInput 
+                  (change)="onIdDocumentSelect($event, 'medicalLicense')" 
+                  accept="image/*,.pdf"
+                  class="document-input"
+                >
+                <button class="upload-btn primary" (click)="medicalLicenseInput.click()">
+                  <i class="material-icons">cloud_upload</i>
+                  Upload Medical License
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Verification Status -->
+        <div class="verification-status">
+          <div class="verification-header">
+            <h3>Document Verification Status</h3>
+            <span class="verification-badge" [class.verified]="profile.idDocuments.idDocumentsVerified" [class.pending]="!profile.idDocuments.idDocumentsVerified">
+              <i class="material-icons">{{ profile.idDocuments.idDocumentsVerified ? 'verified' : 'schedule' }}</i>
+              {{ profile.idDocuments.idDocumentsVerified ? 'Verified' : 'Pending Verification' }}
+            </span>
+          </div>
+          
+          <div class="verification-details" *ngIf="profile.idDocuments.idDocumentsVerified">
+            <div class="verification-info">
+              <div class="verification-item">
+                <label>Verified By:</label>
+                <span class="info-value">{{ profile.idDocuments.idDocumentsVerifiedBy || 'System Administrator' }}</span>
+              </div>
+              <div class="verification-item">
+                <label>Verified At:</label>
+                <span class="info-value">{{ profile.idDocuments.idDocumentsVerifiedAt | date:'medium' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="verification-note" *ngIf="!profile.idDocuments.idDocumentsVerified">
+            <i class="material-icons">info</i>
+            <p>Your documents are under review. You will be notified once verification is complete.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Contact Information Section -->
     <div class="profile-section">
       <div class="section-header">

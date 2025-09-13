@@ -31,7 +31,14 @@
         <!-- Demo Login Buttons -->
         <div class="space-y-3" style="margin-top: 15px;">
           <p class="text-xs text-center text-gray-500 font-medium">Demo Login (Click any button)</p>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 gap-2">
+            <button 
+              type="button"
+              (click)="loginAsSuperAdmin()"
+              class="py-2 px-3 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              Super Admin
+            </button>
             <button 
               type="button"
               (click)="loginAsAdmin()"

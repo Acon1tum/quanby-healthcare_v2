@@ -108,18 +108,18 @@ export class AppointmentsService {
     return this.http.get(`${this.API_URL}/appointments/my-appointments${qs ? `?${qs}` : ''}`, { headers });
   }
 
-  updateAppointmentStatus(appointmentId: number, status: 'CONFIRMED' | 'REJECTED' | 'CANCELLED', notes?: string): Observable<any> {
+  updateAppointmentStatus(appointmentId: string, status: 'CONFIRMED' | 'REJECTED' | 'CANCELLED', notes?: string): Observable<any> {
     const headers = this.getAuthHeaders();
     return this.http.patch(`${this.API_URL}/appointments/${appointmentId}/status`, { status, notes }, { headers });
   }
 
   // Patient actions
-  cancelMyAppointment(appointmentId: number, reason?: string): Observable<any> {
+  cancelMyAppointment(appointmentId: string, reason?: string): Observable<any> {
     const headers = this.getAuthHeaders();
     return this.http.patch(`${this.API_URL}/appointments/${appointmentId}/cancel`, { reason }, { headers });
   }
 
-  requestReschedule(appointmentId: number, newDate: string, newTime: string, reason: string, notes?: string): Observable<any> {
+  requestReschedule(appointmentId: string, newDate: string, newTime: string, reason: string, notes?: string): Observable<any> {
     const headers = this.getAuthHeaders();
     return this.http.post(`${this.API_URL}/appointments/${appointmentId}/reschedule`, { newDate, newTime, reason, notes }, { headers });
   }
@@ -142,8 +142,17 @@ export class AppointmentsService {
     return this.http.get(`${this.API_URL}/appointments/doctors`, { headers });
   }
 
-  getDoctorAvailability(doctorId: number): Observable<any> {
+  getDoctorAvailability(doctorId: string): Observable<any> {
     const headers = this.getAuthHeaders();
     return this.http.get(`${this.API_URL}/appointments/doctor/${doctorId}/availability`, { headers });
+  }
+
+  // Organizations API methods
+  getOrganizations(): Observable<any> {
+    return this.http.get(`${this.API_URL}/organizations`);
+  }
+
+  getDoctorsByOrganization(organizationId: string): Observable<any> {
+    return this.http.get(`${this.API_URL}/organizations/${organizationId}/doctors`);
   }
 }

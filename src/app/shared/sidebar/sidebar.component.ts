@@ -38,6 +38,50 @@ export class SidebarComponent implements OnInit {
 
   getNavigationItems(role: string): NavigationItem[] {
     switch (role) {
+      case 'SUPER_ADMIN':
+        return [
+          {
+            label: 'Dashboard',
+            icon: 'dashboard',
+            route: '/super-admin/dashboard'
+          },
+          {
+            label: 'Organization Management',
+            icon: 'settings',
+            route: '/super-admin/org-management'
+          },
+          
+          {
+            label: 'Doctor Management',
+            icon: 'medical_services',
+            route: '/super-admin/doctor-management'
+          },
+          
+          {
+            label: 'Patient Management',
+            icon: 'people',
+            route: '/super-admin/patient-management'
+          },
+          
+          {
+            label: 'Audit Logs',
+            icon: 'history',
+            route: '/super-admin/audit-logs'
+          },
+          
+          {
+            label: 'Reports',
+            icon: 'bar_chart',
+            route: '/super-admin/reports'
+          },
+          
+          {
+            label: 'Settings',
+            icon: 'settings',
+            route: '/super-admin/settings'
+          },
+          
+        ];
       case 'ADMIN':
         return [
           {

@@ -23,6 +23,17 @@ interface DoctorProfile {
     languages: string[];
     certifications: string[];
     hospitalAffiliations: string[];
+    // Medical License Information
+    prcId: string;
+    ptrId: string;
+    medicalLicenseLevel: string;
+    philHealthAccreditation: string;
+    licenseExpiry: Date;
+    isLicenseActive: boolean;
+    additionalCertifications: string;
+    licenseIssuedBy: string;
+    licenseIssuedDate: Date;
+    renewalRequired: boolean;
   };
   contactInfo: {
     address: string;
@@ -60,6 +71,16 @@ interface DoctorProfile {
     status: string;
     verificationStatus: string;
   };
+  // ID Document Uploads
+  idDocuments: {
+    prcIdImage: string;
+    ptrIdImage: string;
+    medicalLicenseImage: string;
+    additionalIdImages: string[];
+    idDocumentsVerified: boolean;
+    idDocumentsVerifiedBy: string;
+    idDocumentsVerifiedAt: Date;
+  };
 }
 
 @Component({
@@ -87,6 +108,19 @@ export class DoctorMyProfileComponent implements OnInit {
     'Emergency Medicine', 'Family Medicine', 'Internal Medicine', 'Other'
   ];
   languageOptions = ['English', 'Spanish', 'French', 'German', 'Chinese', 'Japanese', 'Arabic', 'Hindi', 'Other'];
+  medicalLicenseLevelOptions = [
+    { value: 'S1', label: 'S1 - General Practitioner Accreditation' },
+    { value: 'S2', label: 'S2 - Specialist Accreditation' },
+    { value: 'S3', label: 'S3 - Subspecialist Accreditation' }
+  ];
+  philHealthAccreditationOptions = [
+    { value: 'ACCREDITED', label: 'Accredited' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'SUSPENDED', label: 'Suspended' },
+    { value: 'EXPIRED', label: 'Expired' },
+    { value: 'NOT_ACCREDITED', label: 'Not Accredited' },
+    { value: 'UNDER_REVIEW', label: 'Under Review' }
+  ];
   timezoneOptions = [
     'UTC-12:00', 'UTC-11:00', 'UTC-10:00', 'UTC-09:00', 'UTC-08:00',
     'UTC-07:00', 'UTC-06:00', 'UTC-05:00', 'UTC-04:00', 'UTC-03:00',
@@ -129,7 +163,27 @@ export class DoctorMyProfileComponent implements OnInit {
       address: '',
       specialization: '',
       qualifications: '',
-      experience: 0
+      experience: 0,
+      // Medical License Information
+      licenseNumber: '',
+      prcId: '',
+      ptrId: '',
+      medicalLicenseLevel: '',
+      philHealthAccreditation: '',
+      licenseExpiry: '',
+      isLicenseActive: false,
+      additionalCertifications: '',
+      licenseIssuedBy: '',
+      licenseIssuedDate: '',
+      renewalRequired: false,
+      // ID Document Uploads
+      prcIdImage: '',
+      ptrIdImage: '',
+      medicalLicenseImage: '',
+      additionalIdImages: '',
+      idDocumentsVerified: false,
+      idDocumentsVerifiedBy: '',
+      idDocumentsVerifiedAt: ''
     };
 
     this.profile = {
@@ -144,13 +198,24 @@ export class DoctorMyProfileComponent implements OnInit {
         profileImage: undefined
       },
       professionalInfo: {
-        licenseNumber: '',
+        licenseNumber: (doctor as any).licenseNumber || '',
         specialization: doctor.specialization || '',
         qualifications: doctor.qualifications || '',
         experience: doctor.experience || 0,
         languages: [],
         certifications: [],
-        hospitalAffiliations: []
+        hospitalAffiliations: [],
+        // Medical License Information
+        prcId: (doctor as any).prcId || '',
+        ptrId: (doctor as any).ptrId || '',
+        medicalLicenseLevel: (doctor as any).medicalLicenseLevel || '',
+        philHealthAccreditation: (doctor as any).philHealthAccreditation || '',
+        licenseExpiry: (doctor as any).licenseExpiry ? new Date((doctor as any).licenseExpiry) : new Date(),
+        isLicenseActive: (doctor as any).isLicenseActive || false,
+        additionalCertifications: (doctor as any).additionalCertifications || '',
+        licenseIssuedBy: (doctor as any).licenseIssuedBy || '',
+        licenseIssuedDate: (doctor as any).licenseIssuedDate ? new Date((doctor as any).licenseIssuedDate) : new Date(),
+        renewalRequired: (doctor as any).renewalRequired || false
       },
       contactInfo: {
         address: doctor.address || '',
@@ -187,6 +252,15 @@ export class DoctorMyProfileComponent implements OnInit {
         accountCreated: new Date(),
         status: 'Active',
         verificationStatus: 'Verified'
+      },
+      idDocuments: {
+        prcIdImage: (doctor as any).prcIdImage || '',
+        ptrIdImage: (doctor as any).ptrIdImage || '',
+        medicalLicenseImage: (doctor as any).medicalLicenseImage || '',
+        additionalIdImages: (doctor as any).additionalIdImages ? JSON.parse((doctor as any).additionalIdImages) : [],
+        idDocumentsVerified: (doctor as any).idDocumentsVerified || false,
+        idDocumentsVerifiedBy: (doctor as any).idDocumentsVerifiedBy || '',
+        idDocumentsVerifiedAt: (doctor as any).idDocumentsVerifiedAt ? new Date((doctor as any).idDocumentsVerifiedAt) : new Date()
       }
     };
 
@@ -211,7 +285,18 @@ export class DoctorMyProfileComponent implements OnInit {
         experience: [this.profile.professionalInfo.experience, [Validators.required, Validators.min(0), Validators.max(50)]],
         languages: [this.profile.professionalInfo.languages, Validators.required],
         certifications: [this.profile.professionalInfo.certifications, Validators.required],
-        hospitalAffiliations: [this.profile.professionalInfo.hospitalAffiliations, Validators.required]
+        hospitalAffiliations: [this.profile.professionalInfo.hospitalAffiliations, Validators.required],
+        // Medical License Information
+        prcId: [this.profile.professionalInfo.prcId, [Validators.required, Validators.minLength(5)]],
+        ptrId: [this.profile.professionalInfo.ptrId, [Validators.required, Validators.minLength(5)]],
+        medicalLicenseLevel: [this.profile.professionalInfo.medicalLicenseLevel, Validators.required],
+        philHealthAccreditation: [this.profile.professionalInfo.philHealthAccreditation, Validators.required],
+        licenseExpiry: [this.profile.professionalInfo.licenseExpiry, Validators.required],
+        isLicenseActive: [this.profile.professionalInfo.isLicenseActive],
+        additionalCertifications: [this.profile.professionalInfo.additionalCertifications],
+        licenseIssuedBy: [this.profile.professionalInfo.licenseIssuedBy],
+        licenseIssuedDate: [this.profile.professionalInfo.licenseIssuedDate],
+        renewalRequired: [this.profile.professionalInfo.renewalRequired]
       }),
       contactInfo: this.fb.group({
         address: [this.profile.contactInfo.address, Validators.required],
@@ -315,6 +400,42 @@ export class DoctorMyProfileComponent implements OnInit {
     this.profile.personalInfo.profileImage = undefined;
     this.selectedImage = null;
     this.imagePreview = null;
+  }
+
+  onIdDocumentSelect(event: any, documentType: string): void {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const base64String = e.target.result;
+        switch (documentType) {
+          case 'prcId':
+            this.profile.idDocuments.prcIdImage = base64String;
+            break;
+          case 'ptrId':
+            this.profile.idDocuments.ptrIdImage = base64String;
+            break;
+          case 'medicalLicense':
+            this.profile.idDocuments.medicalLicenseImage = base64String;
+            break;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onRemoveIdDocument(documentType: string): void {
+    switch (documentType) {
+      case 'prcId':
+        this.profile.idDocuments.prcIdImage = '';
+        break;
+      case 'ptrId':
+        this.profile.idDocuments.ptrIdImage = '';
+        break;
+      case 'medicalLicense':
+        this.profile.idDocuments.medicalLicenseImage = '';
+        break;
+    }
   }
 
   onAddItem(array: string[], newItem: string): void {
@@ -461,5 +582,56 @@ export class DoctorMyProfileComponent implements OnInit {
     if (this.profile.preferences.notificationSettings.sms) labels.push('SMS');
     if (this.profile.preferences.notificationSettings.push) labels.push('Push');
     return labels;
+  }
+
+  getMedicalLicenseLevelLabel(value: string): string {
+    const option = this.medicalLicenseLevelOptions.find(l => l.value === value);
+    return option ? option.label : value;
+  }
+
+  getPhilHealthAccreditationLabel(value: string): string {
+    const option = this.philHealthAccreditationOptions.find(a => a.value === value);
+    return option ? option.label : value;
+  }
+
+  getCertificationsList(): string[] {
+    if (!this.profile.professionalInfo.additionalCertifications) {
+      return [];
+    }
+    
+    try {
+      // Try to parse as JSON array first
+      const parsed = JSON.parse(this.profile.professionalInfo.additionalCertifications);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (e) {
+      // If not JSON, split by newlines
+      return this.profile.professionalInfo.additionalCertifications
+        .split('\n')
+        .map(cert => cert.trim())
+        .filter(cert => cert.length > 0);
+    }
+    
+    return [];
+  }
+
+  viewDocument(documentType: string): void {
+    let imageUrl = '';
+    switch (documentType) {
+      case 'prcId':
+        imageUrl = this.profile.idDocuments.prcIdImage;
+        break;
+      case 'ptrId':
+        imageUrl = this.profile.idDocuments.ptrIdImage;
+        break;
+      case 'medicalLicense':
+        imageUrl = this.profile.idDocuments.medicalLicenseImage;
+        break;
+    }
+    
+    if (imageUrl) {
+      window.open(imageUrl, '_blank');
+    }
   }
 }

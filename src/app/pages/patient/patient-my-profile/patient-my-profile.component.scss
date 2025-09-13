@@ -1427,3 +1427,86 @@
     }
   }
 }
+
+// PhilHealth Information Section Specific Styles
+.profile-section {
+  &:has(.section-header h2:contains("PhilHealth Information")) {
+    .section-header {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-left: 4px solid #0ea5e9;
+      
+      h2 {
+        color: #0c4a6e;
+      }
+      
+      p {
+        color: #0369a1;
+      }
+    }
+    
+    .form-group {
+      label {
+        color: #0c4a6e;
+        font-weight: 600;
+      }
+      
+      .form-control {
+        border-color: #bae6fd;
+        
+        &:focus {
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        &.error {
+          border-color: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+      }
+      
+      .info-value {
+        color: #0c4a6e;
+        font-weight: 500;
+        
+        &:empty::before {
+          content: "Not specified";
+          color: #94a3b8;
+          font-style: italic;
+        }
+      }
+    }
+    
+    // PhilHealth ID specific styling
+    .form-group:has(label:contains("PhilHealth ID")) {
+      .form-control {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.5px;
+        
+        &::placeholder {
+          color: #94a3b8;
+          font-style: italic;
+        }
+      }
+    }
+    
+    // Status and Category dropdowns
+    .form-group:has(select) {
+      .form-control {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230ea5e9' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+      }
+    }
+    
+    // Date inputs
+    .form-group:has(input[type="date"]) {
+      .form-control {
+        &::-webkit-calendar-picker-indicator {
+          color: #0ea5e9;
+        }
+      }
+    }
+  }
+}
