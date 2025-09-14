@@ -1,1 +1,354 @@
-<p>org-management works!</p>
+<div class="org-management-dashboard">
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="welcome-section">
+        <h1>{{ getGreeting() }}, {{ getSuperAdminDisplayName() }}</h1>
+        <p class="subtitle">Organization Management • {{ currentDate | date:'EEEE, MMMM d, y' }}</p>
+      </div>
+      <div class="time-display">
+        <div class="current-time">{{ currentDate | date:'h:mm a' }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Statistics Overview -->
+  <section class="stats-overview">
+    <div class="stats-grid">
+      <div class="stat-card" [class.loading]="isLoadingStats">
+        <div class="stat-icon">
+          <i class="material-icons">business</i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ orgStats.totalOrganizations }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
+          <div class="stat-label">Total Organizations</div>
+        </div>
+      </div>
+      <div class="stat-card" [class.loading]="isLoadingStats">
+        <div class="stat-icon">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ orgStats.activeOrganizations }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
+          <div class="stat-label">Active Organizations</div>
+        </div>
+      </div>
+      <div class="stat-card" [class.loading]="isLoadingStats">
+        <div class="stat-icon">
+          <i class="material-icons">medical_services</i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ orgStats.totalDoctors }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
+          <div class="stat-label">Total Doctors</div>
+        </div>
+      </div>
+      <div class="stat-card" [class.loading]="isLoadingStats">
+        <div class="stat-icon">
+          <i class="material-icons">people</i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">
+            <span *ngIf="!isLoadingStats">{{ orgStats.totalPatients }}</span>
+            <i *ngIf="isLoadingStats" class="material-icons rotating">refresh</i>
+          </div>
+          <div class="stat-label">Total Patients</div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-error" *ngIf="statsError">
+      <i class="material-icons">error</i>
+      <span>{{ statsError }}</span>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="actions-grid">
+      <button 
+        *ngFor="let action of quickActions" 
+        class="action-button"
+        (click)="handleQuickAction(action.action)"
+      >
+        <i class="material-icons">{{ action.icon }}</i>
+        <span>{{ action.label }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Dashboard Content -->
+  <div class="dashboard-content">
+    <!-- Left Column - Organizations List -->
+    <div class="content-main">
+      <!-- Organizations List -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Organizations</h3>
+          <div class="header-actions">
+            <button 
+              class="refresh-button" 
+              (click)="refreshOrganizations()"
+              [disabled]="isLoadingOrganizations"
+              title="Refresh organizations"
+            >
+              <i class="material-icons" [class.rotating]="isLoadingOrganizations">
+                {{ isLoadingOrganizations ? 'refresh' : 'refresh' }}
+              </i>
+            </button>
+            <button class="text-button" (click)="handleQuickAction('add')">
+              Add Organization
+            </button>
+          </div>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="search-controls">
+          <div class="search-input">
+            <i class="material-icons">search</i>
+            <input 
+              type="text" 
+              placeholder="Search organizations..." 
+              [(ngModel)]="searchTerm"
+            >
+          </div>
+          <select [(ngModel)]="filterStatus" class="filter-select">
+            <option value="all">All Organizations</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
+        </div>
+
+        <div class="organizations-list">
+          <!-- Loading State -->
+          <div class="loading-state" *ngIf="isLoadingOrganizations">
+            <i class="material-icons rotating">refresh</i>
+            <p>Loading organizations...</p>
+          </div>
+          
+          <!-- Error State -->
+          <div class="error-state" *ngIf="organizationsError && !isLoadingOrganizations">
+            <i class="material-icons">error</i>
+            <p>{{ organizationsError }}</p>
+            <button class="secondary-button" (click)="refreshOrganizations()">
+              <i class="material-icons">refresh</i>
+              Try Again
+            </button>
+          </div>
+          
+          <!-- Organizations List -->
+          <div *ngIf="!isLoadingOrganizations && !organizationsError">
+            <div 
+              *ngFor="let organization of getFilteredOrganizations(); trackBy: trackByOrganizationId" 
+              class="organization-item"
+              [class.selected]="selectedOrganization?.id === organization.id"
+              (click)="selectOrganization(organization)"
+            >
+              <div class="organization-info">
+                <div class="organization-header">
+                  <h4 class="organization-name">{{ organization.name }}</h4>
+                  <span class="status-badge status-{{ getStatusColor(organization.isActive) }}">
+                    {{ getStatusText(organization.isActive) }}
+                  </span>
+                </div>
+                <p class="organization-description" *ngIf="organization.description">
+                  {{ organization.description }}
+                </p>
+                <div class="organization-details">
+                  <div class="detail-item" *ngIf="organization.address">
+                    <i class="material-icons">location_on</i>
+                    <span>{{ organization.address }}</span>
+                  </div>
+                  <div class="detail-item" *ngIf="organization.phone">
+                    <i class="material-icons">phone</i>
+                    <span>{{ organization.phone }}</span>
+                  </div>
+                  <div class="detail-item" *ngIf="organization.email">
+                    <i class="material-icons">email</i>
+                    <span>{{ organization.email }}</span>
+                  </div>
+                </div>
+                <div class="organization-stats">
+                  <div class="stat-item">
+                    <i class="material-icons">medical_services</i>
+                    <span>{{ organization.doctorCount || 0 }} Doctors</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="material-icons">people</i>
+                    <span>{{ organization.patientCount || 0 }} Patients</span>
+                  </div>
+                </div>
+              </div>
+              <div class="organization-actions">
+                <button 
+                  class="action-btn edit-btn" 
+                  (click)="editOrganization(organization); $event.stopPropagation()"
+                  title="Edit Organization"
+                >
+                  <i class="material-icons">edit</i>
+                </button>
+                <button 
+                  class="action-btn toggle-btn" 
+                  [class.active]="organization.isActive"
+                  (click)="toggleOrganizationStatus(organization); $event.stopPropagation()"
+                  [title]="organization.isActive ? 'Deactivate' : 'Activate'"
+                >
+                  <i class="material-icons">{{ organization.isActive ? 'pause' : 'play_arrow' }}</i>
+                </button>
+                <button 
+                  class="action-btn delete-btn" 
+                  (click)="deleteOrganization(organization); $event.stopPropagation()"
+                  title="Delete Organization"
+                >
+                  <i class="material-icons">delete</i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoadingOrganizations && getFilteredOrganizations().length === 0">
+            <i class="material-icons">business</i>
+            <p *ngIf="searchTerm || filterStatus !== 'all'">No organizations found matching your criteria</p>
+            <p *ngIf="!searchTerm && filterStatus === 'all'">No organizations registered yet</p>
+            <button class="secondary-button" (click)="handleQuickAction('add')">
+              <i class="material-icons">add</i>
+              Add First Organization
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Organization Details & Secondary Content -->
+    <div class="content-sidebar">
+      <!-- Selected Organization Details -->
+      <div class="content-card" *ngIf="selectedOrganization">
+        <div class="card-header">
+          <h3>{{ selectedOrganization.name }}</h3>
+          <button class="text-button" (click)="editOrganization(selectedOrganization)">
+            Edit
+          </button>
+        </div>
+        <div class="organization-details-panel">
+          <div class="detail-section">
+            <h4>Contact Information</h4>
+            <div class="detail-item" *ngIf="selectedOrganization.address">
+              <i class="material-icons">location_on</i>
+              <span>{{ selectedOrganization.address }}</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedOrganization.phone">
+              <i class="material-icons">phone</i>
+              <span>{{ selectedOrganization.phone }}</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedOrganization.email">
+              <i class="material-icons">email</i>
+              <span>{{ selectedOrganization.email }}</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedOrganization.website">
+              <i class="material-icons">language</i>
+              <a [href]="selectedOrganization.website" target="_blank">{{ selectedOrganization.website }}</a>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Statistics</h4>
+            <div class="stat-row">
+              <span class="stat-label">Doctors:</span>
+              <span class="stat-value">{{ selectedOrganization.doctorCount || 0 }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Patients:</span>
+              <span class="stat-value">{{ selectedOrganization.patientCount || 0 }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Status:</span>
+              <span class="status-badge status-{{ getStatusColor(selectedOrganization.isActive) }}">
+                {{ getStatusText(selectedOrganization.isActive) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Doctors</h4>
+            <div class="doctors-list">
+              <!-- Loading State -->
+              <div class="loading-state" *ngIf="isLoadingDoctors">
+                <i class="material-icons rotating">refresh</i>
+                <p>Loading doctors...</p>
+              </div>
+              
+              <!-- Doctors List -->
+              <div *ngIf="!isLoadingDoctors">
+                <div 
+                  *ngFor="let doctor of organizationDoctors; trackBy: trackByDoctorId" 
+                  class="doctor-item"
+                >
+                  <div class="doctor-info">
+                    <div class="doctor-name">{{ doctor.name }}</div>
+                    <div class="doctor-specialization">{{ doctor.specialization }}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Empty State -->
+              <div class="empty-state" *ngIf="!isLoadingDoctors && organizationDoctors.length === 0">
+                <i class="material-icons">medical_services</i>
+                <p>No doctors assigned</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Notifications</h3>
+          <button class="text-button">View All</button>
+        </div>
+        <div class="notifications-list">
+          <div 
+            *ngFor="let notification of notifications" 
+            class="notification-item"
+          >
+            <div class="notification-icon">
+              <i class="material-icons" *ngIf="notification.type === 'success'">check_circle</i>
+              <i class="material-icons" *ngIf="notification.type === 'info'">info</i>
+              <i class="material-icons" *ngIf="notification.type === 'warning'">warning</i>
+            </div>
+            <div class="notification-content">
+              <div class="notification-message">{{ notification.message }}</div>
+              <div class="notification-time">{{ notification.time }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Search -->
+      <div class="content-card">
+        <div class="card-header">
+          <h3>Quick Search</h3>
+        </div>
+        <div class="search-section">
+          <div class="search-input">
+            <i class="material-icons">search</i>
+            <input type="text" placeholder="Search by name or ID...">
+          </div>
+          <button class="primary-button">
+            <i class="material-icons">search</i>
+            Search
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
