@@ -64,8 +64,8 @@ export class PatientScheduleComponent {
   newApptReason = '';
   newApptPriority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' = 'NORMAL';
   availableOrganizations: Array<{ id: string; name: string }> = [];
-  availableDoctors: Array<{ id: string; name: string; specialization: string; organizationId?: string }> = [];
-  filteredDoctors: Array<{ id: string; name: string; specialization: string; organizationId?: string }> = [];
+  availableDoctors: Array<{ id: string; name: string; specialization: string; organizationId: string | null }> = [];
+  filteredDoctors: Array<{ id: string; name: string; specialization: string; organizationId: string | null }> = [];
   
   // Error modal properties
   showErrorModal = false;
@@ -138,7 +138,7 @@ export class PatientScheduleComponent {
 
   submitReschedule() {
     if (!this.rescheduleApptId || !this.rescheduleDate || !this.rescheduleTime || !this.rescheduleReason.trim()) return;
-    this.appointmentsService.requestReschedule(String(this.rescheduleApptId), this.rescheduleDate, this.rescheduleTime, this.rescheduleReason).subscribe({
+    this.appointmentsService.requestReschedule(this.rescheduleApptId, this.rescheduleDate, this.rescheduleTime, this.rescheduleReason).subscribe({
       next: () => {
         this.showRescheduleModal = false;
         this.rescheduleApptId = '';
@@ -153,7 +153,7 @@ export class PatientScheduleComponent {
 
   submitCancel() {
     if (!this.cancelApptId) return;
-    this.appointmentsService.cancelMyAppointment(String(this.cancelApptId), this.cancelReason).subscribe({
+    this.appointmentsService.cancelMyAppointment(this.cancelApptId, this.cancelReason).subscribe({
       next: () => {
         this.showCancelModal = false;
         this.cancelApptId = '';
@@ -177,10 +177,7 @@ export class PatientScheduleComponent {
     this.appointmentsService.getOrganizations().subscribe({
       next: (resp: any) => {
         if (resp?.success && Array.isArray(resp.data)) {
-          this.availableOrganizations = resp.data.map((org: any) => ({
-            id: org.id,
-            name: org.name
-          }));
+          this.availableOrganizations = resp.data;
         }
       },
       error: (e) => console.error('Failed to load organizations', e)
@@ -188,16 +185,31 @@ export class PatientScheduleComponent {
   }
 
   loadDoctors() {
-    // Load all doctors initially (for when no organization is selected)
     this.appointmentsService.getAvailableDoctors().subscribe({
       next: (resp: any) => {
         if (resp?.success && Array.isArray(resp.data)) {
           this.availableDoctors = resp.data;
-          this.filteredDoctors = [...this.availableDoctors];
         }
       },
       error: (e) => console.error('Failed to load doctors', e)
     });
+  }
+
+  onOrganizationSelected() {
+    console.log('Organization selected:', this.newApptOrganizationId);
+    console.log('Available doctors:', this.availableDoctors);
+    if (this.newApptOrganizationId) {
+      // Filter doctors by selected organization
+      this.filteredDoctors = this.availableDoctors.filter(doctor => 
+        doctor.organizationId === this.newApptOrganizationId
+      );
+      console.log('Filtered doctors:', this.filteredDoctors);
+      // Reset doctor selection
+      this.newApptDoctorId = null;
+    } else {
+      this.filteredDoctors = [];
+      this.newApptDoctorId = null;
+    }
   }
   closeNewAppointmentModal() {
     this.showNewAppointmentModal = false; 
@@ -207,34 +219,7 @@ export class PatientScheduleComponent {
     this.newApptTime = ''; 
     this.newApptReason = ''; 
     this.newApptPriority = 'NORMAL';
-    this.filteredDoctors = [...this.availableDoctors];
-  }
-
-  onOrganizationSelected() {
-    console.log('Organization selected:', this.newApptOrganizationId);
-    if (this.newApptOrganizationId) {
-      // Load doctors from the selected organization
-      this.appointmentsService.getDoctorsByOrganization(this.newApptOrganizationId).subscribe({
-        next: (resp: any) => {
-          if (resp?.success && Array.isArray(resp.data)) {
-            this.filteredDoctors = resp.data;
-          } else {
-            this.filteredDoctors = [];
-          }
-        },
-        error: (e) => {
-          console.error('Failed to load doctors for organization', e);
-          this.filteredDoctors = [];
-        }
-      });
-    } else {
-      // Show all doctors if no organization selected
-      this.filteredDoctors = [...this.availableDoctors];
-    }
-    
-    // Reset doctor selection when organization changes
-    this.newApptDoctorId = null;
-    this.selectedDoctorAvailability = {};
+    this.filteredDoctors = [];
   }
 
   showError(message: string) {
@@ -250,9 +235,7 @@ export class PatientScheduleComponent {
   onDoctorSelected() {
     console.log('Doctor selected:', this.newApptDoctorId, 'Type:', typeof this.newApptDoctorId);
     if (this.newApptDoctorId) {
-      // Keep as string since backend expects UUID
-      const doctorId = String(this.newApptDoctorId);
-      this.loadDoctorAvailability(doctorId);
+      this.loadDoctorAvailability(this.newApptDoctorId);
     } else {
       this.selectedDoctorAvailability = {};
     }
@@ -310,6 +293,7 @@ export class PatientScheduleComponent {
 
   submitNewAppointment() {
     console.log('Submit new appointment called with:', {
+      organizationId: this.newApptOrganizationId,
       doctorId: this.newApptDoctorId,
       date: this.newApptDate,
       time: this.newApptTime,
@@ -330,7 +314,8 @@ export class PatientScheduleComponent {
     
     const payload = {
       patientId: currentUserId,
-      doctorId: String(this.newApptDoctorId),
+      organizationId: this.newApptOrganizationId,
+      doctorId: this.newApptDoctorId,
       requestedDate: this.newApptDate,
       requestedTime: this.newApptTime,
       reason: this.newApptReason,

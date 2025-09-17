@@ -41,7 +41,7 @@ header {
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(229, 231, 235, 0.6);
   /* Add shadow for better separation */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Adjust header layout when logged in (no logo) */
