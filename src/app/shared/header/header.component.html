@@ -106,7 +106,7 @@
           <p class="text-xs text-gray-500 capitalize group-hover:text-sky-500 transition-colors">{{ currentUser?.role }}</p>
         </div>
         <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center group-hover:bg-sky-600 transition-colors">
-          <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
+          <span class="text-white text-sm font-medium">{{ (getUserDisplayName() || 'U').charAt(0) }}</span>
         </div>
       </button>
     </div>
@@ -132,7 +132,7 @@
       aria-label="Toggle profile menu"
     >
       <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
-        <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
+        <span class="text-white text-sm font-medium">{{ (getUserDisplayName() || 'U').charAt(0) }}</span>
       </div>
       <svg class="w-4 h-4 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -216,7 +216,7 @@
           class="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-4 hover:bg-gray-100 transition-colors cursor-pointer group"
         >
           <div class="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center group-hover:bg-sky-600 transition-colors">
-            <span class="text-white text-sm font-medium">{{ getUserDisplayName().charAt(0) }}</span>
+            <span class="text-white text-sm font-medium">{{ (getUserDisplayName() || 'U').charAt(0) }}</span>
           </div>
           <div>
             <p class="text-sm font-medium text-slate-800 group-hover:text-sky-600 transition-colors">{{ getUserDisplayName() }}</p>

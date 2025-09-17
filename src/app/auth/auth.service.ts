@@ -10,17 +10,48 @@ export interface User {
   role: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT';
   token?: string;
   refreshToken?: string;
+  profilePicture?: string;
+  profilePictureVerified?: boolean;
+  profilePictureVerifiedBy?: string;
+  profilePictureVerifiedAt?: string;
+  organizationId?: string;
+  createdAt?: string;
+  updatedAt?: string;
   doctorInfo?: {
+    id: string;
+    userId: string;
     firstName: string;
-    lastName: string;
-    specialization: string;
     middleName?: string;
+    lastName: string;
     gender?: 'MALE' | 'FEMALE' | 'OTHER' | string;
     dateOfBirth?: string;
     contactNumber?: string;
     address?: string;
+    bio?: string;
+    specialization?: string;
     qualifications?: string;
     experience?: number;
+    // Medical License Information
+    prcId?: string;
+    ptrId?: string;
+    medicalLicenseLevel?: string;
+    philHealthAccreditation?: string;
+    licenseNumber?: string;
+    licenseExpiry?: string;
+    isLicenseActive?: boolean;
+    // Additional License Information
+    additionalCertifications?: string;
+    licenseIssuedBy?: string;
+    licenseIssuedDate?: string;
+    renewalRequired?: boolean;
+    // ID Document Uploads (Base64 encoded)
+    prcIdImage?: string;
+    ptrIdImage?: string;
+    medicalLicenseImage?: string;
+    additionalIdImages?: string;
+    idDocumentsVerified?: boolean;
+    idDocumentsVerifiedBy?: string;
+    idDocumentsVerifiedAt?: string;
   };
   patientInfo?: {
     fullName: string;
@@ -90,12 +121,59 @@ export interface BackendLoginResponse {
       id: number;
       email: string;
       role: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT';
+      profilePicture?: string;
+      profilePictureVerified?: boolean;
+      profilePictureVerifiedBy?: string;
+      profilePictureVerifiedAt?: string;
+      organizationId?: string;
+      createdAt?: string;
+      updatedAt?: string;
       doctorInfo?: any;
       patientInfo?: any;
     };
     token: string;
     refreshToken: string;
   };
+}
+
+export interface UpdateProfilePayload {
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  bio?: string;
+  contactNumber?: string;
+  address?: string;
+  specialization?: string;
+  qualifications?: string;
+  experience?: number;
+  fullName?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string;
+  dateOfBirth?: string; // ISO string
+  weight?: number;
+  height?: number;
+  bloodType?: string;
+  medicalHistory?: string;
+  allergies?: string;
+  medications?: string;
+  // Profile Picture (for all users)
+  profilePicture?: string;
+  // Doctor license fields
+  prcId?: string;
+  ptrId?: string;
+  medicalLicenseLevel?: string;
+  philHealthAccreditation?: string;
+  licenseNumber?: string;
+  licenseExpiry?: string; // ISO string
+  isLicenseActive?: boolean;
+  additionalCertifications?: string;
+  licenseIssuedBy?: string;
+  licenseIssuedDate?: string; // ISO string
+  renewalRequired?: boolean;
+  // ID Document Uploads (optional)
+  prcIdImage?: string;
+  ptrIdImage?: string;
+  medicalLicenseImage?: string;
+  additionalIdImages?: string;
 }
 
 @Injectable({
@@ -116,7 +194,19 @@ export class AuthService {
     const savedRefreshToken = localStorage.getItem('refreshToken');
     
     if (savedUser && savedToken) {
-      this.currentUserSubject.next(JSON.parse(savedUser));
+      try {
+        const parsed = JSON.parse(savedUser);
+        // Normalize stored profilePicture so it can render immediately
+        if (parsed && parsed.profilePicture && typeof parsed.profilePicture === 'string') {
+          const t = parsed.profilePicture.trim();
+          if (!t.startsWith('data:')) {
+            parsed.profilePicture = `data:image/png;base64,${t}`;
+          }
+        }
+        this.currentUserSubject.next(parsed);
+      } catch {
+        this.currentUserSubject.next(JSON.parse(savedUser));
+      }
     }
   }
 
@@ -144,13 +234,37 @@ export class AuthService {
       const payload = response.data?.user ? response.data : response;
       const userData = payload.user || payload;
 
+      const normalizeImage = (img?: string) => {
+        if (!img) return undefined;
+        const t = (img || '').trim();
+        if (t.startsWith('data:')) return t;
+        // Detect mime type from base64 signature
+        const prefix = t.slice(0, 10);
+        let mime = 'image/png';
+        if (t.startsWith('/9j/')) mime = 'image/jpeg'; // JPEG
+        else if (t.startsWith('iVBORw0KGgo')) mime = 'image/png'; // PNG
+        else if (t.startsWith('R0lG')) mime = 'image/gif'; // GIF
+        else if (t.startsWith('Qk')) mime = 'image/bmp'; // BMP
+        else if (prefix.includes('PHN2Zy') || t.startsWith('PD94bWwg')) mime = 'image/svg+xml'; // SVG (base64 of <svg or xml)
+        return `data:${mime};base64,${t}`;
+      };
+
       const mappedUser: User = {
         id: userData.id,
         email: userData.email,
         role: userData.role,
         token: this.accessToken || undefined,
         refreshToken: this.refreshToken || undefined,
+        profilePicture: normalizeImage(userData.profilePicture),
+        profilePictureVerified: userData.profilePictureVerified,
+        profilePictureVerifiedBy: userData.profilePictureVerifiedBy,
+        profilePictureVerifiedAt: userData.profilePictureVerifiedAt,
+        organizationId: userData.organizationId,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
         doctorInfo: userData.doctorInfo ? {
+          id: userData.doctorInfo.id,
+          userId: userData.doctorInfo.userId,
           firstName: userData.doctorInfo.firstName,
           middleName: userData.doctorInfo.middleName,
           lastName: userData.doctorInfo.lastName,
@@ -158,9 +272,31 @@ export class AuthService {
           dateOfBirth: userData.doctorInfo.dateOfBirth,
           contactNumber: userData.doctorInfo.contactNumber,
           address: userData.doctorInfo.address,
+          bio: userData.doctorInfo.bio,
           specialization: userData.doctorInfo.specialization,
           qualifications: userData.doctorInfo.qualifications,
           experience: userData.doctorInfo.experience,
+          // Medical License Information
+          prcId: userData.doctorInfo.prcId,
+          ptrId: userData.doctorInfo.ptrId,
+          medicalLicenseLevel: userData.doctorInfo.medicalLicenseLevel,
+          philHealthAccreditation: userData.doctorInfo.philHealthAccreditation,
+          licenseNumber: userData.doctorInfo.licenseNumber,
+          licenseExpiry: userData.doctorInfo.licenseExpiry,
+          isLicenseActive: userData.doctorInfo.isLicenseActive,
+          // Additional License Information
+          additionalCertifications: userData.doctorInfo.additionalCertifications,
+          licenseIssuedBy: userData.doctorInfo.licenseIssuedBy,
+          licenseIssuedDate: userData.doctorInfo.licenseIssuedDate,
+          renewalRequired: userData.doctorInfo.renewalRequired,
+          // ID Document Uploads
+          prcIdImage: userData.doctorInfo.prcIdImage,
+          ptrIdImage: userData.doctorInfo.ptrIdImage,
+          medicalLicenseImage: userData.doctorInfo.medicalLicenseImage,
+          additionalIdImages: userData.doctorInfo.additionalIdImages,
+          idDocumentsVerified: userData.doctorInfo.idDocumentsVerified,
+          idDocumentsVerifiedBy: userData.doctorInfo.idDocumentsVerifiedBy,
+          idDocumentsVerifiedAt: userData.doctorInfo.idDocumentsVerifiedAt,
         } : undefined,
         patientInfo: userData.patientInfo ? {
           fullName: userData.patientInfo.fullName,
@@ -244,12 +380,31 @@ export class AuthService {
       ));
 
       if (response?.success && response.data) {
+        // Normalize image helper
+        const normalizeImage = (img?: string) => {
+          if (!img) return undefined;
+          const t = (img || '').trim();
+          if (t.startsWith('data:')) return t;
+          // Minimal detection; most common is jpeg/png
+          let mime = 'image/png';
+          if (t.startsWith('/9j/')) mime = 'image/jpeg';
+          else if (t.startsWith('iVBORw0KGgo')) mime = 'image/png';
+          return `data:${mime};base64,${t}`;
+        };
+
         const user: User = {
           id: response.data.user.id,
           email: response.data.user.email,
           role: response.data.user.role,
           token: response.data.token,
           refreshToken: response.data.refreshToken,
+          profilePicture: normalizeImage(response.data.user.profilePicture),
+          profilePictureVerified: response.data.user.profilePictureVerified,
+          profilePictureVerifiedBy: response.data.user.profilePictureVerifiedBy,
+          profilePictureVerifiedAt: response.data.user.profilePictureVerifiedAt,
+          organizationId: response.data.user.organizationId,
+          createdAt: response.data.user.createdAt,
+          updatedAt: response.data.user.updatedAt,
           doctorInfo: response.data.user.doctorInfo,
           patientInfo: response.data.user.patientInfo
         };
@@ -326,6 +481,38 @@ export class AuthService {
     } catch (error) {
       console.error('Token refresh error:', error);
       return false;
+    }
+  }
+
+  async updateProfile(payload: UpdateProfilePayload): Promise<{ success: boolean; message: string }>{
+    try {
+      const headers = this.getAuthHeaders();
+      const response = await firstValueFrom(this.http.put<any>(`${this.API_URL}/auth/profile`, payload, { headers }));
+
+      const ok = response?.success !== false;
+
+      // Don't automatically refresh the global user state to avoid affecting sidebar
+      // Let the individual components handle their own refresh if needed
+      if (ok) {
+        // Only update the current user's doctorInfo or patientInfo if we have the updated data
+        const currentUser = this.currentUserValue;
+        if (currentUser && response?.data) {
+          const updatedUser = { ...currentUser };
+          
+          if (currentUser.role === 'DOCTOR' && response.data.doctorInfo) {
+            updatedUser.doctorInfo = { ...currentUser.doctorInfo, ...response.data.doctorInfo };
+          } else if (currentUser.role === 'PATIENT' && response.data.patientInfo) {
+            updatedUser.patientInfo = { ...currentUser.patientInfo, ...response.data.patientInfo };
+          }
+          
+          this.currentUserSubject.next(updatedUser);
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        }
+      }
+
+      return { success: ok, message: response?.message || (ok ? 'Profile updated successfully' : 'Profile update failed') };
+    } catch (e: any) {
+      return { success: false, message: e?.error?.message || 'Profile update failed' };
     }
   }
 

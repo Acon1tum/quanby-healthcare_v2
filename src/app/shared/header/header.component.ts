@@ -113,14 +113,17 @@ export class HeaderComponent implements OnInit {
     if (!this.currentUser) return '';
     
     if (this.currentUser.role === 'DOCTOR' && this.currentUser.doctorInfo) {
-      return `${this.currentUser.doctorInfo.firstName} ${this.currentUser.doctorInfo.lastName}`;
+      const firstName = this.currentUser.doctorInfo.firstName || '';
+      const lastName = this.currentUser.doctorInfo.lastName || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      return fullName || this.currentUser.email || 'Doctor';
     } else if (this.currentUser.role === 'PATIENT' && this.currentUser.patientInfo) {
-      return this.currentUser.patientInfo.fullName;
+      return this.currentUser.patientInfo.fullName || this.currentUser.email || 'Patient';
     } else if (this.currentUser.role === 'ADMIN') {
       return 'Administrator';
     }
     
-    return this.currentUser.email;
+    return this.currentUser.email || 'User';
   }
 
   // Mobile dropdown methods

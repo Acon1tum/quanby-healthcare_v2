@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService, User } from '../../../auth/auth.service';
+import { AuthService, User, UpdateProfilePayload } from '../../../auth/auth.service';
 
 interface DoctorProfile {
   personalInfo: {
@@ -97,6 +98,18 @@ export class DoctorMyProfileComponent implements OnInit {
   isChangingPassword = false;
   selectedImage: File | null = null;
   imagePreview: string | null = null;
+  // Track pending (not yet uploaded) image state
+  private imagePendingUpload = false;
+  private previousProfileImage: string | undefined = undefined;
+  private pendingAuthProfileImage: string | undefined = undefined;
+  // Direct source bound to <img [src]>
+  avatarSrc: string = '9.png';
+
+  // Lightweight toast notification
+  showNotification = false;
+  notificationMessage = '';
+  notificationType: 'success' | 'error' | 'info' = 'success';
+  private notificationTimeoutHandle: any = null;
 
   // Available options for form fields
   genderOptions = ['MALE', 'FEMALE', 'OTHER'];
@@ -133,141 +146,219 @@ export class DoctorMyProfileComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private sanitizer: DomSanitizer
   ) {}
 
+  private normalizeImageDataUrl(image: string | undefined | null): string | undefined {
+    if (!image) return undefined;
+    const trimmed = image.trim();
+    if (trimmed.startsWith('data:')) return trimmed;
+    // Detect mime type from base64 signature
+    let mime = 'image/png';
+    if (trimmed.startsWith('/9j/')) mime = 'image/jpeg';
+    else if (trimmed.startsWith('iVBORw0KGgo')) mime = 'image/png';
+    else if (trimmed.startsWith('R0lG')) mime = 'image/gif';
+    else if (trimmed.startsWith('Qk')) mime = 'image/bmp';
+    else if (trimmed.slice(0, 10).includes('PHN2Zy') || trimmed.startsWith('PD94bWwg')) mime = 'image/svg+xml';
+    return `data:${mime};base64,${trimmed}`;
+  }
+
   ngOnInit(): void {
+    // Immediately use current cached user profilePicture if present
+    this.setAvatarFromCurrentUser();
+
+    // Keep profile image in sync with auth user stream in case it arrives later
+    this.authService.currentUser$.subscribe(u => {
+      if (u?.profilePicture) {
+        const normalized = this.normalizeImageDataUrl(u.profilePicture);
+        this.pendingAuthProfileImage = normalized;
+        // Always reflect latest DB image in avatar
+        if (normalized) {
+          this.avatarSrc = normalized;
+          if (this.profile?.personalInfo) {
+            this.profile.personalInfo.profileImage = normalized;
+          }
+        }
+      }
+    });
     this.loadProfile();
+    // Ensure avatar reflects current user after initial map
+    this.setAvatarFromCurrentUser();
+  }
+
+  private setAvatarFromCurrentUser(): void {
+    const cached = this.authService.currentUserValue?.profilePicture;
+    if (cached && typeof cached === 'string') {
+      const t = cached.trim();
+      if (t.length > 0) {
+        const src = t.startsWith('data:image') ? t : (this.normalizeImageDataUrl(t) || '');
+        if (src) {
+          this.avatarSrc = src;
+        }
+      }
+    }
   }
 
   async loadProfile(): Promise<void> {
-    // Guard: must be logged in and a doctor
-    const user = this.authService.currentUserValue || await this.authService.getProfile();
-    if (!user) {
-      this.router.navigate(['/login']);
-      return;
-    }
-    if (user.role !== 'DOCTOR') {
-      this.authService.redirectBasedOnRole();
-      return;
-    }
-
-    // Map backend user (User + DoctorInfo) to view model
-    const doctor = user.doctorInfo || {
-      firstName: '',
-      middleName: '',
-      lastName: '',
-      gender: 'OTHER',
-      dateOfBirth: '',
-      contactNumber: '',
-      address: '',
-      specialization: '',
-      qualifications: '',
-      experience: 0,
-      // Medical License Information
-      licenseNumber: '',
-      prcId: '',
-      ptrId: '',
-      medicalLicenseLevel: '',
-      philHealthAccreditation: '',
-      licenseExpiry: '',
-      isLicenseActive: false,
-      additionalCertifications: '',
-      licenseIssuedBy: '',
-      licenseIssuedDate: '',
-      renewalRequired: false,
-      // ID Document Uploads
-      prcIdImage: '',
-      ptrIdImage: '',
-      medicalLicenseImage: '',
-      additionalIdImages: '',
-      idDocumentsVerified: false,
-      idDocumentsVerifiedBy: '',
-      idDocumentsVerifiedAt: ''
-    };
-
-    this.profile = {
-      personalInfo: {
-        firstName: doctor.firstName || '',
-        middleName: doctor.middleName || '',
-        lastName: doctor.lastName || '',
-        email: user.email,
-        phone: doctor.contactNumber || '',
-        dateOfBirth: doctor.dateOfBirth ? new Date(doctor.dateOfBirth) : new Date(),
-        gender: (doctor.gender || 'OTHER').toString(),
-        profileImage: undefined
-      },
-      professionalInfo: {
-        licenseNumber: (doctor as any).licenseNumber || '',
-        specialization: doctor.specialization || '',
-        qualifications: doctor.qualifications || '',
-        experience: doctor.experience || 0,
-        languages: [],
-        certifications: [],
-        hospitalAffiliations: [],
-        // Medical License Information
-        prcId: (doctor as any).prcId || '',
-        ptrId: (doctor as any).ptrId || '',
-        medicalLicenseLevel: (doctor as any).medicalLicenseLevel || '',
-        philHealthAccreditation: (doctor as any).philHealthAccreditation || '',
-        licenseExpiry: (doctor as any).licenseExpiry ? new Date((doctor as any).licenseExpiry) : new Date(),
-        isLicenseActive: (doctor as any).isLicenseActive || false,
-        additionalCertifications: (doctor as any).additionalCertifications || '',
-        licenseIssuedBy: (doctor as any).licenseIssuedBy || '',
-        licenseIssuedDate: (doctor as any).licenseIssuedDate ? new Date((doctor as any).licenseIssuedDate) : new Date(),
-        renewalRequired: (doctor as any).renewalRequired || false
-      },
-      contactInfo: {
-        address: doctor.address || '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: '',
-        emergencyContact: {
-          name: '',
-          relationship: '',
-          phone: '',
-          email: ''
-        }
-      },
-      bio: {
-        summary: '',
-        expertise: [],
-        achievements: [],
-        researchInterests: []
-      },
-      preferences: {
-        consultationFee: 0,
-        availability: [],
-        notificationSettings: {
-          email: true,
-          sms: false,
-          push: true
-        },
-        timezone: 'UTC+00:00',
-        language: 'English'
-      },
-      systemInfo: {
-        lastLogin: new Date(),
-        accountCreated: new Date(),
-        status: 'Active',
-        verificationStatus: 'Verified'
-      },
-      idDocuments: {
-        prcIdImage: (doctor as any).prcIdImage || '',
-        ptrIdImage: (doctor as any).ptrIdImage || '',
-        medicalLicenseImage: (doctor as any).medicalLicenseImage || '',
-        additionalIdImages: (doctor as any).additionalIdImages ? JSON.parse((doctor as any).additionalIdImages) : [],
-        idDocumentsVerified: (doctor as any).idDocumentsVerified || false,
-        idDocumentsVerifiedBy: (doctor as any).idDocumentsVerifiedBy || '',
-        idDocumentsVerifiedAt: (doctor as any).idDocumentsVerifiedAt ? new Date((doctor as any).idDocumentsVerifiedAt) : new Date()
+    try {
+      // Guard: must be logged in and a doctor
+      const user = this.authService.currentUserValue || await this.authService.getProfile();
+      if (!user) {
+        this.router.navigate(['/login']);
+        return;
       }
-    };
+      if (user.role !== 'DOCTOR') {
+        this.authService.redirectBasedOnRole();
+        return;
+      }
 
-    this.initForm();
+      console.log('Loaded user data:', user);
+      console.log('Doctor info:', user.doctorInfo);
+      console.log('profilePicture (raw):', user.profilePicture ? (user.profilePicture.substring(0, 30) + '...') : 'none');
+
+      // Map backend user (User + DoctorInfo) to view model
+      const doctor = user.doctorInfo || {
+        id: '',
+        userId: '',
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        gender: 'OTHER',
+        dateOfBirth: '',
+        contactNumber: '',
+        address: '',
+        bio: '',
+        specialization: '',
+        qualifications: '',
+        experience: 0,
+        // Medical License Information
+        prcId: '',
+        ptrId: '',
+        medicalLicenseLevel: '',
+        philHealthAccreditation: '',
+        licenseNumber: '',
+        licenseExpiry: '',
+        isLicenseActive: false,
+        // Additional License Information
+        additionalCertifications: '',
+        licenseIssuedBy: '',
+        licenseIssuedDate: '',
+        renewalRequired: false,
+        // ID Document Uploads
+        prcIdImage: '',
+        ptrIdImage: '',
+        medicalLicenseImage: '',
+        additionalIdImages: '',
+        idDocumentsVerified: false,
+        idDocumentsVerifiedBy: '',
+        idDocumentsVerifiedAt: ''
+      };
+
+      this.profile = {
+        personalInfo: {
+          firstName: doctor.firstName || '',
+          middleName: doctor.middleName || '',
+          lastName: doctor.lastName || '',
+          email: user.email,
+          phone: doctor.contactNumber || '',
+          dateOfBirth: doctor.dateOfBirth ? new Date(doctor.dateOfBirth) : new Date(),
+          gender: (doctor.gender || 'OTHER').toString(),
+          profileImage: this.normalizeImageDataUrl(user.profilePicture) || this.pendingAuthProfileImage
+        },
+        professionalInfo: {
+          licenseNumber: doctor.licenseNumber || '',
+          specialization: doctor.specialization || '',
+          qualifications: doctor.qualifications || '',
+          experience: doctor.experience || 0,
+          languages: [],
+          certifications: [],
+          hospitalAffiliations: [],
+          // Medical License Information
+          prcId: doctor.prcId || '',
+          ptrId: doctor.ptrId || '',
+          medicalLicenseLevel: doctor.medicalLicenseLevel || '',
+          philHealthAccreditation: doctor.philHealthAccreditation || '',
+          licenseExpiry: doctor.licenseExpiry ? new Date(doctor.licenseExpiry) : new Date(),
+          isLicenseActive: doctor.isLicenseActive || false,
+          additionalCertifications: doctor.additionalCertifications || '',
+          licenseIssuedBy: doctor.licenseIssuedBy || '',
+          licenseIssuedDate: doctor.licenseIssuedDate ? new Date(doctor.licenseIssuedDate) : new Date(),
+          renewalRequired: doctor.renewalRequired || false
+        },
+        contactInfo: {
+          address: doctor.address || '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: '',
+          emergencyContact: {
+            name: '',
+            relationship: '',
+            phone: '',
+            email: ''
+          }
+        },
+        bio: {
+          summary: doctor.bio || '',
+          expertise: [],
+          achievements: [],
+          researchInterests: []
+        },
+        preferences: {
+          consultationFee: 0,
+          availability: [],
+          notificationSettings: {
+            email: true,
+            sms: false,
+            push: true
+          },
+          timezone: 'UTC+00:00',
+          language: 'English'
+        },
+        systemInfo: {
+          lastLogin: new Date(),
+          accountCreated: new Date(),
+          status: 'Active',
+          verificationStatus: 'Verified'
+        },
+        idDocuments: {
+          prcIdImage: doctor.prcIdImage || '',
+          ptrIdImage: doctor.ptrIdImage || '',
+          medicalLicenseImage: doctor.medicalLicenseImage || '',
+          additionalIdImages: doctor.additionalIdImages ? JSON.parse(doctor.additionalIdImages) : [],
+          idDocumentsVerified: doctor.idDocumentsVerified || false,
+          idDocumentsVerifiedBy: doctor.idDocumentsVerifiedBy || '',
+          idDocumentsVerifiedAt: doctor.idDocumentsVerifiedAt ? new Date(doctor.idDocumentsVerifiedAt) : new Date()
+        }
+      };
+
+      console.log('Mapped profile data:', this.profile);
+
+      // Fallback: if for any reason profile image is still empty but auth service holds it, apply it
+      if ((!this.profile.personalInfo.profileImage || this.profile.personalInfo.profileImage.length === 0) && this.authService.currentUserValue?.profilePicture) {
+        this.profile.personalInfo.profileImage = this.normalizeImageDataUrl(this.authService.currentUserValue.profilePicture);
+        console.log('Applied fallback profilePicture from auth service');
+      }
+
+      // Set avatar src for the template
+      this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc || '9.png';
+
+      // Initialize form with the loaded data
+      this.initForm();
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Handle error appropriately - maybe show a toast or redirect
+    }
   }
 
   initForm(): void {
+    // Ensure profile data is available before initializing form
+    if (!this.profile) {
+      console.warn('Profile data not available for form initialization');
+      return;
+    }
+
     this.profileForm = this.fb.group({
       personalInfo: this.fb.group({
         firstName: [this.profile.personalInfo.firstName, [Validators.required, Validators.minLength(2)]],
@@ -279,19 +370,19 @@ export class DoctorMyProfileComponent implements OnInit {
         gender: [this.profile.personalInfo.gender, Validators.required]
       }),
       professionalInfo: this.fb.group({
-        licenseNumber: [this.profile.professionalInfo.licenseNumber, [Validators.required, Validators.minLength(5)]],
-        specialization: [this.profile.professionalInfo.specialization, Validators.required],
-        qualifications: [this.profile.professionalInfo.qualifications, Validators.required],
-        experience: [this.profile.professionalInfo.experience, [Validators.required, Validators.min(0), Validators.max(50)]],
-        languages: [this.profile.professionalInfo.languages, Validators.required],
-        certifications: [this.profile.professionalInfo.certifications, Validators.required],
-        hospitalAffiliations: [this.profile.professionalInfo.hospitalAffiliations, Validators.required],
-        // Medical License Information
-        prcId: [this.profile.professionalInfo.prcId, [Validators.required, Validators.minLength(5)]],
-        ptrId: [this.profile.professionalInfo.ptrId, [Validators.required, Validators.minLength(5)]],
-        medicalLicenseLevel: [this.profile.professionalInfo.medicalLicenseLevel, Validators.required],
-        philHealthAccreditation: [this.profile.professionalInfo.philHealthAccreditation, Validators.required],
-        licenseExpiry: [this.profile.professionalInfo.licenseExpiry, Validators.required],
+        licenseNumber: [this.profile.professionalInfo.licenseNumber],
+        specialization: [this.profile.professionalInfo.specialization],
+        qualifications: [this.profile.professionalInfo.qualifications],
+        experience: [this.profile.professionalInfo.experience, [Validators.min(0), Validators.max(50)]],
+        languages: [this.profile.professionalInfo.languages],
+        certifications: [this.profile.professionalInfo.certifications],
+        hospitalAffiliations: [this.profile.professionalInfo.hospitalAffiliations],
+        // Medical License Information (optional)
+        prcId: [this.profile.professionalInfo.prcId],
+        ptrId: [this.profile.professionalInfo.ptrId],
+        medicalLicenseLevel: [this.profile.professionalInfo.medicalLicenseLevel],
+        philHealthAccreditation: [this.profile.professionalInfo.philHealthAccreditation],
+        licenseExpiry: [this.profile.professionalInfo.licenseExpiry],
         isLicenseActive: [this.profile.professionalInfo.isLicenseActive],
         additionalCertifications: [this.profile.professionalInfo.additionalCertifications],
         licenseIssuedBy: [this.profile.professionalInfo.licenseIssuedBy],
@@ -299,41 +390,48 @@ export class DoctorMyProfileComponent implements OnInit {
         renewalRequired: [this.profile.professionalInfo.renewalRequired]
       }),
       contactInfo: this.fb.group({
-        address: [this.profile.contactInfo.address, Validators.required],
-        city: [this.profile.contactInfo.city, Validators.required],
-        state: [this.profile.contactInfo.state, Validators.required],
-        zipCode: [this.profile.contactInfo.zipCode, Validators.required],
-        country: [this.profile.contactInfo.country, Validators.required],
+        address: [this.profile.contactInfo.address],
+        city: [this.profile.contactInfo.city],
+        state: [this.profile.contactInfo.state],
+        zipCode: [this.profile.contactInfo.zipCode],
+        country: [this.profile.contactInfo.country],
         emergencyContact: this.fb.group({
-          name: [this.profile.contactInfo.emergencyContact.name, Validators.required],
-          relationship: [this.profile.contactInfo.emergencyContact.relationship, Validators.required],
-          phone: [this.profile.contactInfo.emergencyContact.phone, [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
-          email: [this.profile.contactInfo.emergencyContact.email, [Validators.required, Validators.email]]
+          name: [this.profile.contactInfo.emergencyContact.name],
+          relationship: [this.profile.contactInfo.emergencyContact.relationship],
+          phone: [this.profile.contactInfo.emergencyContact.phone, [Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
+          email: [this.profile.contactInfo.emergencyContact.email, [Validators.email]]
         })
       }),
       bio: this.fb.group({
-        summary: [this.profile.bio.summary, [Validators.required, Validators.minLength(50)]],
-        expertise: [this.profile.bio.expertise, Validators.required],
-        achievements: [this.profile.bio.achievements, Validators.required],
-        researchInterests: [this.profile.bio.researchInterests, Validators.required]
+        summary: [this.profile.bio.summary, [Validators.minLength(10)]],
+        expertise: [this.profile.bio.expertise],
+        achievements: [this.profile.bio.achievements],
+        researchInterests: [this.profile.bio.researchInterests]
       }),
       preferences: this.fb.group({
-        consultationFee: [this.profile.preferences.consultationFee, [Validators.required, Validators.min(0)]],
-        availability: [this.profile.preferences.availability, Validators.required],
+        consultationFee: [this.profile.preferences.consultationFee, [Validators.min(0)]],
+        availability: [this.profile.preferences.availability],
         notificationSettings: this.fb.group({
           email: [this.profile.preferences.notificationSettings.email],
           sms: [this.profile.preferences.notificationSettings.sms],
           push: [this.profile.preferences.notificationSettings.push]
         }),
-        timezone: [this.profile.preferences.timezone, Validators.required],
-        language: [this.profile.preferences.language, Validators.required]
+        timezone: [this.profile.preferences.timezone],
+        language: [this.profile.preferences.language]
       })
     });
+
+    console.log('Form initialized with values:', this.profileForm.value);
   }
 
-  onEdit(): void {
+  async onEdit(): Promise<void> {
     this.isEditing = true;
-    this.populateForm();
+    // Refresh profile data from backend before populating form
+    await this.loadProfile();
+    
+    // Debug: Log the current profile data
+    console.log('Profile data loaded:', this.profile);
+    console.log('Form values after population:', this.profileForm.value);
   }
 
   onCancel(): void {
@@ -341,36 +439,94 @@ export class DoctorMyProfileComponent implements OnInit {
     this.profileForm.reset();
   }
 
-  onSave(): void {
-    if (this.profileForm.valid) {
-      this.profile = {
-        ...this.profile,
-        personalInfo: { 
-          ...this.profile.personalInfo, 
-          ...this.profileForm.value.personalInfo 
-        },
-        professionalInfo: { 
-          ...this.profile.professionalInfo, 
-          ...this.profileForm.value.professionalInfo 
-        },
-        contactInfo: { 
-          ...this.profile.contactInfo, 
-          ...this.profileForm.value.contactInfo 
-        },
-        bio: { 
-          ...this.profile.bio, 
-          ...this.profileForm.value.bio 
-        },
-        preferences: { 
-          ...this.profile.preferences, 
-          ...this.profileForm.value.preferences 
-        }
-      };
-      this.isEditing = false;
-      console.log('Profile saved:', this.profile);
-    } else {
+  async onSave(): Promise<void> {
+    if (!this.profileForm.valid) {
       this.markFormGroupTouched();
+      this.triggerToast('Please fix the highlighted fields before saving.', 'error');
+      return;
     }
+
+    // Merge form values into local profile state
+    this.profile = {
+      ...this.profile,
+      personalInfo: {
+        ...this.profile.personalInfo,
+        ...this.profileForm.value.personalInfo
+      },
+      professionalInfo: {
+        ...this.profile.professionalInfo,
+        ...this.profileForm.value.professionalInfo
+      },
+      contactInfo: {
+        ...this.profile.contactInfo,
+        ...this.profileForm.value.contactInfo
+      },
+      bio: {
+        ...this.profile.bio,
+        ...this.profileForm.value.bio
+      },
+      preferences: {
+        ...this.profile.preferences,
+        ...this.profileForm.value.preferences
+      }
+    };
+
+    // Map to backend payload
+    const p = this.profile;
+    const payload: UpdateProfilePayload = {
+      firstName: p.personalInfo.firstName,
+      lastName: p.personalInfo.lastName,
+      middleName: p.personalInfo.middleName || undefined,
+      bio: p.bio.summary,
+      contactNumber: p.personalInfo.phone,
+      address: p.contactInfo.address,
+      specialization: p.professionalInfo.specialization,
+      qualifications: p.professionalInfo.qualifications,
+      experience: p.professionalInfo.experience,
+      gender: p.personalInfo.gender as any,
+      dateOfBirth: p.personalInfo.dateOfBirth ? new Date(p.personalInfo.dateOfBirth).toISOString() : undefined,
+      // Profile Picture
+      profilePicture: p.personalInfo.profileImage || undefined,
+      // Medical license fields
+      prcId: p.professionalInfo.prcId || undefined,
+      ptrId: p.professionalInfo.ptrId || undefined,
+      medicalLicenseLevel: p.professionalInfo.medicalLicenseLevel || undefined,
+      philHealthAccreditation: p.professionalInfo.philHealthAccreditation || undefined,
+      licenseNumber: p.professionalInfo.licenseNumber || undefined,
+      licenseExpiry: p.professionalInfo.licenseExpiry ? new Date(p.professionalInfo.licenseExpiry).toISOString() : undefined,
+      isLicenseActive: p.professionalInfo.isLicenseActive,
+      additionalCertifications: p.professionalInfo.additionalCertifications || undefined,
+      licenseIssuedBy: p.professionalInfo.licenseIssuedBy || undefined,
+      licenseIssuedDate: p.professionalInfo.licenseIssuedDate ? new Date(p.professionalInfo.licenseIssuedDate).toISOString() : undefined,
+      renewalRequired: p.professionalInfo.renewalRequired,
+    };
+
+    try {
+      const result = await this.authService.updateProfile(payload);
+      if (result.success) {
+        this.isEditing = false;
+        // Refresh profile from backend to reflect saved data
+        await this.refreshProfile();
+        this.triggerToast('Profile updated successfully', 'success');
+      } else {
+        this.triggerToast(result.message || 'Profile update failed', 'error');
+      }
+    } catch (e) {
+      this.triggerToast('An error occurred while updating the profile.', 'error');
+    }
+  }
+
+  private triggerToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+    if (this.notificationTimeoutHandle) {
+      clearTimeout(this.notificationTimeoutHandle);
+    }
+    this.notificationTimeoutHandle = setTimeout(() => {
+      this.showNotification = false;
+      this.notificationMessage = '';
+    }, 3000);
   }
 
   onImageSelect(event: any): void {
@@ -380,26 +536,102 @@ export class DoctorMyProfileComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreview = e.target.result;
+        // Remember previous image and show preview immediately
+        this.previousProfileImage = this.profile?.personalInfo?.profileImage;
+        this.profile.personalInfo.profileImage = this.imagePreview as string;
+        this.imagePendingUpload = true;
+        // Reflect in avatar immediately
+        this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc;
       };
       reader.readAsDataURL(file);
     }
   }
 
-  onUploadImage(): void {
-    if (this.selectedImage) {
-      // In real app, this would upload to backend
-      console.log('Uploading image:', this.selectedImage.name);
-      // Simulate upload success
-      this.profile.personalInfo.profileImage = this.imagePreview || this.profile.personalInfo.profileImage;
-      this.selectedImage = null;
-      this.imagePreview = null;
+  async onUploadImage(): Promise<void> {
+    if (this.selectedImage && this.imagePreview) {
+      try {
+        console.log('Uploading profile picture:', this.selectedImage.name);
+        
+        // Update the profile picture in the User table via backend
+        const result = await this.authService.updateProfile({
+          profilePicture: this.imagePreview
+        });
+        
+        if (result.success) {
+          // Update local profile state
+          this.profile.personalInfo.profileImage = this.imagePreview;
+          this.imagePendingUpload = false;
+          this.previousProfileImage = undefined;
+          this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc;
+          
+          // Clear the selected image and preview
+          this.selectedImage = null;
+          this.imagePreview = null;
+          
+          // Update the form with the new image
+          if (this.isEditing) {
+            this.profileForm.patchValue({
+              personalInfo: {
+                ...this.profileForm.value.personalInfo,
+                profileImage: this.profile.personalInfo.profileImage
+              }
+            });
+          }
+          
+          this.triggerToast('Profile picture updated successfully', 'success');
+        } else {
+          this.triggerToast(result.message || 'Failed to update profile picture', 'error');
+        }
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        this.triggerToast('An error occurred while uploading the profile picture', 'error');
+      }
     }
   }
 
-  onRemoveImage(): void {
-    this.profile.personalInfo.profileImage = undefined;
-    this.selectedImage = null;
-    this.imagePreview = null;
+  async onRemoveImage(): Promise<void> {
+    // If there is a newly selected image that hasn't been uploaded yet,
+    // just clear the preview and restore the previous image without calling the backend.
+    if (this.imagePendingUpload) {
+      this.selectedImage = null;
+      this.imagePreview = null;
+      this.profile.personalInfo.profileImage = this.previousProfileImage;
+      this.imagePendingUpload = false;
+      this.previousProfileImage = undefined;
+      return;
+    }
+
+    try {
+      // Remove the profile picture from the User table via backend
+      const result = await this.authService.updateProfile({
+        profilePicture: undefined
+      });
+      
+      if (result.success) {
+        // Update local profile state
+        this.profile.personalInfo.profileImage = undefined;
+        this.selectedImage = null;
+        this.imagePreview = null;
+        this.avatarSrc = '9.png';
+        
+        // Update the form
+        if (this.isEditing) {
+          this.profileForm.patchValue({
+            personalInfo: {
+              ...this.profileForm.value.personalInfo,
+              profileImage: undefined
+            }
+          });
+        }
+        
+        this.triggerToast('Profile picture removed successfully', 'success');
+      } else {
+        this.triggerToast(result.message || 'Failed to remove profile picture', 'error');
+      }
+    } catch (error) {
+      console.error('Error removing profile picture:', error);
+      this.triggerToast('An error occurred while removing the profile picture', 'error');
+    }
   }
 
   onIdDocumentSelect(event: any, documentType: string): void {
@@ -466,58 +698,12 @@ export class DoctorMyProfileComponent implements OnInit {
     this.router.navigate(['/doctor/dashboard']);
   }
 
-  private populateForm(): void {
-    this.profileForm.patchValue({
-      personalInfo: {
-        firstName: this.profile.personalInfo.firstName,
-        middleName: this.profile.personalInfo.middleName || '',
-        lastName: this.profile.personalInfo.lastName,
-        email: this.profile.personalInfo.email,
-        phone: this.profile.personalInfo.phone,
-        dateOfBirth: this.profile.personalInfo.dateOfBirth,
-        gender: this.profile.personalInfo.gender
-      },
-      professionalInfo: {
-        licenseNumber: this.profile.professionalInfo.licenseNumber,
-        specialization: this.profile.professionalInfo.specialization,
-        qualifications: this.profile.professionalInfo.qualifications,
-        experience: this.profile.professionalInfo.experience,
-        languages: this.profile.professionalInfo.languages,
-        certifications: this.profile.professionalInfo.certifications,
-        hospitalAffiliations: this.profile.professionalInfo.hospitalAffiliations
-      },
-      contactInfo: {
-        address: this.profile.contactInfo.address,
-        city: this.profile.contactInfo.city,
-        state: this.profile.contactInfo.state,
-        zipCode: this.profile.contactInfo.zipCode,
-        country: this.profile.contactInfo.country,
-        emergencyContact: {
-          name: this.profile.contactInfo.emergencyContact.name,
-          relationship: this.profile.contactInfo.emergencyContact.relationship,
-          phone: this.profile.contactInfo.emergencyContact.phone,
-          email: this.profile.contactInfo.emergencyContact.email
-        }
-      },
-      bio: {
-        summary: this.profile.bio.summary,
-        expertise: this.profile.bio.expertise,
-        achievements: this.profile.bio.achievements,
-        researchInterests: this.profile.bio.researchInterests
-      },
-      preferences: {
-        consultationFee: this.profile.preferences.consultationFee,
-        availability: this.profile.preferences.availability,
-        notificationSettings: {
-          email: this.profile.preferences.notificationSettings.email,
-          sms: this.profile.preferences.notificationSettings.sms,
-          push: this.profile.preferences.notificationSettings.push
-        },
-        timezone: this.profile.preferences.timezone,
-        language: this.profile.preferences.language
-      }
-    });
+  async refreshProfile(): Promise<void> {
+    // No need to refresh from server since updateProfile already updates the global state
+    // The profile data is already up to date from the save operation
+    console.log('Profile refresh completed - data already up to date');
   }
+
 
   private markFormGroupTouched(): void {
     Object.keys(this.profileForm.controls).forEach(key => {
@@ -570,6 +756,35 @@ export class DoctorMyProfileComponent implements OnInit {
 
   get consultationFeeLabel(): string {
     return `$${this.profile.preferences.consultationFee}`;
+  }
+
+  // Safe image URL for template binding
+  get profileImageUrl(): SafeUrl {
+    const authRaw = this.authService.currentUserValue?.profilePicture;
+    const authHasDataUrl = typeof authRaw === 'string' && authRaw.trim().startsWith('data:image');
+    const fromAuth = authHasDataUrl ? authRaw!.trim() : this.normalizeImageDataUrl(authRaw);
+    const fromProfile = this.profile?.personalInfo?.profileImage;
+    const src = (fromAuth && fromAuth.length > 0) ? fromAuth : (fromProfile && fromProfile.length > 0 ? fromProfile : '9.png');
+    return this.sanitizer.bypassSecurityTrustUrl(src);
+  }
+
+  // Plain string source for <img [src]> to avoid any SafeUrl binding issues
+  get profileImageSrc(): string {
+    const authRaw = this.authService.currentUserValue?.profilePicture;
+    const authHasDataUrl = typeof authRaw === 'string' && authRaw.trim().startsWith('data:image');
+    const fromAuth = authHasDataUrl ? authRaw!.trim() : (this.normalizeImageDataUrl(authRaw) || '');
+    const fromProfile = this.profile?.personalInfo?.profileImage || '';
+    return fromAuth || fromProfile || '9.png';
+  }
+
+  // Prefer current user's profilePicture (DB) over local avatarSrc
+  get effectiveAvatarSrc(): string {
+    const raw = this.authService.currentUserValue?.profilePicture;
+    if (raw && typeof raw === 'string' && raw.trim().length > 0) {
+      const t = raw.trim();
+      return t.startsWith('data:image') ? t : (this.normalizeImageDataUrl(t) || this.avatarSrc || '9.png');
+    }
+    return this.avatarSrc || '9.png';
   }
 
   get availabilityLabel(): string {
