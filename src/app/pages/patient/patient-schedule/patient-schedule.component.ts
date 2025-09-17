@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppointmentsService } from '../../../services/appointments.service';
@@ -31,7 +31,7 @@ interface PatientAppointment {
   templateUrl: './patient-schedule.component.html',
   styleUrl: './patient-schedule.component.scss'
 })
-export class PatientScheduleComponent {
+export class PatientScheduleComponent implements OnInit, OnDestroy {
   appointments: PatientAppointment[] = [];
   paginatedAppointments: PatientAppointment[] = [];
 
@@ -74,9 +74,31 @@ export class PatientScheduleComponent {
   // Doctor availability for date validation
   selectedDoctorAvailability: { [date: string]: boolean } = {};
 
+  // Computed property to check if any modal is open
+  get isAnyModalOpen(): boolean {
+    return this.showRescheduleModal || this.showCancelModal || this.showNewAppointmentModal || this.showErrorModal;
+  }
+
   constructor(private appointmentsService: AppointmentsService, private auth: AuthService) {
     this.buildCalendar();
     this.loadAppointments();
+  }
+
+  ngOnInit(): void {
+    // Initialize any additional setup if needed
+  }
+
+  ngOnDestroy(): void {
+    // Clean up body class when component is destroyed
+    document.body.classList.remove('modal-open');
+  }
+
+  private updateBodyClass(): void {
+    if (this.isAnyModalOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
   }
 
   loadAppointments() {
@@ -129,11 +151,13 @@ export class PatientScheduleComponent {
   cancelAppointment(appt: PatientAppointment) {
     this.showCancelModal = true;
     this.cancelApptId = appt.id;
+    this.updateBodyClass();
   }
 
   rescheduleAppointment(appt: PatientAppointment) {
     this.showRescheduleModal = true;
     this.rescheduleApptId = appt.id;
+    this.updateBodyClass();
   }
 
   submitReschedule() {
@@ -146,6 +170,7 @@ export class PatientScheduleComponent {
         this.rescheduleTime = '';
         this.rescheduleReason = '';
         this.loadAppointments();
+        this.updateBodyClass();
       },
       error: (e) => console.error('Failed to request reschedule', e)
     });
@@ -159,18 +184,32 @@ export class PatientScheduleComponent {
         this.cancelApptId = '';
         this.cancelReason = '';
         this.loadAppointments();
+        this.updateBodyClass();
       },
       error: (e) => console.error('Failed to cancel appointment', e)
     });
   }
 
-  closeRescheduleModal() { this.showRescheduleModal = false; this.rescheduleApptId = ''; this.rescheduleDate = ''; this.rescheduleTime = ''; this.rescheduleReason = ''; }
-  closeCancelModal() { this.showCancelModal = false; this.cancelApptId = ''; this.cancelReason = ''; }
+  closeRescheduleModal() { 
+    this.showRescheduleModal = false; 
+    this.rescheduleApptId = ''; 
+    this.rescheduleDate = ''; 
+    this.rescheduleTime = ''; 
+    this.rescheduleReason = ''; 
+    this.updateBodyClass();
+  }
+  closeCancelModal() { 
+    this.showCancelModal = false; 
+    this.cancelApptId = ''; 
+    this.cancelReason = ''; 
+    this.updateBodyClass();
+  }
 
   openNewAppointmentModal() { 
     this.showNewAppointmentModal = true; 
     this.loadOrganizations();
     this.loadDoctors();
+    this.updateBodyClass();
   }
 
   loadOrganizations() {
@@ -220,16 +259,19 @@ export class PatientScheduleComponent {
     this.newApptReason = ''; 
     this.newApptPriority = 'NORMAL';
     this.filteredDoctors = [];
+    this.updateBodyClass();
   }
 
   showError(message: string) {
     this.errorMessage = message;
     this.showErrorModal = true;
+    this.updateBodyClass();
   }
 
   closeErrorModal() {
     this.showErrorModal = false;
     this.errorMessage = '';
+    this.updateBodyClass();
   }
 
   onDoctorSelected() {

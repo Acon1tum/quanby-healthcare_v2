@@ -257,12 +257,20 @@ export class DoctorScheduleComponent implements OnInit {
     });
   }
 
-  openAvailabilityModal() { this.showAvailabilityModal = true; }
-  closeAvailabilityModal() { this.showAvailabilityModal = false; this.conflictError = null; }
+  openAvailabilityModal() { 
+    this.showAvailabilityModal = true; 
+    document.body.classList.add('modal-open');
+  }
+  closeAvailabilityModal() { 
+    this.showAvailabilityModal = false; 
+    this.conflictError = null; 
+    document.body.classList.remove('modal-open');
+  }
 
   requestRescheduleForDay(dayOfWeek: string) {
     this.conflictDay = dayOfWeek;
     this.showRescheduleModal = true;
+    document.body.classList.add('modal-open');
   }
 
   submitReschedule() {
@@ -292,6 +300,7 @@ export class DoctorScheduleComponent implements OnInit {
     this.conflictDay = '';
     this.rescheduleNewDate = '';
     this.rescheduleNewTime = '';
+    document.body.classList.remove('modal-open');
   }
 
   getPendingRequests(): ScheduleRequest[] {

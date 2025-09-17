@@ -208,4 +208,12 @@ header.logged-in .hidden.lg\:flex {
 .mobile-sidebar-dropdown,
 .mobile-profile-dropdown {
   z-index: 60;
+}
+
+/* Enhanced shadow when modal is open */
+body.modal-open header {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 } 

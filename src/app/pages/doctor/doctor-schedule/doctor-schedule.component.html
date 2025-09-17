@@ -15,24 +15,20 @@
     <table class="requests-table">
       <thead>
         <tr>
-          <th>Request ID</th>
           <th>Patient</th>
           <th>Reason</th>
           <th>Requested</th>
           <th>Start</th>
-          <th>End</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let r of paginatedPendingRequests">
-          <td>{{ r.id }}</td>
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
           <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
           <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
-          <td>{{ r.end | date:'MMM d, y, h:mm a' }}</td>
           <td>
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
           </td>
@@ -50,7 +46,6 @@
     <div class="mobile-cards">
       <div class="mobile-card" *ngFor="let r of paginatedPendingRequests">
         <div class="mobile-card-header">
-          <div class="mobile-card-id">Request #{{ r.id }}</div>
           <div class="mobile-card-status">
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
           </div>
@@ -71,10 +66,6 @@
           <div class="mobile-card-row">
             <span class="mobile-card-label">Start:</span>
             <span class="mobile-card-value">{{ r.start | date:'MMM d, h:mm a' }}</span>
-          </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">End:</span>
-            <span class="mobile-card-value">{{ r.end | date:'MMM d, h:mm a' }}</span>
           </div>
         </div>
         <div class="mobile-card-actions">
@@ -126,24 +117,20 @@
     <table class="requests-table">
       <thead>
         <tr>
-          <th>Request ID</th>
           <th>Patient</th>
           <th>Reason</th>
           <th>Requested</th>
           <th>Start</th>
-          <th>End</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let r of paginatedConfirmedRequests">
-          <td>{{ r.id }}</td>
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
           <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
           <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
-          <td>{{ r.end | date:'MMM d, y, h:mm a' }}</td>
           <td>
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
           </td>
@@ -158,7 +145,6 @@
     <div class="mobile-cards">
       <div class="mobile-card" *ngFor="let r of paginatedConfirmedRequests">
         <div class="mobile-card-header">
-          <div class="mobile-card-id">Request #{{ r.id }}</div>
           <div class="mobile-card-status">
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
           </div>
@@ -179,10 +165,6 @@
           <div class="mobile-card-row">
             <span class="mobile-card-label">Start:</span>
             <span class="mobile-card-value">{{ r.start | date:'MMM d, h:mm a' }}</span>
-          </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">End:</span>
-            <span class="mobile-card-value">{{ r.end | date:'MMM d, h:mm a' }}</span>
           </div>
         </div>
         <div class="mobile-card-actions">

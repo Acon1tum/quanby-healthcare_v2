@@ -12,26 +12,22 @@
     <table class="appointments-table">
       <thead>
         <tr>
-          <th>Appointment ID</th>
           <th>Doctor</th>
           <th>Specialty</th>
           <th>Reason</th>
           <th>Scheduled</th>
           <th>Start</th>
-          <th>End</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let appt of paginatedAppointments">
-          <td>{{ appt.id }}</td>
           <td>{{ appt.doctor }}</td>
           <td>{{ appt.specialty }}</td>
           <td>{{ appt.reason }}</td>
           <td>{{ appt.scheduledAt | date:'MMM d, y, h:mm a' }}</td>
           <td>{{ appt.start | date:'MMM d, y, h:mm a' }}</td>
-          <td>{{ appt.end | date:'MMM d, y, h:mm a' }}</td>
           <td>
             <span class="badge" [ngClass]="getStatusColor(appt.status)">{{ appt.status }}</span>
           </td>
@@ -49,7 +45,6 @@
     <div class="mobile-cards">
       <div class="mobile-card" *ngFor="let appt of paginatedAppointments">
         <div class="mobile-card-header">
-          <div class="mobile-card-id">Appointment #{{ appt.id }}</div>
           <div class="mobile-card-status">
             <span class="badge" [ngClass]="getStatusColor(appt.status)">{{ appt.status }}</span>
           </div>
@@ -74,10 +69,6 @@
           <div class="mobile-card-row">
             <span class="mobile-card-label">Start:</span>
             <span class="mobile-card-value">{{ appt.start | date:'MMM d, h:mm a' }}</span>
-          </div>
-          <div class="mobile-card-row">
-            <span class="mobile-card-label">End:</span>
-            <span class="mobile-card-value">{{ appt.end | date:'MMM d, h:mm a' }}</span>
           </div>
         </div>
         <div class="mobile-card-actions">
@@ -212,7 +203,7 @@
     <div class="modal-body">
       <div class="form-section">
         <div class="form-group">
-          <label>Select Organization</label>
+          <label>Select Organization / Institution</label>
           <select [(ngModel)]="newApptOrganizationId" (change)="onOrganizationSelected()" class="form-select">
             <option value="">Choose an organization...</option>
             <option *ngFor="let org of availableOrganizations" [value]="org.id">
