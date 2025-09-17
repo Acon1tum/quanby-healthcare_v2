@@ -1,1 +1,131 @@
-<p>doctor-management works!</p>
+<div class="doctor-management-dashboard">
+  <div class="toast-container">
+    <div *ngFor="let n of notifications" class="toast" [class.success]="n.type === 'success'" [class.error]="n.type === 'error'">
+      {{ n.message }}
+    </div>
+  </div>
+  <div class="content-card">
+    <div class="card-header">
+      <h3>Doctor Management</h3>
+      <div class="header-actions">
+        <button class="text-button" (click)="openCreate()">Add Doctor</button>
+      </div>
+    </div>
+
+    <div class="search-controls">
+      <div class="search-input">
+        <i class="material-icons">search</i>
+        <input type="text" [(ngModel)]="search" (input)="searchChanged()" placeholder="Search doctors...">
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <i class="material-icons rotating">refresh</i>
+      <p>Loading doctors...</p>
+    </div>
+    <div class="error-state" *ngIf="!isLoading && error">
+      <i class="material-icons">error</i>
+      <p>{{ error }}</p>
+    </div>
+    <div *ngIf="!isLoading && !error">
+      <div class="doctors-table-wrapper">
+      <table class="doctors-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Specialization</th>
+            <th>Experience</th>
+            <th>Organization</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of doctors">
+            <td><div class="org-name">{{ d.doctorInfo ? (d.doctorInfo.firstName + ' ' + (d.doctorInfo.middleName || '') + ' ' + d.doctorInfo.lastName) : '—' }}</div></td>
+            <td>{{ d.email }}</td>
+            <td>{{ d.doctorInfo?.specialization || '—' }}</td>
+            <td>{{ d.doctorInfo?.experience || 0 }}</td>
+            <td>{{ d.organization?.name || '—' }}</td>
+            <td class="row-actions">
+              <button class="action-btn edit-btn" (click)="openEdit(d)"><i class="material-icons">edit</i></button>
+              <button class="action-btn delete-btn" (click)="delete(d)"><i class="material-icons">delete</i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="pager">
+        <button (click)="changePage(-1)" [disabled]="page <= 1">Prev</button>
+        <span>Page {{ page }} of {{ totalPages }}</span>
+        <button (click)="changePage(1)" [disabled]="page >= totalPages">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal aligned with org-management -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ modalMode === 'create' ? 'Add Doctor' : 'Edit Doctor' }}</h2>
+        <button class="close-button" (click)="showModal=false"><i class="material-icons">close</i></button>
+      </div>
+      <div class="modal-body">
+      <form (ngSubmit)="save()">
+        <div *ngIf="modalMode === 'create'" class="row">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="formData.email" name="email" required>
+        </div>
+        <div class="row">
+          <label>Organization</label>
+          <select [(ngModel)]="formData.organizationId" name="organizationId">
+            <option value="">— None —</option>
+            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+          </select>
+        </div>
+        <div *ngIf="modalMode === 'create'" class="row">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="formData.password" name="password" required>
+        </div>
+        <div class="row">
+          <label>First Name</label>
+          <input type="text" [(ngModel)]="formData.firstName" name="firstName" required>
+        </div>
+        <div class="row">
+          <label>Middle Name</label>
+          <input type="text" [(ngModel)]="formData.middleName" name="middleName">
+        </div>
+        <div class="row">
+          <label>Last Name</label>
+          <input type="text" [(ngModel)]="formData.lastName" name="lastName" required>
+        </div>
+        <div class="row">
+          <label>Specialization</label>
+          <input type="text" [(ngModel)]="formData.specialization" name="specialization" required>
+        </div>
+        <div class="row">
+          <label>Experience (years)</label>
+          <input type="number" [(ngModel)]="formData.experience" name="experience" min="0">
+        </div>
+        <div class="row">
+          <label>Contact Number</label>
+          <input type="tel" [(ngModel)]="formData.contactNumber" name="contactNumber">
+        </div>
+        <div class="row">
+          <label>Qualifications</label>
+          <textarea [(ngModel)]="formData.qualifications" name="qualifications"></textarea>
+        </div>
+        <div class="row">
+          <label>Bio</label>
+          <textarea [(ngModel)]="formData.bio" name="bio"></textarea>
+        </div>
+      </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="secondary-button" (click)="showModal=false">Cancel</button>
+        <button type="button" class="primary-button" (click)="save()">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+</div>

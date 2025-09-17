@@ -6,6 +6,22 @@ import { AuthService, User } from '../../../auth/auth.service';
 import { OrganizationsService, Organization, OrganizationDoctor, ApiResponse } from '../../../services/organizations.service';
 import { Subscription } from 'rxjs';
 
+// Types for form state
+type FormDataModel = {
+  name: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  isActive: boolean;
+};
+
+type StringFieldKey = Exclude<keyof FormDataModel, 'isActive'>;
+
+type FieldErrors = Record<StringFieldKey, string>;
+type FieldValid = Record<StringFieldKey, boolean>;
+
 @Component({
   selector: 'app-org-management',
   imports: [CommonModule, FormsModule],
@@ -44,6 +60,44 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
   searchTerm = '';
   filterStatus = 'all'; // all, active, inactive
 
+  // Modal state
+  showModal = false;
+  modalMode: 'create' | 'edit' = 'create';
+  modalTitle = '';
+  isSubmitting = false;
+  submitError: string | null = null;
+
+  // Form data for modal
+  formData: FormDataModel = {
+    name: '',
+    description: '',
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
+    isActive: true
+  };
+
+  // Form validation errors
+  formErrors: FieldErrors = {
+    name: '',
+    description: '',
+    address: '',
+    phone: '',
+    email: '',
+    website: ''
+  };
+
+  // Field validation states
+  fieldValid: FieldValid = {
+    name: true,
+    description: true,
+    address: true,
+    phone: true,
+    email: true,
+    website: true
+  };
+
   // Notifications
   notifications = [
     {
@@ -66,12 +120,8 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
     }
   ];
 
-  quickActions = [
-    { label: 'Add Organization', icon: 'add_business', action: 'add' },
-    { label: 'View Reports', icon: 'assessment', action: 'reports' },
-    { label: 'Manage Users', icon: 'people', action: 'users' },
-    { label: 'System Settings', icon: 'settings', action: 'settings' }
-  ];
+  // quick actions removed from UI
+  quickActions = [] as Array<{ label: string; icon: string; action: string }>;
 
   constructor(
     private router: Router, 
@@ -245,8 +295,7 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
   handleQuickAction(action: string): void {
     switch (action) {
       case 'add':
-        // Navigate to add organization page or open modal
-        console.log('Add organization');
+        this.openCreateModal();
         break;
       case 'reports':
         // Navigate to reports page
@@ -263,10 +312,258 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
     }
   }
 
+  openCreateModal(): void {
+    this.modalMode = 'create';
+    this.modalTitle = 'Add New Organization';
+    this.resetFormData();
+    this.showModal = true;
+    this.submitError = null;
+  }
+
   editOrganization(organization: Organization): void {
-    console.log('Edit organization:', organization);
-    // TODO: Navigate to edit page or open edit modal
-    // this.router.navigate(['/super-admin/organizations/edit', organization.id]);
+    this.modalMode = 'edit';
+    this.modalTitle = 'Edit Organization';
+    this.formData = {
+      name: organization.name,
+      description: organization.description || '',
+      address: organization.address || '',
+      phone: organization.phone || '',
+      email: organization.email || '',
+      website: organization.website || '',
+      isActive: organization.isActive
+    };
+    this.showModal = true;
+    this.submitError = null;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.submitError = null;
+    this.isSubmitting = false;
+  }
+
+  resetFormData(): void {
+    this.formData = {
+      name: '',
+      description: '',
+      address: '',
+      phone: '',
+      email: '',
+      website: '',
+      isActive: true
+    };
+    this.clearFormErrors();
+  }
+
+  clearFormErrors(): void {
+    this.formErrors = {
+      name: '',
+      description: '',
+      address: '',
+      phone: '',
+      email: '',
+      website: ''
+    };
+    this.fieldValid = {
+      name: true,
+      description: true,
+      address: true,
+      phone: true,
+      email: true,
+      website: true
+    };
+  }
+
+  // Validation methods
+  validateEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  }
+
+  validatePhone(phone: string): boolean {
+    // Enforce exactly 11 digits numeric phone number
+    const digitsOnly = phone.replace(/\D/g, '');
+    return /^\d{11}$/.test(digitsOnly);
+  }
+
+  validateUrl(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  validateField(fieldName: StringFieldKey, value: string): void {
+    let isValid = true;
+    let errorMessage = '';
+
+    switch (fieldName) {
+      case 'name':
+        if (!value.trim()) {
+          isValid = false;
+          errorMessage = 'Organization name is required';
+        } else if (value.trim().length < 2) {
+          isValid = false;
+          errorMessage = 'Organization name must be at least 2 characters';
+        } else if (value.trim().length > 100) {
+          isValid = false;
+          errorMessage = 'Organization name must be less than 100 characters';
+        } else if (this.isDuplicateName(value.trim())) {
+          isValid = false;
+          errorMessage = 'An organization with this name already exists';
+        }
+        break;
+
+      case 'description':
+        if (value.length > 500) {
+          isValid = false;
+          errorMessage = 'Description must be less than 500 characters';
+        }
+        break;
+
+      case 'address':
+        if (value && value.length > 200) {
+          isValid = false;
+          errorMessage = 'Address must be less than 200 characters';
+        }
+        break;
+
+      case 'phone':
+        if (value && !this.validatePhone(value)) {
+          isValid = false;
+          errorMessage = 'Phone number must be exactly 11 digits';
+        }
+        break;
+
+      case 'email':
+        if (value && !this.validateEmail(value)) {
+          isValid = false;
+          errorMessage = 'Please enter a valid email address (e.g., user@example.com)';
+        }
+        break;
+
+      case 'website':
+        if (value && !this.validateUrl(value)) {
+          isValid = false;
+          errorMessage = 'Please enter a valid URL (e.g., https://www.example.com)';
+        }
+        break;
+    }
+
+    this.fieldValid[fieldName] = isValid;
+    this.formErrors[fieldName] = errorMessage;
+  }
+
+  isDuplicateName(name: string): boolean {
+    if (this.modalMode === 'edit' && this.selectedOrganization?.name === name) {
+      return false; // Same name for same organization is allowed
+    }
+    return this.organizations.some(org => 
+      org.name.toLowerCase() === name.toLowerCase()
+    );
+  }
+
+  onFieldChange(fieldName: StringFieldKey, value: string): void {
+    this.formData[fieldName] = value;
+    this.validateField(fieldName, value);
+  }
+
+  onInputChange(event: Event, fieldName: StringFieldKey): void {
+    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+    const value = target?.value || '';
+    if (fieldName === 'phone') {
+      // Keep only digits and limit to 11
+      const digits = value.replace(/\D/g, '').slice(0, 11);
+      this.onFieldChange(fieldName, digits);
+      // Reflect sanitized value back into the input model
+      this.formData.phone = digits;
+      return;
+    }
+    this.onFieldChange(fieldName, value);
+  }
+
+  isFormValid(): boolean {
+    return Object.values(this.fieldValid).every(valid => valid) && 
+           this.formData.name.trim().length > 0;
+  }
+
+  onSubmit(): void {
+    if (this.isSubmitting) return;
+
+    // Validate all fields
+    this.validateField('name', this.formData.name);
+    this.validateField('description', this.formData.description);
+    this.validateField('address', this.formData.address);
+    this.validateField('phone', this.formData.phone);
+    this.validateField('email', this.formData.email);
+    this.validateField('website', this.formData.website);
+
+    // Check if form is valid
+    if (!this.isFormValid()) {
+      this.submitError = 'Please fix the errors below before submitting';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.submitError = null;
+
+    if (this.modalMode === 'create') {
+      this.createOrganization();
+    } else {
+      this.updateOrganization();
+    }
+  }
+
+  createOrganization(): void {
+    this.organizationsService.createOrganization(this.formData).subscribe({
+      next: (response: ApiResponse<Organization>) => {
+        if (response.success) {
+          this.organizations.push(response.data);
+          this.addSuccessNotification(`Organization "${response.data.name}" created successfully`);
+          this.closeModal();
+          this.loadOrganizationStatistics();
+        } else {
+          this.submitError = response.message || 'Failed to create organization';
+        }
+        this.isSubmitting = false;
+      },
+      error: (error) => {
+        console.error('Error creating organization:', error);
+        this.submitError = 'Failed to create organization. Please try again.';
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  updateOrganization(): void {
+    if (!this.selectedOrganization) return;
+
+    this.organizationsService.updateOrganization(this.selectedOrganization.id, this.formData).subscribe({
+      next: (response: ApiResponse<Organization>) => {
+        if (response.success) {
+          // Update the organization in the list
+          const index = this.organizations.findIndex(org => org.id === this.selectedOrganization!.id);
+          if (index !== -1) {
+            this.organizations[index] = response.data;
+          }
+          // Update selected organization
+          this.selectedOrganization = response.data;
+          this.addSuccessNotification(`Organization "${response.data.name}" updated successfully`);
+          this.closeModal();
+          this.loadOrganizationStatistics();
+        } else {
+          this.submitError = response.message || 'Failed to update organization';
+        }
+        this.isSubmitting = false;
+      },
+      error: (error) => {
+        console.error('Error updating organization:', error);
+        this.submitError = 'Failed to update organization. Please try again.';
+        this.isSubmitting = false;
+      }
+    });
   }
 
   toggleOrganizationStatus(organization: Organization): void {
@@ -282,12 +579,15 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
           if (this.selectedOrganization?.id === organization.id) {
             this.selectedOrganization = response.data;
           }
+          const status = response.data.isActive ? 'activated' : 'deactivated';
+          this.addSuccessNotification(`Organization "${response.data.name}" ${status} successfully`);
         } else {
-          console.error('Failed to toggle organization status:', response.message);
+          this.addErrorNotification(`Failed to toggle organization status: ${response.message}`);
         }
       },
       error: (error) => {
         console.error('Error toggling organization status:', error);
+        this.addErrorNotification('Failed to toggle organization status. Please try again.');
       }
     });
   }
@@ -306,12 +606,14 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
             }
             // Refresh statistics
             this.loadOrganizationStatistics();
+            this.addSuccessNotification(`Organization "${organization.name}" deleted successfully`);
           } else {
-            console.error('Failed to delete organization:', response.message);
+            this.addErrorNotification(`Failed to delete organization: ${response.message}`);
           }
         },
         error: (error) => {
           console.error('Error deleting organization:', error);
+          this.addErrorNotification('Failed to delete organization. Please try again.');
         }
       });
     }
@@ -323,5 +625,55 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
 
   trackByDoctorId(index: number, doctor: OrganizationDoctor): string {
     return doctor.id;
+  }
+
+  // Notification management
+  addSuccessNotification(message: string): void {
+    const newNotification = {
+      id: Date.now(),
+      message: message,
+      time: 'Just now',
+      type: 'success'
+    };
+    this.notifications.unshift(newNotification);
+    
+    // Keep only the latest 10 notifications
+    if (this.notifications.length > 10) {
+      this.notifications = this.notifications.slice(0, 10);
+    }
+  }
+
+  addErrorNotification(message: string): void {
+    const newNotification = {
+      id: Date.now(),
+      message: message,
+      time: 'Just now',
+      type: 'error'
+    };
+    this.notifications.unshift(newNotification);
+    
+    // Keep only the latest 10 notifications
+    if (this.notifications.length > 10) {
+      this.notifications = this.notifications.slice(0, 10);
+    }
+  }
+
+  addWarningNotification(message: string): void {
+    const newNotification = {
+      id: Date.now(),
+      message: message,
+      time: 'Just now',
+      type: 'warning'
+    };
+    this.notifications.unshift(newNotification);
+    
+    // Keep only the latest 10 notifications
+    if (this.notifications.length > 10) {
+      this.notifications = this.notifications.slice(0, 10);
+    }
+  }
+
+  removeNotification(notificationId: number): void {
+    this.notifications = this.notifications.filter(n => n.id !== notificationId);
   }
 }

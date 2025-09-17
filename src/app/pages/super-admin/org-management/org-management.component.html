@@ -70,23 +70,10 @@
     </div>
   </section>
 
-  <!-- Quick Actions -->
-  <section class="quick-actions">
-    <h2 class="section-title">Quick Actions</h2>
-    <div class="actions-grid">
-      <button 
-        *ngFor="let action of quickActions" 
-        class="action-button"
-        (click)="handleQuickAction(action.action)"
-      >
-        <i class="material-icons">{{ action.icon }}</i>
-        <span>{{ action.label }}</span>
-      </button>
-    </div>
-  </section>
+  
 
   <!-- Main Dashboard Content -->
-  <div class="dashboard-content">
+  <div class="dashboard-content" [class.has-sidebar]="selectedOrganization">
     <!-- Left Column - Organizations List -->
     <div class="content-main">
       <!-- Organizations List -->
@@ -144,73 +131,72 @@
             </button>
           </div>
           
-          <!-- Organizations List -->
+          <!-- Organizations Table -->
           <div *ngIf="!isLoadingOrganizations && !organizationsError">
-            <div 
-              *ngFor="let organization of getFilteredOrganizations(); trackBy: trackByOrganizationId" 
-              class="organization-item"
-              [class.selected]="selectedOrganization?.id === organization.id"
-              (click)="selectOrganization(organization)"
-            >
-              <div class="organization-info">
-                <div class="organization-header">
-                  <h4 class="organization-name">{{ organization.name }}</h4>
-                  <span class="status-badge status-{{ getStatusColor(organization.isActive) }}">
-                    {{ getStatusText(organization.isActive) }}
-                  </span>
-                </div>
-                <p class="organization-description" *ngIf="organization.description">
-                  {{ organization.description }}
-                </p>
-                <div class="organization-details">
-                  <div class="detail-item" *ngIf="organization.address">
-                    <i class="material-icons">location_on</i>
-                    <span>{{ organization.address }}</span>
-                  </div>
-                  <div class="detail-item" *ngIf="organization.phone">
-                    <i class="material-icons">phone</i>
-                    <span>{{ organization.phone }}</span>
-                  </div>
-                  <div class="detail-item" *ngIf="organization.email">
-                    <i class="material-icons">email</i>
-                    <span>{{ organization.email }}</span>
-                  </div>
-                </div>
-                <div class="organization-stats">
-                  <div class="stat-item">
-                    <i class="material-icons">medical_services</i>
-                    <span>{{ organization.doctorCount || 0 }} Doctors</span>
-                  </div>
-                  <div class="stat-item">
-                    <i class="material-icons">people</i>
-                    <span>{{ organization.patientCount || 0 }} Patients</span>
-                  </div>
-                </div>
-              </div>
-              <div class="organization-actions">
-                <button 
-                  class="action-btn edit-btn" 
-                  (click)="editOrganization(organization); $event.stopPropagation()"
-                  title="Edit Organization"
-                >
-                  <i class="material-icons">edit</i>
-                </button>
-                <button 
-                  class="action-btn toggle-btn" 
-                  [class.active]="organization.isActive"
-                  (click)="toggleOrganizationStatus(organization); $event.stopPropagation()"
-                  [title]="organization.isActive ? 'Deactivate' : 'Activate'"
-                >
-                  <i class="material-icons">{{ organization.isActive ? 'pause' : 'play_arrow' }}</i>
-                </button>
-                <button 
-                  class="action-btn delete-btn" 
-                  (click)="deleteOrganization(organization); $event.stopPropagation()"
-                  title="Delete Organization"
-                >
-                  <i class="material-icons">delete</i>
-                </button>
-              </div>
+            <div class="organizations-table-wrapper">
+              <table class="organizations-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Contact</th>
+                    <th>Status</th>
+                    <th>Doctors</th>
+                    <th>Patients</th>
+                    <th class="actions-col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr 
+                    *ngFor="let organization of getFilteredOrganizations(); trackBy: trackByOrganizationId"
+                    [class.selected]="selectedOrganization?.id === organization.id"
+                    (click)="selectOrganization(organization)"
+                  >
+                    <td>
+                      <div class="org-name">{{ organization.name }}</div>
+                      <div class="org-desc" *ngIf="organization.description">{{ organization.description }}</div>
+                    </td>
+                    <td>
+                      <div class="muted" *ngIf="organization.address">{{ organization.address }}</div>
+                    </td>
+                    <td>
+                      <div class="muted" *ngIf="organization.phone">{{ organization.phone }}</div>
+                      <div class="muted" *ngIf="organization.email">{{ organization.email }}</div>
+                    </td>
+                    <td>
+                      <span class="status-badge status-{{ getStatusColor(organization.isActive) }}">
+                        {{ getStatusText(organization.isActive) }}
+                      </span>
+                    </td>
+                    <td>{{ organization.doctorCount || 0 }}</td>
+                    <td>{{ organization.patientCount || 0 }}</td>
+                    <td class="row-actions" (click)="$event.stopPropagation()">
+                      <button 
+                        class="action-btn edit-btn" 
+                        (click)="editOrganization(organization)"
+                        title="Edit Organization"
+                      >
+                        <i class="material-icons">edit</i>
+                      </button>
+                      <button 
+                        class="action-btn toggle-btn" 
+                        [class.active]="organization.isActive"
+                        (click)="toggleOrganizationStatus(organization)"
+                        [title]="organization.isActive ? 'Deactivate' : 'Activate'"
+                      >
+                        <i class="material-icons">{{ organization.isActive ? 'pause' : 'play_arrow' }}</i>
+                      </button>
+                      <button 
+                        class="action-btn delete-btn" 
+                        (click)="deleteOrganization(organization)"
+                        title="Delete Organization"
+                      >
+                        <i class="material-icons">delete</i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
           
@@ -309,46 +295,181 @@
         </div>
       </div>
 
-      <!-- Notifications -->
-      <div class="content-card">
-        <div class="card-header">
-          <h3>Notifications</h3>
-          <button class="text-button">View All</button>
-        </div>
-        <div class="notifications-list">
-          <div 
-            *ngFor="let notification of notifications" 
-            class="notification-item"
-          >
-            <div class="notification-icon">
-              <i class="material-icons" *ngIf="notification.type === 'success'">check_circle</i>
-              <i class="material-icons" *ngIf="notification.type === 'info'">info</i>
-              <i class="material-icons" *ngIf="notification.type === 'warning'">warning</i>
-            </div>
-            <div class="notification-content">
-              <div class="notification-message">{{ notification.message }}</div>
-              <div class="notification-time">{{ notification.time }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
+    </div>
+  </div>
+</div>
 
-      <!-- Quick Search -->
-      <div class="content-card">
-        <div class="card-header">
-          <h3>Quick Search</h3>
-        </div>
-        <div class="search-section">
-          <div class="search-input">
-            <i class="material-icons">search</i>
-            <input type="text" placeholder="Search by name or ID...">
+<!-- Organization Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ modalTitle }}</h2>
+      <button class="close-button" (click)="closeModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
+        <div class="form-group">
+          <label for="name">Organization Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            [(ngModel)]="formData.name" 
+            (input)="onInputChange($event, 'name')"
+            required
+            class="form-input"
+            [class.error]="!fieldValid.name"
+            placeholder="Enter organization name"
+          >
+          <div class="field-error" *ngIf="!fieldValid.name && formErrors.name">
+            <i class="material-icons">error</i>
+            <span>{{ formErrors.name }}</span>
           </div>
-          <button class="primary-button">
-            <i class="material-icons">search</i>
-            Search
-          </button>
         </div>
-      </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            [(ngModel)]="formData.description" 
+            (input)="onInputChange($event, 'description')"
+            class="form-textarea"
+            [class.error]="!fieldValid.description"
+            placeholder="Enter organization description"
+            rows="3"
+            maxlength="500"
+          ></textarea>
+          <div class="field-footer">
+            <div class="field-error" *ngIf="!fieldValid.description && formErrors.description">
+              <i class="material-icons">error</i>
+              <span>{{ formErrors.description }}</span>
+            </div>
+            <div class="character-count" [class.warning]="formData.description.length > 400">
+              {{ formData.description.length }}/500
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input 
+            type="text" 
+            id="address" 
+            name="address" 
+            [(ngModel)]="formData.address" 
+            (input)="onInputChange($event, 'address')"
+            class="form-input"
+            [class.error]="!fieldValid.address"
+            placeholder="Enter organization address"
+          >
+          <div class="field-error" *ngIf="!fieldValid.address && formErrors.address">
+            <i class="material-icons">error</i>
+            <span>{{ formErrors.address }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              [(ngModel)]="formData.phone" 
+              (input)="onInputChange($event, 'phone')"
+              class="form-input"
+              [class.error]="!fieldValid.phone"
+              maxlength="11"
+              inputmode="numeric"
+              pattern="\\d{11}"
+              placeholder="Enter phone number"
+            >
+            <div class="field-error" *ngIf="!fieldValid.phone && formErrors.phone">
+              <i class="material-icons">error</i>
+              <span>{{ formErrors.phone }}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              [(ngModel)]="formData.email" 
+              (input)="onInputChange($event, 'email')"
+              class="form-input"
+              [class.error]="!fieldValid.email"
+              placeholder="Enter email address"
+            >
+            <div class="field-error" *ngIf="!fieldValid.email && formErrors.email">
+              <i class="material-icons">error</i>
+              <span>{{ formErrors.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="website">Website</label>
+          <input 
+            type="url" 
+            id="website" 
+            name="website" 
+            [(ngModel)]="formData.website" 
+            (input)="onInputChange($event, 'website')"
+            class="form-input"
+            [class.error]="!fieldValid.website"
+            placeholder="Enter website URL"
+          >
+          <div class="field-error" *ngIf="!fieldValid.website && formErrors.website">
+            <i class="material-icons">error</i>
+            <span>{{ formErrors.website }}</span>
+          </div>
+        </div>
+
+        <div class="form-group" *ngIf="modalMode === 'edit'">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="formData.isActive" 
+              name="isActive"
+            >
+            <span class="checkmark"></span>
+            Active Organization
+          </label>
+        </div>
+
+        <div class="error-message" *ngIf="submitError">
+          <i class="material-icons">error</i>
+          <span>{{ submitError }}</span>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button 
+        type="button" 
+        class="secondary-button" 
+        (click)="closeModal()"
+        [disabled]="isSubmitting"
+      >
+        Cancel
+      </button>
+      <button 
+        type="button" 
+        class="primary-button" 
+        (click)="onSubmit()"
+        [disabled]="isSubmitting || !isFormValid()"
+      >
+        <i class="material-icons" *ngIf="isSubmitting" class="rotating">refresh</i>
+        <span *ngIf="!isSubmitting">{{ modalMode === 'create' ? 'Create' : 'Update' }}</span>
+        <span *ngIf="isSubmitting">Processing...</span>
+      </button>
     </div>
   </div>
 </div>

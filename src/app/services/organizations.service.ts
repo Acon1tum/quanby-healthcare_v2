@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Organization interface
@@ -34,6 +34,15 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+// Generic pagination response
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -42,9 +51,43 @@ export class OrganizationsService {
 
   constructor(private http: HttpClient) {}
 
+  // Get authorization headers
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('accessToken');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+  }
+
   // Get all organizations
   getOrganizations(): Observable<ApiResponse<Organization[]>> {
     return this.http.get<ApiResponse<Organization[]>>(`${this.apiUrl}/organizations`);
+  }
+
+  // Get organizations with pagination and optional filters
+  getOrganizationsPaged(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: 'all' | 'active' | 'inactive';
+  }): Observable<ApiResponse<PaginatedResponse<Organization>>> {
+    let params = new HttpParams()
+      .set('page', String(options.page))
+      .set('limit', String(options.limit));
+
+    if (options.search && options.search.trim()) {
+      params = params.set('search', options.search.trim());
+    }
+
+    if (options.status && options.status !== 'all') {
+      params = params.set('status', options.status);
+    }
+
+    return this.http.get<ApiResponse<PaginatedResponse<Organization>>>(
+      `${this.apiUrl}/organizations`,
+      { params }
+    );
   }
 
   // Get organization by ID
@@ -59,22 +102,37 @@ export class OrganizationsService {
 
   // Create new organization
   createOrganization(organization: Partial<Organization>): Observable<ApiResponse<Organization>> {
-    return this.http.post<ApiResponse<Organization>>(`${this.apiUrl}/organizations`, organization);
+    return this.http.post<ApiResponse<Organization>>(
+      `${this.apiUrl}/organizations`, 
+      organization,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Update organization
   updateOrganization(id: string, organization: Partial<Organization>): Observable<ApiResponse<Organization>> {
-    return this.http.put<ApiResponse<Organization>>(`${this.apiUrl}/organizations/${id}`, organization);
+    return this.http.put<ApiResponse<Organization>>(
+      `${this.apiUrl}/organizations/${id}`, 
+      organization,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Delete organization
   deleteOrganization(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/organizations/${id}`);
+    return this.http.delete<ApiResponse<void>>(
+      `${this.apiUrl}/organizations/${id}`,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Toggle organization status
   toggleOrganizationStatus(id: string, isActive: boolean): Observable<ApiResponse<Organization>> {
-    return this.http.patch<ApiResponse<Organization>>(`${this.apiUrl}/organizations/${id}/status`, { isActive });
+    return this.http.patch<ApiResponse<Organization>>(
+      `${this.apiUrl}/organizations/${id}/status`, 
+      { isActive },
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Get organization statistics
