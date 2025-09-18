@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 // Organization interface
 export interface Organization {
@@ -47,7 +48,7 @@ export interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class OrganizationsService {
-  private apiUrl = 'http://localhost:3000/api'; // Update with your actual API URL
+  private apiUrl = environment.backendApi; // Update with your actual API URL
 
   constructor(private http: HttpClient) {}
 
