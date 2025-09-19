@@ -362,7 +362,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 20000; // ensure overlay stays above app header/sidebar
   padding: 1rem;
 }
 
@@ -375,6 +375,7 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  z-index: 20001; // above the backdrop
   
   &.dialog-large {
     max-width: 1000px;

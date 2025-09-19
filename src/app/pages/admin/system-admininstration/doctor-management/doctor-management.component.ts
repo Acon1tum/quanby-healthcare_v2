@@ -2,47 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DoctorsService, DoctorItem, PaginatedResponse, ApiResponse } from '../../../../services/doctors.service';
+import { AuthService } from '../../../../auth/auth.service';
 
 // Interfaces based on the database schema
-interface Doctor {
-  id: number;
-  email: string;
-  role: 'DOCTOR';
-  createdAt: Date;
-  updatedAt: Date;
-  doctorInfo?: DoctorInfo;
-  doctorCategories?: DoctorCategory[];
-  doctorSchedules?: DoctorSchedule[];
-}
-
-interface DoctorInfo {
-  id: number;
-  userId: number;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  gender: 'MALE' | 'FEMALE' | 'OTHER';
-  dateOfBirth: Date;
-  contactNumber: string;
-  address: string;
-  bio: string;
-  specialization: string;
-  qualifications: string;
-  experience: number;
-}
-
 interface DoctorCategory {
   id: number;
   name: string;
   description?: string;
-}
-
-interface DoctorSchedule {
-  id: number;
-  doctorId: number;
-  dayOfWeek: string;
-  startTime: Date;
-  endTime: Date;
 }
 
 @Component({
@@ -53,8 +20,8 @@ interface DoctorSchedule {
   styleUrl: './doctor-management.component.scss'
 })
 export class DoctorManagementComponent implements OnInit {
-  doctors: Doctor[] = [];
-  filteredDoctors: Doctor[] = [];
+  doctors: DoctorItem[] = [];
+  filteredDoctors: DoctorItem[] = [];
   categories: DoctorCategory[] = [];
   
   searchForm: FormGroup;
@@ -62,7 +29,7 @@ export class DoctorManagementComponent implements OnInit {
   
   isAddDialogOpen = false;
   isEditDialogOpen = false;
-  selectedDoctor: Doctor | null = null;
+  selectedDoctor: DoctorItem | null = null;
   
   // Pagination
   pageSize = 10;
@@ -74,7 +41,7 @@ export class DoctorManagementComponent implements OnInit {
   isLoading = false;
   isSaving = false;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(private fb: FormBuilder, private router: Router, private doctorsService: DoctorsService, private authService: AuthService) {
     this.searchForm = this.fb.group({
       searchTerm: [''],
       specialization: [''],
@@ -109,13 +76,24 @@ export class DoctorManagementComponent implements OnInit {
 
   loadDoctors(): void {
     this.isLoading = true;
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      this.doctors = this.getMockDoctors();
-      this.filteredDoctors = [...this.doctors];
-      this.totalItems = this.doctors.length;
-      this.isLoading = false;
-    }, 1000);
+    const search = (this.searchForm.get('searchTerm')?.value || '').trim();
+    this.doctorsService
+      .getDoctorsPaged({ page: this.currentPage + 1, limit: this.pageSize, search: search || undefined })
+      .subscribe({
+        next: (resp: ApiResponse<PaginatedResponse<DoctorItem>>) => {
+          const data = resp.data;
+          this.doctors = data.items || [];
+          // Apply client-side extra filters if any (specialization/experience)
+          this.filteredDoctors = [...this.doctors];
+          this.totalItems = data.total || this.filteredDoctors.length;
+          this.isLoading = false;
+          // Re-apply local filters
+          this.filterDoctors();
+        },
+        error: () => {
+          this.isLoading = false;
+        }
+      });
   }
 
   loadCategories(): void {
@@ -145,23 +123,21 @@ export class DoctorManagementComponent implements OnInit {
     this.filteredDoctors = this.doctors.filter(doctor => {
       const matchesSearch = !searchTerm || 
         doctor.email.toLowerCase().includes(searchTerm) ||
-        `${doctor.doctorInfo?.firstName} ${doctor.doctorInfo?.lastName}`.toLowerCase().includes(searchTerm);
+        `${doctor.doctorInfo?.firstName || ''} ${doctor.doctorInfo?.lastName || ''}`.toLowerCase().includes(searchTerm);
       
       const matchesSpecialization = !specialization || 
-        doctor.doctorInfo?.specialization.toLowerCase().includes(specialization.toLowerCase());
+        (doctor.doctorInfo?.specialization || '').toLowerCase().includes(specialization.toLowerCase());
       
       const matchesCategory = !category || 
-        doctor.doctorCategories?.some(cat => cat.id === category);
+        false; // category filtering not supported from API response yet
       
-      const matchesExperience = doctor.doctorInfo && 
-        doctor.doctorInfo.experience >= experienceMin && 
-        doctor.doctorInfo.experience <= experienceMax;
+      const experienceVal = doctor.doctorInfo?.experience ?? 0;
+      const matchesExperience = experienceVal >= experienceMin && experienceVal <= experienceMax;
 
       return matchesSearch && matchesSpecialization && matchesCategory && matchesExperience;
     });
 
-    this.totalItems = this.filteredDoctors.length;
-    this.currentPage = 0;
+    // Keep totalItems from server for paginator; local filter does not change server total
   }
 
   openAddDialog(): void {
@@ -169,13 +145,13 @@ export class DoctorManagementComponent implements OnInit {
     this.doctorForm.reset();
   }
 
-  openEditDialog(doctor: Doctor): void {
+  openEditDialog(doctor: DoctorItem): void {
     this.selectedDoctor = doctor;
     this.isEditDialogOpen = true;
     this.populateForm(doctor);
   }
 
-  openViewDialog(doctor: Doctor): void {
+  openViewDialog(doctor: DoctorItem): void {
     // Navigate to doctor information page with doctor data
     this.router.navigate(['/admin/system-administration/doctor-management/doctor-information'], {
       state: { doctor: doctor }
@@ -192,22 +168,20 @@ export class DoctorManagementComponent implements OnInit {
     this.doctorForm.reset();
   }
 
-  populateForm(doctor: Doctor): void {
+  populateForm(doctor: DoctorItem): void {
     if (doctor.doctorInfo) {
       this.doctorForm.patchValue({
         email: doctor.email,
         firstName: doctor.doctorInfo.firstName,
         middleName: doctor.doctorInfo.middleName,
         lastName: doctor.doctorInfo.lastName,
-        gender: doctor.doctorInfo.gender,
-        dateOfBirth: doctor.doctorInfo.dateOfBirth,
+        gender: (doctor as any).doctorInfo?.gender,
+        dateOfBirth: (doctor as any).doctorInfo?.dateOfBirth,
         contactNumber: doctor.doctorInfo.contactNumber,
-        address: doctor.doctorInfo.address,
-        bio: doctor.doctorInfo.bio,
         specialization: doctor.doctorInfo.specialization,
         qualifications: doctor.doctorInfo.qualifications,
         experience: doctor.doctorInfo.experience,
-        categories: doctor.doctorCategories?.map(cat => cat.id) || []
+        categories: []
       });
     }
   }
@@ -215,76 +189,85 @@ export class DoctorManagementComponent implements OnInit {
   saveDoctor(): void {
     if (this.doctorForm.valid) {
       this.isSaving = true;
-      
-      // Mock save - replace with actual API call
-      setTimeout(() => {
-        if (this.isEditDialogOpen && this.selectedDoctor) {
-          // Update existing doctor
-          const index = this.doctors.findIndex(d => d.id === this.selectedDoctor!.id);
-          if (index !== -1) {
-            this.doctors[index] = { ...this.doctors[index], ...this.doctorForm.value };
+      const payload = {
+        email: this.doctorForm.value.email,
+        password: this.doctorForm.value.password,
+        firstName: this.doctorForm.value.firstName,
+        middleName: this.doctorForm.value.middleName,
+        lastName: this.doctorForm.value.lastName,
+        specialization: this.doctorForm.value.specialization,
+        qualifications: this.doctorForm.value.qualifications,
+        experience: Number(this.doctorForm.value.experience) || 0,
+        contactNumber: this.doctorForm.value.contactNumber,
+        address: this.doctorForm.value.address,
+        bio: this.doctorForm.value.bio
+      };
+
+      if (this.isEditDialogOpen && this.selectedDoctor) {
+        this.doctorsService.updateDoctor(this.selectedDoctor.id, payload).subscribe({
+          next: () => {
+            this.isSaving = false;
+            this.closeDialog();
+            this.loadDoctors();
+          },
+          error: () => {
+            this.isSaving = false;
           }
-        } else {
-          // Add new doctor
-          const newDoctor: Doctor = {
-            id: Date.now(),
-            email: this.doctorForm.value.email,
-            role: 'DOCTOR',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            doctorInfo: {
-              id: Date.now(),
-              userId: Date.now(),
-              ...this.doctorForm.value
-            }
-          };
-          this.doctors.unshift(newDoctor);
-        }
-        
-        this.filteredDoctors = [...this.doctors];
-        this.totalItems = this.doctors.length;
-        this.isSaving = false;
-        this.closeDialog();
-        console.log(
-          this.isEditDialogOpen ? 'Doctor updated successfully!' : 'Doctor added successfully!'
-        );
-      }, 1000);
+        });
+      } else {
+        this.doctorsService.createDoctor(payload).subscribe({
+          next: () => {
+            this.isSaving = false;
+            this.closeDialog();
+            this.loadDoctors();
+          },
+          error: () => {
+            this.isSaving = false;
+          }
+        });
+      }
     }
   }
 
-  deleteDoctor(doctor: Doctor): void {
+  deleteDoctor(doctor: DoctorItem): void {
     if (confirm(`Are you sure you want to delete Dr. ${doctor.doctorInfo?.firstName} ${doctor.doctorInfo?.lastName}?`)) {
-      this.doctors = this.doctors.filter(d => d.id !== doctor.id);
-      this.filteredDoctors = [...this.doctors];
-      this.totalItems = this.doctors.length;
-      console.log('Doctor deleted successfully!');
+      this.isLoading = true;
+      this.doctorsService.deleteDoctor(doctor.id).subscribe({
+        next: () => {
+          this.loadDoctors();
+        },
+        error: () => {
+          this.isLoading = false;
+        }
+      });
     }
   }
 
   onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
+    this.loadDoctors();
   }
 
-  getPaginatedDoctors(): Doctor[] {
-    const startIndex = this.currentPage * this.pageSize;
-    return this.filteredDoctors.slice(startIndex, startIndex + this.pageSize);
+  getPaginatedDoctors(): DoctorItem[] {
+    // Server-side pagination already applied
+    return this.filteredDoctors;
   }
 
-  getDoctorFullName(doctor: Doctor): string {
+  getDoctorFullName(doctor: DoctorItem): string {
     if (doctor.doctorInfo) {
       return `${doctor.doctorInfo.firstName} ${doctor.doctorInfo.middleName ? doctor.doctorInfo.middleName + ' ' : ''}${doctor.doctorInfo.lastName}`;
     }
     return 'N/A';
   }
 
-  getDoctorStatus(doctor: Doctor): string {
+  getDoctorStatus(doctor: DoctorItem): string {
     // Mock status logic - replace with actual business logic
     return 'Active';
   }
 
   // Add null check for the template
-  getDoctorInfo(doctor: Doctor): DoctorInfo | null {
+  getDoctorInfo(doctor: DoctorItem): any | null {
     return doctor.doctorInfo || null;
   }
 
@@ -335,58 +318,7 @@ export class DoctorManagementComponent implements OnInit {
     return Math;
   }
 
-  // Mock data generator
-  private getMockDoctors(): Doctor[] {
-    return [
-      {
-        id: 1,
-        email: 'dr.smith@qhealth.com',
-        role: 'DOCTOR',
-        createdAt: new Date('2023-01-15'),
-        updatedAt: new Date('2024-01-15'),
-        doctorInfo: {
-          id: 1,
-          userId: 1,
-          firstName: 'John',
-          middleName: 'Michael',
-          lastName: 'Smith',
-          gender: 'MALE',
-          dateOfBirth: new Date('1980-05-15'),
-          contactNumber: '+1-555-0123',
-          address: '123 Medical Center Dr, Healthcare City, HC 12345',
-          bio: 'Experienced cardiologist with expertise in interventional cardiology and heart failure management.',
-          specialization: 'Cardiology',
-          qualifications: 'MD, FACC, FSCAI',
-          experience: 15
-        },
-        doctorCategories: [
-          { id: 1, name: 'Cardiologist', description: 'Heart and cardiovascular system specialist' }
-        ]
-      },
-      {
-        id: 2,
-        email: 'dr.johnson@qhealth.com',
-        role: 'DOCTOR',
-        createdAt: new Date('2023-03-20'),
-        updatedAt: new Date('2024-01-10'),
-        doctorInfo: {
-          id: 2,
-          userId: 2,
-          firstName: 'Sarah',
-          lastName: 'Johnson',
-          gender: 'FEMALE',
-          dateOfBirth: new Date('1985-08-22'),
-          contactNumber: '+1-555-0456',
-          address: '456 Health Plaza, Medical District, MD 67890',
-          bio: 'Dedicated dermatologist specializing in cosmetic dermatology and skin cancer prevention.',
-          specialization: 'Dermatology',
-          qualifications: 'MD, FAAD',
-          experience: 12
-        },
-        doctorCategories: [
-          { id: 2, name: 'Dermatologist', description: 'Skin, hair, and nail specialist' }
-        ]
-      }
-    ];
-  }
+  // Permission helpers for template
+  canCreateDoctor(): boolean { return this.doctorsService.canCreateDoctor(); }
+  canModifyDoctor(doctor: DoctorItem): boolean { return this.doctorsService.canModifyDoctor(doctor); }
 }

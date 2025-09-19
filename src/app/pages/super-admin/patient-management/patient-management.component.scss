@@ -1,0 +1,409 @@
+.patient-management-dashboard {
+  padding: 1rem;
+
+  .toast-container { 
+    position: fixed; 
+    top: 80px; 
+    right: 16px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    z-index: 11000; 
+  }
+  .toast { 
+    background: #fff; 
+    border: 1px solid #e9ecef; 
+    border-left: 4px solid #3498db; 
+    padding: .5rem .75rem; 
+    border-radius: 6px; 
+    box-shadow: 0 4px 16px rgba(0,0,0,.08); 
+    min-width: 220px; 
+  }
+  .toast.success { border-left-color: #27ae60; }
+  .toast.error { border-left-color: #e74c3c; }
+
+  .content-card { 
+    background: #fff; 
+    border: 1px solid #e9ecef; 
+    border-radius: 12px; 
+    padding: 24px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,.05); 
+  }
+  .card-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 16px; 
+    padding-bottom: 12px; 
+    border-bottom: 1px solid #f1f3f4; 
+  }
+  .text-button { 
+    background: none; 
+    border: none; 
+    color: #3498db; 
+    cursor: pointer; 
+    padding: 6px 10px; 
+    border-radius: 6px; 
+    font-weight: 500;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+
+  .search-controls { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 16px; 
+    padding: 12px; 
+    background: #f8f9fa; 
+    border: 1px solid #f1f3f4; 
+    border-radius: 8px; 
+  }
+  .search-input { 
+    position: relative; 
+    flex: 1; 
+  }
+  .search-input i { 
+    position: absolute; 
+    left: 12px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    color: #7f8c8d; 
+  }
+  .search-input input { 
+    width: 100%; 
+    padding: 10px 12px 10px 40px; 
+    border: 1px solid #e9ecef; 
+    border-radius: 8px; 
+    font-size: 14px;
+    
+    &:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+    }
+  }
+  .organization-filter {
+    min-width: 200px;
+    
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      
+      &:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+      }
+    }
+  }
+
+  .loading-state, .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: #7f8c8d;
+    }
+    
+    &.error-state i {
+      color: #e74c3c;
+    }
+  }
+  
+  .rotating {
+    animation: rotate 1s linear infinite;
+  }
+  
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .patients-table-wrapper { 
+    background: #fff; 
+    border: 1px solid #e9ecef; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 2px 8px rgba(0,0,0,.05); 
+  }
+  .patients-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+  }
+  .patients-table th, .patients-table td { 
+    padding: 12px 16px; 
+    border-bottom: 1px solid #f1f3f4; 
+    text-align: left; 
+  }
+  .patients-table thead { 
+    background: #ecf0f1; 
+    text-transform: uppercase; 
+    font-size: 12px; 
+    letter-spacing: 0.04em; 
+    font-weight: 600;
+  }
+  .patients-table tbody tr {
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+  .actions-col { 
+    width: 1%; 
+    white-space: nowrap; 
+  }
+  .patient-name {
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  .row-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .action-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    
+    &.edit-btn {
+      color: #3498db;
+      
+      &:hover {
+        background-color: #e3f2fd;
+      }
+    }
+    
+    &.delete-btn {
+      color: #e74c3c;
+      
+      &:hover {
+        background-color: #ffebee;
+      }
+    }
+  }
+
+  .pager { 
+    display: flex; 
+    gap: .5rem; 
+    align-items: center; 
+    padding: .75rem 1rem; 
+    justify-content: center;
+    
+    button {
+      padding: 8px 16px;
+      border: 1px solid #e9ecef;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      &:hover:not(:disabled) {
+        background: #f8f9fa;
+        border-color: #3498db;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .primary-button, .primary { 
+    background: #3498db; 
+    color: #fff; 
+    border: none; 
+    padding: .5rem .75rem; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 500;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background: #2980b9;
+    }
+  }
+  .secondary-button { 
+    background: #fff; 
+    color: #3498db; 
+    border: 1px solid #3498db; 
+    padding: .5rem .75rem; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 500;
+    transition: all 0.2s;
+    
+    &:hover {
+      background: #f8f9fa;
+    }
+  }
+
+  .modal-overlay { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,.4); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 10000; 
+  }
+  .modal-content { 
+    background: #fff; 
+    border-radius: 12px; 
+    box-shadow: 0 10px 40px rgba(0,0,0,.2); 
+    width: min(92vw, 860px); 
+    max-height: 90vh; 
+    overflow: hidden; 
+    z-index: 10001; 
+    
+    &.large-modal {
+      width: min(95vw, 1200px);
+    }
+  }
+  .modal-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px; 
+    border-bottom: 1px solid #f1f3f4; 
+    
+    h2 {
+      margin: 0;
+      color: #2c3e50;
+    }
+  }
+  .modal-body {
+    background: #fff;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+  }
+  .modal-footer { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 8px; 
+    padding: 16px 20px; 
+    border-top: 1px solid #f1f3f4; 
+    background: #f8f9fa; 
+  }
+  .close-button { 
+    background: none; 
+    border: none; 
+    color: #7f8c8d; 
+    cursor: pointer; 
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #f1f3f4;
+    }
+  }
+
+  // Form styles
+  .form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f1f3f4;
+    
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    h4 {
+      margin: 0 0 1rem 0;
+      color: #2c3e50;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    .form-group {
+      flex: 1;
+    }
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    
+    label {
+      font-weight: 500;
+      color: #2c3e50;
+      font-size: 0.9rem;
+    }
+    
+    input, textarea, select {
+      padding: 0.75rem;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      
+      &:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+      }
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .search-controls {
+      flex-direction: column;
+    }
+    
+    .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+    
+    .patients-table-wrapper {
+      overflow-x: auto;
+    }
+    
+    .patients-table {
+      min-width: 600px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .modal-content { 
+      width: calc(100% - 1.5rem); 
+    }
+    .modal-body { 
+      padding: .75rem; 
+      max-height: calc(95vh - 110px); 
+    }
+  }
+}

@@ -159,4 +159,10 @@ export class DoctorManagementComponent implements OnInit {
       this.notifications = this.notifications.filter(n => n.id !== id);
     }, 3000);
   }
+
+  getDoctorDisplayName(doctor: DoctorItem): string {
+    if (!doctor.doctorInfo) return 'Unknown Doctor';
+    const { firstName, middleName, lastName } = doctor.doctorInfo;
+    return `${firstName}${middleName ? ' ' + middleName : ''} ${lastName}`.trim();
+  }
 }

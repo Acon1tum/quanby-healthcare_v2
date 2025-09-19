@@ -1,1 +1,254 @@
-<p>patient-management works!</p>
+<div class="patient-management-dashboard">
+  <div class="toast-container">
+    <div *ngFor="let n of notifications" class="toast" [class.success]="n.type === 'success'" [class.error]="n.type === 'error'">
+      {{ n.message }}
+    </div>
+  </div>
+  <div class="content-card">
+    <div class="card-header">
+      <h3>Patient Management</h3>
+      <div class="header-actions">
+        <button class="text-button" (click)="openCreate()">Add Patient</button>
+      </div>
+    </div>
+
+    <div class="search-controls">
+      <div class="search-input">
+        <i class="material-icons">search</i>
+        <input type="text" [(ngModel)]="search" (input)="searchChanged()" placeholder="Search patients...">
+      </div>
+      <div class="organization-filter">
+        <select [(ngModel)]="organizationId" (change)="searchChanged()">
+          <option value="">All Organizations</option>
+          <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <i class="material-icons rotating">refresh</i>
+      <p>Loading patients...</p>
+    </div>
+    <div class="error-state" *ngIf="!isLoading && error">
+      <i class="material-icons">error</i>
+      <p>{{ error }}</p>
+    </div>
+    <div *ngIf="!isLoading && !error">
+      <div class="patients-table-wrapper">
+        <table class="patients-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Age</th>
+              <th>Gender</th>
+              <th>Blood Type</th>
+              <th>Contact</th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of patients">
+              <td><div class="patient-name">{{ getPatientDisplayName(p) }}</div></td>
+              <td>{{ p.email }}</td>
+              <td>{{ getPatientAge(p) }}</td>
+              <td>{{ p.patientInfo?.gender || '—' }}</td>
+              <td>{{ p.patientInfo?.bloodType || '—' }}</td>
+              <td>{{ p.patientInfo?.contactNumber || '—' }}</td>
+              <td class="row-actions">
+                <button class="action-btn edit-btn" (click)="openEdit(p)"><i class="material-icons">edit</i></button>
+                <button class="action-btn delete-btn" (click)="delete(p)"><i class="material-icons">delete</i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <button (click)="changePage(-1)" [disabled]="page <= 1">Prev</button>
+        <span>Page {{ page }} of {{ totalPages }}</span>
+        <button (click)="changePage(1)" [disabled]="page >= totalPages">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Create/Edit Patient -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="showModal=false">
+    <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ modalMode === 'create' ? 'Add Patient' : 'Edit Patient' }}</h2>
+        <button class="close-button" (click)="showModal=false"><i class="material-icons">close</i></button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="save()">
+          <!-- Basic Information Section -->
+          <div class="form-section">
+            <h4>Basic Information</h4>
+            <div class="form-row">
+              <div class="form-group" *ngIf="modalMode === 'create'">
+                <label>Email *</label>
+                <input type="email" [(ngModel)]="formData.email" name="email" required>
+              </div>
+              <div class="form-group" *ngIf="modalMode === 'create'">
+                <label>Password *</label>
+                <input type="password" [(ngModel)]="formData.password" name="password" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Organization</label>
+                <select [(ngModel)]="formData.organizationId" name="organizationId">
+                  <option value="">— None —</option>
+                  <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" [(ngModel)]="formData.fullName" name="fullName" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Gender *</label>
+                <select [(ngModel)]="formData.gender" name="gender" required>
+                  <option value="">Select Gender</option>
+                  <option *ngFor="let option of genderOptions" [value]="option.value">{{ option.label }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date of Birth *</label>
+                <input type="date" [(ngModel)]="formData.dateOfBirth" name="dateOfBirth" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Contact Number *</label>
+                <input type="tel" [(ngModel)]="formData.contactNumber" name="contactNumber" required>
+              </div>
+              <div class="form-group">
+                <label>Blood Type *</label>
+                <select [(ngModel)]="formData.bloodType" name="bloodType" required>
+                  <option value="">Select Blood Type</option>
+                  <option *ngFor="let type of bloodTypeOptions" [value]="type">{{ type }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Address *</label>
+              <textarea [(ngModel)]="formData.address" name="address" required></textarea>
+            </div>
+          </div>
+
+          <!-- Physical Information Section -->
+          <div class="form-section">
+            <h4>Physical Information</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Weight (kg)</label>
+                <input type="number" [(ngModel)]="formData.weight" name="weight" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label>Height (cm)</label>
+                <input type="number" [(ngModel)]="formData.height" name="height" min="0" step="0.1">
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Information Section -->
+          <div class="form-section">
+            <h4>Medical Information</h4>
+            <div class="form-group">
+              <label>Medical History</label>
+              <textarea [(ngModel)]="formData.medicalHistory" name="medicalHistory" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Allergies</label>
+              <textarea [(ngModel)]="formData.allergies" name="allergies" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Current Medications</label>
+              <textarea [(ngModel)]="formData.medications" name="medications" rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- PhilHealth Information Section -->
+          <div class="form-section">
+            <h4>PhilHealth Information</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>PhilHealth ID</label>
+                <input type="text" [(ngModel)]="formData.philHealthId" name="philHealthId">
+              </div>
+              <div class="form-group">
+                <label>PhilHealth Status</label>
+                <input type="text" [(ngModel)]="formData.philHealthStatus" name="philHealthStatus">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>PhilHealth Category</label>
+                <input type="text" [(ngModel)]="formData.philHealthCategory" name="philHealthCategory">
+              </div>
+              <div class="form-group">
+                <label>PhilHealth Expiry</label>
+                <input type="date" [(ngModel)]="formData.philHealthExpiry" name="philHealthExpiry">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>PhilHealth Member Since</label>
+              <input type="date" [(ngModel)]="formData.philHealthMemberSince" name="philHealthMemberSince">
+            </div>
+          </div>
+
+          <!-- Emergency Contact Section -->
+          <div class="form-section">
+            <h4>Emergency Contact</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Contact Name</label>
+                <input type="text" [(ngModel)]="formData.emergencyContactName" name="emergencyContactName">
+              </div>
+              <div class="form-group">
+                <label>Relationship</label>
+                <input type="text" [(ngModel)]="formData.emergencyContactRelationship" name="emergencyContactRelationship">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Contact Number</label>
+                <input type="tel" [(ngModel)]="formData.emergencyContactNumber" name="emergencyContactNumber">
+              </div>
+              <div class="form-group">
+                <label>Contact Address</label>
+                <input type="text" [(ngModel)]="formData.emergencyContactAddress" name="emergencyContactAddress">
+              </div>
+            </div>
+          </div>
+
+          <!-- Insurance Information Section -->
+          <div class="form-section">
+            <h4>Insurance Information</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Insurance Provider</label>
+                <input type="text" [(ngModel)]="formData.insuranceProviderName" name="insuranceProviderName">
+              </div>
+              <div class="form-group">
+                <label>Policy Number</label>
+                <input type="text" [(ngModel)]="formData.insurancePolicyNumber" name="insurancePolicyNumber">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Insurance Contact</label>
+              <input type="text" [(ngModel)]="formData.insuranceContact" name="insuranceContact">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="secondary-button" (click)="showModal=false">Cancel</button>
+        <button type="button" class="primary-button" (click)="save()">{{ modalMode === 'create' ? 'Create' : 'Save' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
