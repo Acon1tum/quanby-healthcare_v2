@@ -576,16 +576,35 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         }, 500);
         
         // Enhanced remote stream binding with better timing for remote connections
-        setTimeout(() => {
+        setTimeout(async () => {
           this.refreshRemoteStream();
           console.log('🔍 Debug after first remote stream refresh:');
           this.webrtc.logDebugInfo();
+          
+          // Wait for remote tracks to be established
+          console.log('⏳ Waiting for remote tracks...');
+          const tracksReady = await this.webrtc.waitForRemoteTracks(10000);
+          if (tracksReady) {
+            console.log('✅ Remote tracks established successfully');
+            this.refreshRemoteStream();
+          } else {
+            console.warn('⚠️ Remote tracks not established, triggering negotiation...');
+            this.webrtc.triggerNegotiation();
+          }
         }, 1500);
         
-        setTimeout(() => {
+        setTimeout(async () => {
           this.refreshRemoteStream();
           console.log('🔍 Debug after second remote stream refresh:');
           this.webrtc.logDebugInfo();
+          
+          // Check data channel readiness
+          const dataChannelReady = await this.webrtc.waitForDataChannel(5000);
+          if (dataChannelReady) {
+            console.log('✅ Data channel is ready');
+          } else {
+            console.warn('⚠️ Data channel not ready');
+          }
         }, 3000);
         
         // Nudge negotiation in case tracks didn't sync - important for remote connections

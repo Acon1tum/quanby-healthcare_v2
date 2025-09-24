@@ -249,10 +249,19 @@ export class WebRTCService {
 
     this.peer.onicecandidate = (event) => {
       if (event.candidate && this.currentRoomId) {
+        console.log('🧊 ICE candidate found:', {
+          type: event.candidate.type,
+          protocol: event.candidate.protocol,
+          address: event.candidate.address,
+          port: event.candidate.port
+        });
+        
         this.socket?.emit('webrtc:ice-candidate', {
           roomId: this.currentRoomId,
           candidate: event.candidate,
         });
+      } else if (event.candidate === null) {
+        console.log('🧊 ICE gathering complete');
       }
     };
 
@@ -267,30 +276,43 @@ export class WebRTCService {
       });
       
       this.zone.run(() => {
-        if (event.streams && event.streams[0]) {
-          // Stream provided by browser
-          this.remoteStream = event.streams[0];
-          console.log('✅ Remote stream (from event.streams) updated:', this.remoteStream);
-        } else {
-          // Some browsers fire ontrack with no streams; add track to our aggregate stream
-          if (!this.remoteStream) {
-            this.remoteStream = new MediaStream();
-          }
-          try {
-            this.remoteStream.addTrack(event.track);
-            console.log('➕ Added remote track to aggregate stream');
-          } catch (e) {
-            console.warn('⚠️ Failed to add remote track to stream:', e);
-          }
+        // Always use the aggregate stream approach for better compatibility
+        if (!this.remoteStream) {
+          this.remoteStream = new MediaStream();
         }
-        if (this.remoteStream) {
+        
+        try {
+          // Add the track to our aggregate stream
+          this.remoteStream.addTrack(event.track);
+          console.log('➕ Added remote track to aggregate stream:', {
+            trackId: event.track.id,
+            kind: event.track.kind,
+            enabled: event.track.enabled,
+            readyState: event.track.readyState
+          });
+          
+          // Update the stream state
           console.log('📹 Remote stream tracks now:', this.remoteStream.getTracks().map(t => ({
             id: t.id,
             kind: t.kind,
             enabled: t.enabled,
             readyState: t.readyState
           })));
+          
+          // Notify subscribers immediately
           this.remoteStreamSubject.next(this.remoteStream);
+          
+          // Log stream state for debugging
+          console.log('🔍 Remote stream state after track addition:', {
+            streamId: this.remoteStream.id,
+            active: this.remoteStream.active,
+            tracksCount: this.remoteStream.getTracks().length,
+            hasAudio: this.remoteStream.getAudioTracks().length > 0,
+            hasVideo: this.remoteStream.getVideoTracks().length > 0
+          });
+          
+        } catch (e) {
+          console.error('❌ Failed to add remote track to stream:', e);
         }
       });
     };
@@ -388,6 +410,9 @@ export class WebRTCService {
       
       this.dataChannel.onopen = () => {
         console.log('📡 Data channel opened for face scan communication');
+        console.log('📡 Data channel ready state:', this.dataChannel?.readyState);
+        console.log('📡 Data channel label:', this.dataChannel?.label);
+        
         // Notify that data channel is ready
         this.zone.run(() => {
           this.dataChannelSubject.next({
@@ -396,6 +421,23 @@ export class WebRTCService {
             timestamp: Date.now()
           });
         });
+        
+        // Send initial handshake message to verify connectivity
+        setTimeout(() => {
+          if (this.dataChannel?.readyState === 'open') {
+            console.log('📡 Sending data channel handshake...');
+            try {
+              this.dataChannel.send(JSON.stringify({
+                type: 'handshake',
+                timestamp: Date.now(),
+                role: this.currentRole
+              }));
+              console.log('✅ Data channel handshake sent successfully');
+            } catch (error) {
+              console.error('❌ Failed to send data channel handshake:', error);
+            }
+          }
+        }, 1000);
       };
       
       this.dataChannel.onclose = () => {
@@ -636,6 +678,35 @@ export class WebRTCService {
         clearTimeout(timer);
         resolve(false);
       }
+    });
+  }
+
+  // Wait for remote stream to have active tracks
+  waitForRemoteTracks(timeoutMs = 15000): Promise<boolean> {
+    return new Promise((resolve) => {
+      const checkForTracks = () => {
+        if (this.remoteStream && this.remoteStream.getTracks().length > 0) {
+          const tracks = this.remoteStream.getTracks();
+          const activeTracks = tracks.filter(track => track.readyState === 'live');
+          if (activeTracks.length > 0) {
+            console.log('✅ Remote tracks are active:', activeTracks.map(t => ({ kind: t.kind, id: t.id })));
+            resolve(true);
+            return;
+          }
+        }
+        
+        // Continue checking
+        setTimeout(checkForTracks, 500);
+      };
+      
+      // Start checking immediately
+      checkForTracks();
+      
+      // Timeout after specified time
+      setTimeout(() => {
+        console.warn('⚠️ Remote tracks timeout after', timeoutMs, 'ms');
+        resolve(false);
+      }, timeoutMs);
     });
   }
 

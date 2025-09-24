@@ -38,6 +38,22 @@ export const environment = {
       urls: 'turn:192.158.29.39:3478?transport=tcp',
       credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
       username: '28224511:1379330808'
+    },
+    // Additional TURN servers for better connectivity
+    {
+      urls: 'turn:relay.metered.ca:80',
+      username: '8e4b8e8e4b8e8e4b8e8e4b8e',
+      credential: '8e4b8e8e4b8e8e4b8e8e4b8e'
+    },
+    {
+      urls: 'turn:relay.metered.ca:443',
+      username: '8e4b8e8e4b8e8e4b8e8e4b8e',
+      credential: '8e4b8e8e4b8e8e4b8e8e4b8e'
+    },
+    {
+      urls: 'turn:relay.metered.ca:443?transport=tcp',
+      username: '8e4b8e8e4b8e8e4b8e8e4b8e',
+      credential: '8e4b8e8e4b8e8e4b8e8e4b8e'
     }
   ]
 };
