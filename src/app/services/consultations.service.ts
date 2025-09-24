@@ -5,8 +5,8 @@ import { environment } from '../../environments/environment';
 
 export interface Consultation {
   id: number;
-  doctorId: number;
-  patientId: number;
+  doctorId: string;
+  patientId: string;
   startTime: Date;
   endTime?: Date;
   consultationCode: string;
@@ -35,7 +35,7 @@ export interface Consultation {
 }
 
 export interface CreateDirectConsultationRequest {
-  patientId: number;
+  patientId: string;
   startTime?: Date;
   endTime?: Date;
   notes?: string;

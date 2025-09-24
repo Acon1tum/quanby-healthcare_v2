@@ -1153,7 +1153,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Handle status messages from doctor (prescriptions, diagnoses, etc.)
+  // Handle status messages from doctor (prescriptions, diagnoses, lab requests, appointments, etc.)
   private handleStatusMessage(data: any): void {
     console.log('📨 Handling status message:', data);
     
@@ -1172,6 +1172,12 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           this.receivedDiagnoses.push(data.diagnosisData);
         }
         this.showNotificationMessage('🔍 New Diagnosis Received', 'diagnosis', data);
+      } else if (status.includes('lab request')) {
+        // Handle lab request notifications
+        this.showNotificationMessage('🧪 Lab Request Created', 'info', data);
+      } else if (status.includes('appointment scheduled')) {
+        // Handle appointment scheduling notifications
+        this.showNotificationMessage('📅 New Appointment Scheduled', 'info', data);
       } else {
         this.showNotificationMessage(data.status, 'info', data);
       }

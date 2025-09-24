@@ -1,6 +1,3 @@
-<!-- Header Spacer for Fixed Header -->
-<div class="header-spacer"></div>
-
 <div class="admin-profile-container main-content">
   <!-- Header Section -->
   <div class="header-section">
@@ -26,6 +23,27 @@
         Change Password
       </button>
     </div>
+    <!-- Edit Actions -->
+    <div *ngIf="isEditing" class="edit-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="cancelEditing()"
+        [disabled]="isSaving"
+      >
+        Cancel
+      </button>
+      &nbsp;
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="saveProfile()"
+        [disabled]="isSaving || profileForm.invalid"
+      >
+        <span *ngIf="isSaving">Saving...</span>
+        <span *ngIf="!isSaving">Save Changes</span>
+      </button>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -42,7 +60,7 @@
         <div class="profile-image-section">
           <div class="profile-image">
             <img 
-              [src]="imagePreview || profile.profileImage || 'assets/images/default-avatar.jpg'" 
+              [src]="imagePreview || profile.profilePicture || 'assets/images/default-avatar.jpg'" 
               alt="Profile Image"
               class="avatar"
             >
@@ -74,15 +92,31 @@
         
         <div class="profile-info">
           <h2 class="profile-name">{{ getFullName() }}</h2>
-          <p class="profile-role">{{ profile.role }}</p>
-          <p class="profile-department">{{ profile.department }}</p>
+          <p class="profile-role">{{ roleLabel }}</p>
+          <p class="profile-department">{{ departmentLabel }}</p>
+          
+          <!-- Organization Information -->
+          <div *ngIf="organization" class="organization-info">
+            <div class="org-item">
+              <i class="material-icons">business</i>
+              <span class="org-name">{{ organizationName }}</span>
+            </div>
+            <div *ngIf="organizationDescription" class="org-item">
+              <i class="material-icons">description</i>
+              <span class="org-description">{{ organizationDescription }}</span>
+            </div>
+            <div *ngIf="organizationAddress" class="org-item">
+              <i class="material-icons">location_on</i>
+              <span class="org-address">{{ organizationAddress }}</span>
+            </div>
+          </div>
           
           <div class="profile-stats">
             <div class="stat-item">
               <i class="material-icons">badge</i>
-              <span>{{ profile.employeeId }}</span>
+              <span>{{ profile.id }}</span>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" *ngIf="getAge() > 0">
               <i class="material-icons">cake</i>
               <span>{{ getAge() }} years old</span>
             </div>
@@ -107,73 +141,20 @@
           
           <div *ngIf="!isEditing" class="info-grid">
             <div class="info-item">
-              <label>Full Name</label>
-              <span>{{ getFullName() }}</span>
-            </div>
-            <div class="info-item">
               <label>Email</label>
               <span>{{ profile.email }}</span>
             </div>
-            <div class="info-item">
+            <div class="info-item" *ngIf="profile.doctorInfo?.gender || profile.patientInfo?.gender">
               <label>Gender</label>
-              <span>{{ profile.gender === 'MALE' ? 'Male' : profile.gender === 'FEMALE' ? 'Female' : 'Other' }}</span>
+              <span>{{ (profile.doctorInfo?.gender || profile.patientInfo?.gender) === 'MALE' ? 'Male' : (profile.doctorInfo?.gender || profile.patientInfo?.gender) === 'FEMALE' ? 'Female' : 'Other' }}</span>
             </div>
-            <div class="info-item">
+            <div class="info-item" *ngIf="profile.doctorInfo?.dateOfBirth || profile.patientInfo?.dateOfBirth">
               <label>Date of Birth</label>
-              <span>{{ profile.dateOfBirth | date:'longDate' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Contact Number</label>
-              <span>{{ profile.contactNumber }}</span>
-            </div>
-            <div class="info-item">
-              <label>Address</label>
-              <span>{{ profile.address }}</span>
+              <span>{{ (profile.doctorInfo?.dateOfBirth || profile.patientInfo?.dateOfBirth) | date:'longDate' }}</span>
             </div>
           </div>
           
           <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="firstName">First Name *</label>
-                <input 
-                  type="text" 
-                  id="firstName" 
-                  formControlName="firstName" 
-                  class="form-control"
-                  [class.ng-invalid]="firstName?.invalid && firstName?.touched"
-                >
-                <div *ngIf="firstName?.invalid && firstName?.touched" class="error-message">
-                  <span *ngIf="firstName?.errors?.['required']">First name is required</span>
-                  <span *ngIf="firstName?.errors?.['minlength']">First name must be at least 2 characters</span>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="middleName">Middle Name</label>
-                <input 
-                  type="text" 
-                  id="middleName" 
-                  formControlName="middleName" 
-                  class="form-control"
-                >
-              </div>
-              
-              <div class="form-group">
-                <label for="lastName">Last Name *</label>
-                <input 
-                  type="text" 
-                  id="lastName" 
-                  formControlName="lastName" 
-                  class="form-control"
-                  [class.ng-invalid]="lastName?.invalid && lastName?.touched"
-                >
-                <div *ngIf="lastName?.invalid && lastName?.touched" class="error-message">
-                  <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
-                  <span *ngIf="lastName?.errors?.['minlength']">Last name must be at least 2 characters</span>
-                </div>
-              </div>
-            </div>
             
             <div class="form-row">
               <div class="form-group">
@@ -198,35 +179,16 @@
               </div>
               
               <div class="form-group">
-                <label for="contactNumber">Contact Number *</label>
+                <label for="contactNumber">Email</label>
                 <input 
-                  type="tel" 
+                  type="email" 
                   id="contactNumber" 
                   formControlName="contactNumber" 
                   class="form-control"
-                  [class.ng-invalid]="contactNumber?.invalid && contactNumber?.touched"
+                  readonly
                 >
-                <div *ngIf="contactNumber?.invalid && contactNumber?.touched" class="error-message">
-                  <span *ngIf="contactNumber?.errors?.['required']">Contact number is required</span>
-                  <span *ngIf="contactNumber?.errors?.['pattern']">Please enter a valid phone number</span>
-                </div>
               </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="address">Address *</label>
-              <textarea 
-                id="address" 
-                formControlName="address" 
-                class="form-control" 
-                rows="3"
-                [class.ng-invalid]="address?.invalid && address?.touched"
-              ></textarea>
-              <div *ngIf="address?.invalid && address?.touched" class="error-message">
-                <span *ngIf="address?.errors?.['required']">Address is required</span>
-                <span *ngIf="address?.errors?.['minlength']">Address must be at least 10 characters</span>
-              </div>
-            </div>
+            </div>      
           </form>
         </div>
 
@@ -239,33 +201,116 @@
           
           <div *ngIf="!isEditing" class="info-grid">
             <div class="info-item">
-              <label>Employee ID</label>
-              <span>{{ profile.employeeId }}</span>
+              <label>Organization</label>
+              <span>{{ organizationName }}</span>
             </div>
             <div class="info-item">
-              <label>Department</label>
-              <span>{{ profile.department }}</span>
+              <label>Member Since</label>
+              <span>{{ profile.createdAt | date:'longDate' }}</span>
+            </div>
+          
+            <div *ngIf="organization.website" class="info-item">
+              <label>Website</label>
+              <span>
+                <a [href]="organization.website" target="_blank" class="website-link">{{ organization.website }}</a>
+              </span>
             </div>
             <div class="info-item">
-              <label>Role</label>
-              <span>{{ profile.role }}</span>
-            </div>
-            <div class="info-item">
-              <label>Hire Date</label>
-              <span>{{ profile.hireDate | date:'longDate' }}</span>
+              <label>Status</label>
+              <span class="status-badge" [class.status-active]="organization.isActive" [class.status-inactive]="!organization.isActive">
+                {{ organization.isActive ? 'Active' : 'Inactive' }}
+              </span>
             </div>
           </div>
-          
+
+          <!-- Organization Information Edit Form -->
           <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
-            <div class="form-group">
-              <label for="department">Department *</label>
-              <input 
-                type="text" 
-                id="department" 
-                formControlName="department" 
-                class="form-control" 
-                required
-              >
+            <div class="organization-form-section">
+              <h4 class="form-section-title">Organization Information</h4>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="orgName">Organization Name</label>
+                  <input 
+                    type="text" 
+                    id="orgName" 
+                    formControlName="orgName" 
+                    class="form-control" 
+                    placeholder="Organization name"
+                    readonly
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="orgStatus">Status</label>
+                  <input 
+                    type="text" 
+                    id="orgStatus" 
+                    formControlName="orgStatus" 
+                    class="form-control" 
+                    readonly
+                  >
+                </div>
+              </div>
+
+
+              <div class="form-group">
+                <label for="orgDescription">Description</label>
+                <textarea 
+                  id="orgDescription" 
+                  formControlName="orgDescription" 
+                  class="form-control" 
+                  rows="3"
+                  readonly
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="orgAddress">Address</label>
+                  <textarea 
+                    id="orgAddress" 
+                    formControlName="orgAddress" 
+                    class="form-control" 
+                    rows="2"
+                    readonly
+                  ></textarea>
+                </div>
+              </div>
+
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="orgPhone">Phone</label>
+                  <input 
+                    type="text" 
+                    id="orgPhone" 
+                    formControlName="orgPhone" 
+                    class="form-control" 
+                    readonly
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="orgEmail">Email</label>
+                  <input 
+                    type="email" 
+                    id="orgEmail" 
+                    formControlName="orgEmail" 
+                    class="form-control" 
+                    readonly
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="orgWebsite">Website</label>
+                <input 
+                  type="url" 
+                  id="orgWebsite" 
+                  formControlName="orgWebsite" 
+                  class="form-control" 
+                  readonly
+                >
+              </div>
             </div>
           </form>
         </div>
@@ -278,7 +323,7 @@
           </h3>
           
           <div *ngIf="!isEditing" class="bio-content">
-            <p>{{ profile.bio }}</p>
+            <p>{{ profile.doctorInfo?.bio || 'No bio available' }}</p>
           </div>
           
           <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
@@ -306,55 +351,62 @@
             Emergency Contact
           </h3>
           
-          <div *ngIf="!isEditing" class="info-grid">
+          <div *ngIf="!isEditing && profile?.patientInfo?.emergencyContact" class="info-grid">
             <div class="info-item">
               <label>Name</label>
-              <span>{{ profile.emergencyContact.name }}</span>
+              <span>{{ profile.patientInfo?.emergencyContact?.contactName }}</span>
             </div>
             <div class="info-item">
               <label>Relationship</label>
-              <span>{{ profile.emergencyContact.relationship }}</span>
+              <span>{{ profile.patientInfo?.emergencyContact?.relationship }}</span>
             </div>
             <div class="info-item">
               <label>Phone</label>
-              <span>{{ profile.emergencyContact.phone }}</span>
+              <span>{{ profile.patientInfo?.emergencyContact?.contactNumber }}</span>
+            </div>
+          </div>
+          
+          <!-- Organization Contact Information -->
+          <div *ngIf="!isEditing && organization" class="organization-contact-info">
+            <div class="info-grid">
+              <div *ngIf="organization.phone" class="info-item">
+                <label>Organization Phone</label>
+                <span>{{ organization.phone }}</span>
+              </div>
+              <div *ngIf="organization.email" class="info-item">
+                <label>Organization Email</label>
+                <span>{{ organization.email }}</span>
+              </div>
             </div>
           </div>
           
           <form *ngIf="isEditing" [formGroup]="profileForm" class="edit-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="emergencyContactName">Contact Name *</label>
-                <input 
-                  type="text" 
-                  id="emergencyContactName" 
-                  formControlName="emergencyContactName" 
-                  class="form-control" 
-                  required
-                >
-              </div>
-              
-              <div class="form-group">
-                <label for="emergencyContactRelationship">Relationship *</label>
-                <input 
-                  type="text" 
-                  id="emergencyContactRelationship" 
-                  formControlName="emergencyContactRelationship" 
-                  class="form-control" 
-                  required
-                >
-              </div>
-            </div>
             
-            <div class="form-group">
-              <label for="emergencyContactPhone">Contact Phone *</label>
-              <input 
-                type="tel" 
-                id="emergencyContactPhone" 
-                formControlName="emergencyContactPhone" 
-                class="form-control" 
-                required
-              >
+            <!-- Organization Contact Information in Edit Mode -->
+            <div *ngIf="organization" class="organization-contact-form">
+              <h4 class="form-section-title">Organization Contact</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="orgPhone">Organization Phone</label>
+                  <input 
+                    type="text" 
+                    id="orgPhone" 
+                    formControlName="orgPhone" 
+                    class="form-control" 
+                    readonly
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="orgEmail">Organization Email</label>
+                  <input 
+                    type="email" 
+                    id="orgEmail" 
+                    formControlName="orgEmail" 
+                    class="form-control" 
+                    readonly
+                  >
+                </div>
+              </div>
             </div>
           </form>
         </div>
@@ -424,27 +476,6 @@
           </form>
         </div>
       </div>
-    </div>
-
-    <!-- Edit Actions -->
-    <div *ngIf="isEditing" class="edit-actions">
-      <button 
-        type="button" 
-        class="btn btn-secondary" 
-        (click)="cancelEditing()"
-        [disabled]="isSaving"
-      >
-        Cancel
-      </button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        (click)="saveProfile()"
-        [disabled]="isSaving || profileForm.invalid"
-      >
-        <span *ngIf="isSaving">Saving...</span>
-        <span *ngIf="!isSaving">Save Changes</span>
-      </button>
     </div>
   </div>
 

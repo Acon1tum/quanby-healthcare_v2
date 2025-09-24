@@ -99,14 +99,34 @@
   <div *ngIf="isJoined" class="meeting-interface">
     <!-- Room Status -->
     <div class="room-status">
-      <div class="status-item">
-        <strong>Room ID:</strong> {{ roomId }}
+      <div class="status-info">
+        <div class="status-item">
+          <strong>Room ID:</strong> {{ roomId }}
+        </div>
+        <div class="status-item">
+          <strong>Your Role:</strong> {{ currentRole }}
+        </div>
+        <div class="status-item">
+          <strong>Participants:</strong> {{ participants }}/2
+        </div>
       </div>
-      <div class="status-item">
-        <strong>Your Role:</strong> {{ currentRole }}
-      </div>
-      <div class="status-item">
-        <strong>Participants:</strong> {{ participants }}/2
+      <div class="status-actions">
+        <button 
+          *ngIf="remoteStream" 
+          (click)="openLabRequestModal(); closeOverlayMenu()" 
+          class="btn btn-ghost btn-info"
+          title="Request lab tests for patient"
+        >
+          🧪 Lab Request
+        </button>
+        <button 
+          *ngIf="remoteStream" 
+          (click)="openScheduleModal()" 
+          class="btn btn-info btn-schedule"
+          title="Schedule patient to another doctor"
+        >
+          📅 Schedule to Another Doctor
+        </button>
       </div>
     </div>
 
@@ -150,6 +170,15 @@
         title="Create diagnosis for patient"
       >
         🔍 Create Diagnosis
+      </button>
+      
+      <button 
+        *ngIf="remoteStream" 
+        (click)="openLabRequestModal()" 
+        class="btn btn-info"
+        title="Request lab tests for patient"
+      >
+        🧪 Lab Request
       </button>
     </div>
 
@@ -404,169 +433,201 @@
         </div>
         
         <!-- Patient and Consultation Info Display -->
-        <div class="consultation-info" *ngIf="currentPatient">
+        <div class="consultation-info">
           <div class="info-item">
-            <strong>Patient:</strong> {{ currentPatient.fullName }}
+            <strong>Patient:</strong> 
+            <span [class.loading]="getCurrentPatientName() === 'Patient Name Loading...'"
+                  [class.no-patient]="getCurrentPatientName() === 'No Patient Connected'">
+              {{ getCurrentPatientName() }}
+            </span>
+            <span *ngIf="getCurrentPatientName() === 'Patient Name Loading...'" class="loading-spinner">⏳</span>
           </div>
           <div class="info-item" *ngIf="currentConsultation">
             <strong>Consultation ID:</strong> {{ currentConsultation.id }}
           </div>
           <div class="info-item" *ngIf="!currentConsultation && consultationId">
-            <strong>Status:</strong> Creating consultation...
+            <strong>Consultation ID:</strong> {{ consultationId }} (Creating...)
           </div>
           <div class="info-item" *ngIf="!currentConsultation && !consultationId">
-            <strong>Mode:</strong> Direct Prescription (No Consultation)
+            <strong>Consultation ID:</strong> Not Available
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="medicationName">Medication Name *</label>
-            <input 
-              type="text" 
-              id="medicationName"
-              [(ngModel)]="prescriptionForm.medicationName" 
-              name="medicationName"
-              class="form-control"
-              placeholder="e.g., Amoxicillin"
-              required
+        <!-- Multiple Prescription Forms -->
+        <div *ngFor="let form of prescriptionForms; let i = index" class="prescription-form-item">
+          <div class="prescription-form-header">
+            <h4>Prescription {{ i + 1 }}</h4>
+            <button 
+              *ngIf="prescriptionForms.length > 1" 
+              type="button" 
+              (click)="removePrescriptionForm(i)" 
+              class="btn-remove-prescription"
+              title="Remove this prescription"
             >
+              ✕
+            </button>
           </div>
-          
+
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'medicationName' + i">Medication Name *</label>
+              <input 
+                type="text" 
+                [id]="'medicationName' + i"
+                [(ngModel)]="form.medicationName" 
+                [name]="'medicationName' + i"
+                class="form-control"
+                placeholder="e.g., Amoxicillin"
+                required
+              >
+            </div>
+            
+            <div class="form-group">
+              <!-- Empty div for layout balance -->
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'dosage' + i">Dosage *</label>
+              <input 
+                type="text" 
+                [id]="'dosage' + i"
+                [(ngModel)]="form.dosage" 
+                [name]="'dosage' + i"
+                class="form-control"
+                placeholder="e.g., 500mg"
+                required
+              >
+            </div>
+            
+            <div class="form-group">
+              <label [for]="'frequency' + i">Frequency *</label>
+              <select 
+                [id]="'frequency' + i"
+                [(ngModel)]="form.frequency" 
+                [name]="'frequency' + i"
+                class="form-control"
+                required
+              >
+                <option value="">Select frequency</option>
+                <option value="Once daily">Once daily</option>
+                <option value="Twice daily">Twice daily</option>
+                <option value="Three times daily">Three times daily</option>
+                <option value="Four times daily">Four times daily</option>
+                <option value="Every 6 hours">Every 6 hours</option>
+                <option value="Every 8 hours">Every 8 hours</option>
+                <option value="Every 12 hours">Every 12 hours</option>
+                <option value="As needed">As needed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'duration' + i">Duration *</label>
+              <input 
+                type="text" 
+                [id]="'duration' + i"
+                [(ngModel)]="form.duration" 
+                [name]="'duration' + i"
+                class="form-control"
+                placeholder="e.g., 7 days, 2 weeks"
+                required
+              >
+            </div>
+            
+            <div class="form-group">
+              <label [for]="'quantity' + i">Quantity</label>
+              <input 
+                type="number" 
+                [id]="'quantity' + i"
+                [(ngModel)]="form.quantity" 
+                [name]="'quantity' + i"
+                class="form-control"
+                placeholder="e.g., 30"
+                min="1"
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'refills' + i">Refills</label>
+              <input 
+                type="number" 
+                [id]="'refills' + i"
+                [(ngModel)]="form.refills" 
+                [name]="'refills' + i"
+                class="form-control"
+                placeholder="0"
+                min="0"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label [for]="'prescribedAt' + i">Prescribed Date</label>
+              <input 
+                type="datetime-local" 
+                [id]="'prescribedAt' + i"
+                [(ngModel)]="form.prescribedAt" 
+                [name]="'prescribedAt' + i"
+                class="form-control"
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label [for]="'expiresAt' + i">Expiration Date</label>
+              <input 
+                type="datetime-local" 
+                [id]="'expiresAt' + i"
+                [(ngModel)]="form.expiresAt" 
+                [name]="'expiresAt' + i"
+                class="form-control"
+              >
+            </div>
+            
+            <div class="form-group">
+              <!-- Empty div for layout balance -->
+            </div>
+          </div>
+
           <div class="form-group">
-            <!-- Empty div for layout balance -->
+            <label [for]="'instructions' + i">Instructions</label>
+            <textarea 
+              [id]="'instructions' + i"
+              [(ngModel)]="form.instructions" 
+              [name]="'instructions' + i"
+              class="form-control"
+              rows="3"
+              placeholder="e.g., Take with food, avoid alcohol"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'notes' + i">Doctor's Notes</label>
+            <textarea 
+              [id]="'notes' + i"
+              [(ngModel)]="form.notes" 
+              [name]="'notes' + i"
+              class="form-control"
+              rows="2"
+              placeholder="Additional notes about this prescription"
+            ></textarea>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="dosage">Dosage *</label>
-            <input 
-              type="text" 
-              id="dosage"
-              [(ngModel)]="prescriptionForm.dosage" 
-              name="dosage"
-              class="form-control"
-              placeholder="e.g., 500mg"
-              required
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="frequency">Frequency *</label>
-            <select 
-              id="frequency"
-              [(ngModel)]="prescriptionForm.frequency" 
-              name="frequency"
-              class="form-control"
-              required
-            >
-              <option value="">Select frequency</option>
-              <option value="Once daily">Once daily</option>
-              <option value="Twice daily">Twice daily</option>
-              <option value="Three times daily">Three times daily</option>
-              <option value="Four times daily">Four times daily</option>
-              <option value="Every 6 hours">Every 6 hours</option>
-              <option value="Every 8 hours">Every 8 hours</option>
-              <option value="Every 12 hours">Every 12 hours</option>
-              <option value="As needed">As needed</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="duration">Duration *</label>
-            <input 
-              type="text" 
-              id="duration"
-              [(ngModel)]="prescriptionForm.duration" 
-              name="duration"
-              class="form-control"
-              placeholder="e.g., 7 days, 2 weeks"
-              required
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="quantity">Quantity</label>
-            <input 
-              type="number" 
-              id="quantity"
-              [(ngModel)]="prescriptionForm.quantity" 
-              name="quantity"
-              class="form-control"
-              placeholder="e.g., 30"
-              min="1"
-            >
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="refills">Refills</label>
-            <input 
-              type="number" 
-              id="refills"
-              [(ngModel)]="prescriptionForm.refills" 
-              name="refills"
-              class="form-control"
-              placeholder="0"
-              min="0"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label for="prescribedAt">Prescribed Date</label>
-            <input 
-              type="datetime-local" 
-              id="prescribedAt"
-              [(ngModel)]="prescriptionForm.prescribedAt" 
-              name="prescribedAt"
-              class="form-control"
-            >
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="expiresAt">Expiration Date</label>
-            <input 
-              type="datetime-local" 
-              id="expiresAt"
-              [(ngModel)]="prescriptionForm.expiresAt" 
-              name="expiresAt"
-              class="form-control"
-            >
-          </div>
-          
-          <div class="form-group">
-            <!-- Empty div for layout balance -->
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="instructions">Instructions</label>
-          <textarea 
-            id="instructions"
-            [(ngModel)]="prescriptionForm.instructions" 
-            name="instructions"
-            class="form-control"
-            rows="3"
-            placeholder="e.g., Take with food, avoid alcohol"
-          ></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Doctor's Notes</label>
-          <textarea 
-            id="notes"
-            [(ngModel)]="prescriptionForm.notes" 
-            name="notes"
-            class="form-control"
-            rows="2"
-            placeholder="Additional notes about this prescription"
-          ></textarea>
+        <!-- Add Prescription Button -->
+        <div class="add-prescription-section">
+          <button 
+            type="button" 
+            (click)="addPrescriptionForm()" 
+            class="btn btn-outline-primary"
+          >
+            ➕ Add Another Prescription
+          </button>
         </div>
 
         <div class="prescription-actions">
@@ -582,7 +643,7 @@
             class="btn btn-success"
             [disabled]="isSubmittingPrescription"
           >
-            <span *ngIf="!isSubmittingPrescription">💊 Submit Prescription</span>
+            <span *ngIf="!isSubmittingPrescription">💊 Submit Prescription(s)</span>
             <span *ngIf="isSubmittingPrescription">⏳ Submitting...</span>
           </button>
         </div>
@@ -626,18 +687,21 @@
         </div>
         
         <!-- Patient and Consultation Info Display -->
-        <div class="consultation-info" *ngIf="currentPatient">
+        <div class="consultation-info">
           <div class="info-item">
-            <strong>Patient:</strong> {{ currentPatient.fullName }}
+            <strong>Patient:</strong> 
+            <span [class.no-patient]="getCurrentPatientName() === 'No Patient Connected'">
+              {{ getCurrentPatientName() }}
+            </span>
           </div>
           <div class="info-item" *ngIf="currentConsultation">
             <strong>Consultation ID:</strong> {{ currentConsultation.id }}
           </div>
           <div class="info-item" *ngIf="!currentConsultation && consultationId">
-            <strong>Status:</strong> Creating consultation...
+            <strong>Consultation ID:</strong> {{ consultationId }} (Creating...)
           </div>
           <div class="info-item" *ngIf="!currentConsultation && !consultationId">
-            <strong>Mode:</strong> Direct Diagnosis (No Consultation)
+            <strong>Consultation ID:</strong> Not Available
           </div>
         </div>
 
@@ -798,6 +862,250 @@
         <button (click)="deleteDiagnosis(i)" class="btn btn-sm btn-outline-danger">Delete</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Lab Request Modal -->
+<div *ngIf="showLabRequestModal" class="lab-request-modal">
+  <div class="lab-request-modal-content">
+    <div class="lab-request-header">
+      <h3>🧪 Lab Request</h3>
+      <button (click)="closeLabRequestModal()" class="btn-close">&times;</button>
+    </div>
+    
+    <form (ngSubmit)="submitLabRequest()" class="lab-request-form">
+      <!-- Error Message -->
+      <div *ngIf="labRequestError" class="alert alert-error">
+        {{ labRequestError }}
+      </div>
+      
+      <!-- Success Message -->
+      <div *ngIf="labRequestSuccess" class="alert alert-success">
+        {{ labRequestSuccess }}
+      </div>
+
+      <!-- Patient and Consultation Info Display -->
+      <div class="consultation-info">
+        <div class="info-item">
+          <strong>Patient:</strong> 
+          <span [class.no-patient]="getCurrentPatientName() === 'No Patient Connected'">
+            {{ getCurrentPatientName() }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="currentConsultation">
+          <strong>Consultation ID:</strong> {{ currentConsultation.id }}
+        </div>
+        <div class="info-item" *ngIf="!currentConsultation && consultationId">
+          <strong>Consultation ID:</strong> {{ consultationId }} (Creating...)
+        </div>
+        <div class="info-item" *ngIf="!currentConsultation && !consultationId">
+          <strong>Consultation ID:</strong> Not Available
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="organizationId">Organization *</label>
+          <select 
+            id="organizationId"
+            [(ngModel)]="labRequestForm.organizationId" 
+            name="organizationId"
+            class="form-control"
+            required
+            (change)="onLabRequestOrganizationChange()"
+          >
+            <option value="">Select Organization</option>
+            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="doctorId">Doctor *</label>
+          <select 
+            id="doctorId"
+            [(ngModel)]="labRequestForm.doctorId" 
+            name="doctorId"
+            class="form-control"
+            required
+            [disabled]="!labRequestForm.organizationId"
+          >
+            <option value="">Select Doctor</option>
+            <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+              {{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea 
+          id="notes"
+          [(ngModel)]="labRequestForm.notes" 
+          name="notes"
+          class="form-control"
+          rows="4"
+          placeholder="Describe the lab tests needed, symptoms, or any specific requirements..."
+        ></textarea>
+      </div>
+
+      <div class="lab-request-actions">
+        <button 
+          type="button" 
+          (click)="closeLabRequestModal()" 
+          class="btn btn-secondary"
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-info" 
+          [disabled]="!isLabRequestFormValid() || isSubmittingLabRequest"
+        >
+          <span *ngIf="!isSubmittingLabRequest">🧪 Submit Lab Request</span>
+          <span *ngIf="isSubmittingLabRequest">⏳ Submitting...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Schedule to Another Doctor Modal -->
+<div *ngIf="showScheduleModal" class="schedule-modal">
+  <div class="schedule-modal-content">
+    <div class="schedule-header">
+      <h3>📅 Schedule to Another Doctor</h3>
+      <button (click)="closeScheduleModal()" class="btn-close">&times;</button>
+    </div>
+    
+    <form (ngSubmit)="submitSchedule()" class="schedule-form">
+      <div *ngIf="scheduleError" class="alert alert-error">
+        {{ scheduleError }}
+      </div>
+      
+      <div *ngIf="scheduleSuccess" class="alert alert-success">
+        {{ scheduleSuccess }}
+      </div>
+      
+      <!-- Patient Info Display -->
+      <div class="patient-info">
+        <div class="info-item">
+          <strong>Patient:</strong> 
+          <span [class.no-patient]="getCurrentPatientName() === 'No Patient Connected'">
+            {{ getCurrentPatientName() }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="currentConsultation">
+          <strong>Consultation ID:</strong> {{ currentConsultation.id }}
+        </div>
+        <div class="info-item" *ngIf="!currentConsultation && consultationId">
+          <strong>Consultation ID:</strong> {{ consultationId }} (Creating...)
+        </div>
+        <div class="info-item" *ngIf="!currentConsultation && !consultationId">
+          <strong>Consultation ID:</strong> Not Available
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="organizationId">Organization *</label>
+          <select 
+            id="organizationId"
+            [(ngModel)]="scheduleForm.organizationId" 
+            name="organizationId"
+            class="form-control"
+            required
+            (change)="onOrganizationChange()"
+          >
+            <option value="">Select Organization</option>
+            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="doctorId">Doctor *</label>
+          <select 
+            id="doctorId"
+            [(ngModel)]="scheduleForm.doctorId" 
+            name="doctorId"
+            class="form-control"
+            required
+            [disabled]="!scheduleForm.organizationId"
+          >
+            <option value="">Select Doctor</option>
+            <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+              {{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="appointmentDate">Date *</label>
+          <input 
+            type="date" 
+            id="appointmentDate"
+            [(ngModel)]="scheduleForm.appointmentDate" 
+            name="appointmentDate"
+            class="form-control"
+            required
+            [min]="getMinDate()"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentTime">Time *</label>
+          <input 
+            type="time" 
+            id="appointmentTime"
+            [(ngModel)]="scheduleForm.appointmentTime" 
+            name="appointmentTime"
+            class="form-control"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select 
+            id="priority"
+            [(ngModel)]="scheduleForm.priority" 
+            name="priority"
+            class="form-control"
+          >
+            <option value="NORMAL">Normal</option>
+            <option value="HIGH">High</option>
+            <option value="URGENT">Urgent</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea 
+          id="notes"
+          [(ngModel)]="scheduleForm.notes" 
+          name="notes"
+          class="form-control"
+          rows="3"
+          placeholder="Additional notes for the appointment..."
+        ></textarea>
+      </div>
+
+      <div class="schedule-actions">
+        <button type="button" (click)="closeScheduleModal()" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!isScheduleFormValid()">
+          📅 Schedule Appointment
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 

@@ -152,9 +152,9 @@ export class DoctorManagementComponent implements OnInit {
   }
 
   openViewDialog(doctor: DoctorItem): void {
-    // Navigate to doctor information page with doctor data
-    this.router.navigate(['/admin/system-administration/doctor-management/doctor-information'], {
-      state: { doctor: doctor }
+    // Navigate to doctor information page with doctor ID parameter
+    this.router.navigate(['/admin/system-administration/doctor-management/doctor-information', doctor.id], {
+      state: { doctor: doctor } // Keep state as backup for immediate loading
     });
     
     // Also store in localStorage as backup

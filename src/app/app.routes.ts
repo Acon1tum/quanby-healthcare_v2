@@ -32,6 +32,7 @@ import { DoctorMeetComponent } from './pages/doctor/doctor-meet/doctor-meet.comp
 import { DoctorMyProfileComponent } from './pages/doctor/doctor-my-profile/doctor-my-profile.component';
 import { DoctorScheduleComponent } from './pages/doctor/doctor-schedule/doctor-schedule.component';
 import { PatientRecordsComponent } from './pages/doctor/patient-records/patient-records.component';
+import { DoctorLabRequestsComponent } from './pages/doctor/lab-requests/lab-requests.component';
 
 // Patient Components
 import { PatientDashboardComponent } from './pages/patient/patient-dashboard/patient-dashboard.component';
@@ -40,6 +41,7 @@ import { PatientMyProfileComponent } from './pages/patient/patient-my-profile/pa
 import { PatientScheduleComponent } from './pages/patient/patient-schedule/patient-schedule.component';
 import { MedicalRecordsComponent } from './pages/patient/medical-records/medical-records.component';
 import { SelfCheckComponent } from './pages/patient/self-check/self-check.component';
+import { PatientLabRequestsComponent } from './pages/patient/lab-requests/lab-requests.component';
 
 // Layout Components
 import { DashboardLayoutComponent } from './shared/layouts/dashboard-layout.component';
@@ -93,7 +95,7 @@ export const appRoutes: Routes = [
               { path: '', component: SystemAdmininstrationComponent },
               { path: 'audit-logs', component: AuditLogsComponent },
               { path: 'doctor-management', component: DoctorManagementComponent },
-              { path: 'doctor-management/doctor-information', component: DoctorInformationComponent },
+              { path: 'doctor-management/doctor-information/:id', component: DoctorInformationComponent },
               { path: 'patient-management', component: PatientManagementComponent },
               { path: 'patient-management/patient-information', component: PatientInformationComponent },
               { path: 'reports', component: ReportsComponent }
@@ -113,7 +115,8 @@ export const appRoutes: Routes = [
           { path: 'meet', component: DoctorMeetComponent },
           { path: 'my-profile', component: DoctorMyProfileComponent },
           { path: 'schedule', component: DoctorScheduleComponent },
-          { path: 'patient-records', component: PatientRecordsComponent }
+          { path: 'patient-records', component: PatientRecordsComponent },
+          { path: 'lab-requests', component: DoctorLabRequestsComponent }
         ]
       },
       
@@ -129,7 +132,8 @@ export const appRoutes: Routes = [
           { path: 'my-profile', component: PatientMyProfileComponent },
           { path: 'schedule', component: PatientScheduleComponent },
           { path: 'medical-record', component: MedicalRecordsComponent},
-          { path: 'self-check', component: SelfCheckComponent}
+          { path: 'self-check', component: SelfCheckComponent},
+          { path: 'lab-requests', component: PatientLabRequestsComponent }
         ]
       }
     ]

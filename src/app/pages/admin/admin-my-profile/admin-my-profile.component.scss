@@ -160,7 +160,116 @@
         
         .profile-department {
           color: #6b7280;
+          margin: 0 0 1rem 0;
+        }
+        
+        .organization-info {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1rem;
           margin: 0 0 1.5rem 0;
+          
+          .org-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+            
+            i {
+              color: #3b82f6;
+              font-size: 1.1rem;
+              width: 20px;
+              text-align: center;
+            }
+            
+            .org-name {
+              font-weight: 600;
+              color: #1f2937;
+              font-size: 1rem;
+            }
+            
+            .org-description,
+            .org-address {
+              color: #6b7280;
+              font-size: 0.9rem;
+            }
+          }
+        }
+
+        // Website Link Styling
+        .website-link {
+          color: #3b82f6;
+          text-decoration: none;
+          font-weight: 500;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+        
+        // Status Badge Styling
+        .status-badge {
+          display: inline-block;
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          
+          &.status-active {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+          }
+          
+          &.status-inactive {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+          }
+        }
+
+        // Organization Contact Information
+        .organization-contact-info {
+          background: #f0f9ff;
+          border: 1px solid #bae6fd;
+          border-radius: 8px;
+          padding: 1rem;
+          margin: 1rem 0;
+          
+          .contact-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0369a1;
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            &::before {
+              content: "📞";
+              font-size: 1.1rem;
+            }
+          }
+          
+          .info-grid {
+            .info-item {
+              label {
+                color: #0369a1;
+                font-weight: 500;
+              }
+              
+              span {
+                color: #0c4a6e;
+              }
+            }
+          }
         }
         
         .profile-stats {
@@ -301,6 +410,107 @@
             }
           }
           
+          // Organization Form Section
+          .organization-form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            
+            .form-section-title {
+              font-size: 1.1rem;
+              font-weight: 600;
+              color: #1f2937;
+              margin: 0 0 1.5rem 0;
+              padding-bottom: 0.5rem;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .form-row {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 1rem;
+              
+              @media (max-width: 768px) {
+                grid-template-columns: 1fr;
+              }
+            }
+            
+            .form-group {
+              margin-bottom: 1rem;
+              
+              label {
+                font-size: 0.85rem;
+                color: #6b7280;
+                margin-bottom: 0.25rem;
+              }
+              
+              .form-control {
+                background-color: #f9fafb;
+                border-color: #e5e7eb;
+                color: #6b7280;
+                font-size: 0.9rem;
+                padding: 0.5rem 0.75rem;
+              }
+            }
+          }
+
+          // Organization Contact Form Section
+          .organization-contact-form {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            
+            .form-section-title {
+              font-size: 1rem;
+              font-weight: 600;
+              color: #0369a1;
+              margin: 0 0 1rem 0;
+              padding-bottom: 0.5rem;
+              border-bottom: 1px solid #bae6fd;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              
+              &::before {
+                content: "📞";
+                font-size: 1.1rem;
+              }
+            }
+            
+            .form-row {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 1rem;
+              
+              @media (max-width: 768px) {
+                grid-template-columns: 1fr;
+              }
+            }
+            
+            .form-group {
+              margin-bottom: 1rem;
+              
+              label {
+                font-size: 0.85rem;
+                color: #0369a1;
+                font-weight: 500;
+                margin-bottom: 0.25rem;
+              }
+              
+              .form-control {
+                background-color: #f0f9ff;
+                border-color: #bae6fd;
+                color: #0c4a6e;
+                font-size: 0.9rem;
+                padding: 0.5rem 0.75rem;
+              }
+            }
+          }
+
           .checkbox-group {
             display: flex;
             flex-direction: column;

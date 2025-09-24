@@ -1,11 +1,18 @@
 <div class="patient-profile-container main-content" [class.modal-open]="showVerificationModal">
+  <!-- Toast Notification -->
+  <div 
+    class="toast" 
+    *ngIf="showNotification" 
+    [class.success]="notificationType === 'success'" 
+    [class.error]="notificationType === 'error'" 
+    [class.info]="notificationType === 'info'">
+    <i class="material-icons toast-icon">{{ notificationType === 'success' ? 'check_circle' : (notificationType === 'error' ? 'error' : 'info') }}</i>
+    <span class="toast-message">{{ notificationMessage }}</span>
+  </div>
   <!-- Header Section -->
   <div class="profile-header">
     <div class="header-content">
       <div class="back-section">
-        <button class="back-btn" (click)="onBack()">
-          <i class="material-icons">arrow_back</i>
-        </button>
         <div class="header-text">
           <h1>My Profile</h1>
           <p>Manage your personal and medical information</p>
@@ -14,197 +21,449 @@
       
       <div class="header-actions">
         <button *ngIf="!isEditing" class="verify-btn" (click)="openVerificationModal()">
-          <i class="material-icons">verified_user</i>
+          <i class="material-icons" style="font-size: 1.2rem;">verified_user</i>
           Verify Identity
         </button>
         <button *ngIf="!isEditing" class="edit-btn" (click)="onEdit()">
-          <i class="material-icons">edit</i>
           Edit Profile
         </button>
-        <div *ngIf="isEditing" class="edit-actions">
-          <button class="cancel-btn" (click)="onCancel()">
-            <i class="material-icons">close</i>
+        <div *ngIf="isEditing" class="flex items-center">
+          <button 
+            class="px-4 py-2 text-sm text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-100 transition"
+            (click)="onCancel()">
             Cancel
           </button>
-          <button class="save-btn" (click)="onSave()">
-            <i class="material-icons">save</i>
+          &nbsp;&nbsp;
+          <button 
+            class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+            (click)="onSave()">
             Save Changes
           </button>
-        </div>
+        </div>        
       </div>
     </div>
   </div>
 
   <!-- Profile Content -->
   <div class="profile-content">
+    <!-- Read-only view when not editing -->
+    <div *ngIf="!isEditing && profile" class="profile-readonly">
     <!-- Personal Information Section -->
     <div class="profile-section">
       <div class="section-header">
         <h2>Personal Information</h2>
-        <p>Your basic personal details and contact information</p>
       </div>
       
       <div class="section-content">
-        <div class="profile-image-section">
-          <div class="profile-image-container">
-            <img 
-              [src]="profile.personalInfo.profileImage || '/assets/default-avatar.jpg'" 
-              [alt]="fullName"
-              class="profile-image"
-            >
-            <div class="image-overlay" *ngIf="isEditing">
-              <input 
-                type="file" 
-                #imageInput 
-                (change)="onImageSelect($event)" 
-                accept="image/*"
-                class="image-input"
+        <div class="profile-card">
+          <div class="profile-image-section">
+            <div class="profile-image-container">
+              <img 
+                [src]="effectiveAvatarSrc" 
+                [alt]="fullName"
+                class="profile-image"
               >
-              <button class="upload-btn" (click)="imageInput.click()">
-                <i class="material-icons">photo_camera</i>
-              </button>
+            </div>
+            <div class="profile-name">
+              <h3>{{ fullName }}</h3>
+              <p>{{ profile.personalInfo.email }}</p>
             </div>
           </div>
-          
-          <div class="image-actions" *ngIf="isEditing">
-            <button 
-              *ngIf="selectedImage" 
-              class="upload-confirm-btn" 
-              (click)="onUploadImage()"
-            >
-              <i class="material-icons">cloud_upload</i>
-              Upload
-            </button>
-            <button 
-              *ngIf="profile.personalInfo.profileImage" 
-              class="remove-image-btn" 
-              (click)="onRemoveImage()"
-            >
-              <i class="material-icons">delete</i>
-              Remove
-            </button>
-          </div>
-        </div>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input 
-              *ngIf="isEditing"
-              type="text" 
-              [formControlName]="'fullName'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'fullName')"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.fullName }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'fullName') }}</span>
-          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Phone</span>
+              <span class="info-value">{{ profile.personalInfo.contactNumber }}</span>
+            </div>
 
-          <div class="form-group">
-            <label>Email</label>
-            <input 
-              *ngIf="isEditing"
-              type="email" 
-              [formControlName]="'email'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'email')"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.email }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'email') }}</span>
-          </div>
+            <div class="info-item">
+              <span class="info-label">Date of Birth</span>
+              <span class="info-value">{{ profile.personalInfo.dateOfBirth | date:'mediumDate' }} ({{ age }} years old)</span>
+            </div>
 
-          <div class="form-group">
-            <label>Phone</label>
-            <input 
-              *ngIf="isEditing"
-              type="tel" 
-              [formControlName]="'contactNumber'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'contactNumber')"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.contactNumber }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'contactNumber') }}</span>
-          </div>
+            <div class="info-item">
+              <span class="info-label">Gender</span>
+              <span class="info-value">{{ profile.personalInfo.gender }}</span>
+            </div>
 
-          <div class="form-group">
-            <label>Date of Birth</label>
-            <input 
-              *ngIf="isEditing"
-              type="date" 
-              [formControlName]="'dateOfBirth'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'dateOfBirth')"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.dateOfBirth | date:'mediumDate' }} ({{ age }} years old)</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'dateOfBirth') }}</span>
-          </div>
+            <div class="info-item">
+              <span class="info-label">Blood Type</span>
+              <span class="info-value">{{ profile.personalInfo.bloodType }}</span>
+            </div>
 
-          <div class="form-group">
-            <label>Gender</label>
-            <select 
-              *ngIf="isEditing"
-              [formControlName]="'gender'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'gender')"
-            >
-              <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
-            </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.gender }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'gender') }}</span>
-          </div>
+            <div class="info-item">
+              <span class="info-label">Height</span>
+              <span class="info-value">{{ profile.personalInfo.height }} cm</span>
+            </div>
 
-          <div class="form-group">
-            <label>Blood Type</label>
-            <select 
-              *ngIf="isEditing"
-              [formControlName]="'bloodType'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'bloodType')"
-            >
-              <option *ngFor="let bloodType of bloodTypeOptions" [value]="bloodType">{{ bloodType }}</option>
-            </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.bloodType }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'bloodType') }}</span>
-          </div>
-        </div>
+            <div class="info-item">
+              <span class="info-label">Weight</span>
+              <span class="info-value">{{ profile.personalInfo.weight }} kg</span>
+            </div>
 
-        <!-- Physical Measurements -->
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Height (cm)</label>
-            <input 
-              *ngIf="isEditing"
-              type="number" 
-              [formControlName]="'height'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'height')"
-              min="100" max="250"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.height }} cm</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'height') }}</span>
-          </div>
-
-          <div class="form-group">
-            <label>Weight (kg)</label>
-            <input 
-              *ngIf="isEditing"
-              type="number" 
-              [formControlName]="'weight'"
-              class="form-control"
-              [class.error]="getFieldError('personalInfo', 'weight')"
-              min="20" max="300"
-            >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.weight }} kg</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'weight') }}</span>
-          </div>
-
-          <div class="form-group">
-            <label>BMI</label>
-            <p class="info-value">{{ calculateBMI() }}</p>
+            <div class="info-item">
+              <span class="info-label">BMI</span>
+              <span class="info-value">{{ calculateBMI() }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+      <!-- Medical Information Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>Medical Information</h2>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-card">
+            <!-- Medical History -->
+            <div class="list-section">
+              <span class="info-label">Medical History</span>
+              <div class="info-list">
+                <span class="info-value">{{ profile.personalInfo.medicalHistory || 'No medical history recorded' }}</span>
+              </div>
+            </div>
+
+            <!-- Allergies -->
+            <div class="list-section">
+              <span class="info-label">Allergies</span>
+              <div class="info-list">
+                <span *ngFor="let allergy of profile.personalInfo.allergies" class="info-tag">{{ allergy }}</span>
+                <span *ngIf="!profile.personalInfo.allergies?.length" class="no-data">No allergies recorded</span>
+              </div>
+            </div>
+
+            <!-- Current Medications -->
+            <div class="list-section">
+              <span class="info-label">Current Medications</span>
+              <div class="info-list">
+                <span *ngFor="let medication of profile.personalInfo.medications" class="info-tag">{{ medication }}</span>
+                <span *ngIf="!profile.personalInfo.medications?.length" class="no-data">No medications recorded</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>Contact Information</h2>
+          <p>Your address and emergency contact details</p>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-item full-width">
+                <span class="info-label">Address</span>
+                <span class="info-value">{{ profile.personalInfo.address }}</span>
+              </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="emergency-contact" *ngIf="profile.emergencyContact">
+              <h3>Emergency Contact</h3>
+              <div class="info-card">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Contact Name</span>
+                    <span class="info-value">{{ profile.emergencyContact.contactName }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Relationship</span>
+                    <span class="info-value">{{ profile.emergencyContact.relationship }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Contact Number</span>
+                    <span class="info-value">{{ profile.emergencyContact.contactNumber }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Contact Address</span>
+                    <span class="info-value">{{ profile.emergencyContact.contactAddress }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insurance Information Section -->
+      <div class="profile-section" *ngIf="profile.insuranceInfo">
+        <div class="section-header">
+          <h2>Insurance Information</h2>
+          <p>Your health insurance details and coverage information</p>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Insurance Provider</label>
+                <span class="info-value">{{ profile.insuranceInfo.providerName }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>Policy Number</label>
+                <span class="info-value">{{ profile.insuranceInfo.policyNumber }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>Insurance Contact</label>
+                <span class="info-value">{{ profile.insuranceInfo.insuranceContact }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PhilHealth Information Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>PhilHealth Information</h2>
+          <p>Your PhilHealth membership details and coverage information</p>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>PhilHealth ID</label>
+                <span class="info-value">{{ profile.personalInfo.philHealthId || 'Not specified' }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>PhilHealth Status</label>
+                <span class="info-value">{{ profile.personalInfo.philHealthStatus || 'Not specified' }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>PhilHealth Category</label>
+                <span class="info-value">{{ profile.personalInfo.philHealthCategory || 'Not specified' }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>PhilHealth Expiry Date</label>
+                <span class="info-value">{{ profile.personalInfo.philHealthExpiry || 'Not specified' }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>Member Since</label>
+                <span class="info-value">{{ profile.personalInfo.philHealthMemberSince || 'Not specified' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Metrics Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>Health Metrics</h2>
+          <p>Your current health measurements and vital signs</p>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>BMI</label>
+              <p class="info-value">{{ calculateBMI() }}</p>
+            </div>
+            
+            <div class="info-item">
+              <label>BMI Category</label>
+              <p class="info-value">{{ getBMICategory() }}</p>
+            </div>
+            
+            <div class="info-item">
+              <label>Ideal Weight Range</label>
+              <p class="info-value">{{ getIdealWeightRange() }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>Preferences</h2>
+          <p>Your communication and healthcare preferences</p>
+        </div>
+        
+        <div class="section-content">
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Preferred Language</label>
+                <span class="info-value">{{ profile.preferences.language || 'English' }}</span>
+              </div>
+
+              <div class="info-item">
+                <label>Communication Preference</label>
+                <span class="info-value">{{ profile.preferences.communicationMethod || 'Email' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editable form when editing -->
+    <form [formGroup]="profileForm" *ngIf="isEditing">
+      <!-- Personal Information Section -->
+      <div class="profile-section">
+        <div class="section-header">
+          <h2>Personal Information</h2>
+          <p>Your basic personal details and contact information</p>
+        </div>
+        
+         <div class="section-content">
+           <div formGroupName="personalInfo">
+             <div class="profile-card">
+               <div class="profile-image-section">
+                 <button class="profile-image-container" type="button" (click)="imageInput.click()" title="Choose Profile Picture" aria-label="Choose Profile Picture">
+                   <img 
+                     [src]="effectiveAvatarSrc" 
+                     [alt]="fullName"
+                     class="profile-image"
+                   >
+                   <!-- Hidden file input to open native file picker -->
+                   <input 
+                     type="file" 
+                     #imageInput 
+                     (change)="onImageSelect($event)" 
+                     accept="image/*"
+                     class="image-input"
+                   >
+                   <div class="image-overlay">
+                     <div class="upload-indicator">
+                       <i class="material-icons">camera_alt</i>
+                     </div>
+                   </div>
+                 </button>               
+                 
+                 <div class="image-actions">
+                   <button 
+                     *ngIf="profile.personalInfo.profileImage || selectedImage" 
+                     class="remove-image-btn" 
+                    (click)="openRemoveImageConfirm()"
+                   >
+                     Remove
+                   </button>
+                 </div>
+               </div>
+
+               <div class="form-grid">
+                 <div class="form-group">
+                   <label>Full Name</label>
+                   <input 
+                     type="text" 
+                     formControlName="fullName"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'fullName')"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'fullName') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Email</label>
+                   <input 
+                     type="email" 
+                     formControlName="email"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'email')"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'email') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Phone</label>
+                   <input 
+                     type="tel" 
+                     formControlName="contactNumber"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'contactNumber')"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'contactNumber') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Date of Birth</label>
+                   <input 
+                     type="date" 
+                     formControlName="dateOfBirth"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'dateOfBirth')"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'dateOfBirth') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Gender</label>
+                   <select 
+                     formControlName="gender"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'gender')"
+                   >
+                     <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
+                   </select>
+                   <span class="error-message">{{ getFieldError('personalInfo', 'gender') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Blood Type</label>
+                   <select 
+                     formControlName="bloodType"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'bloodType')"
+                   >
+                     <option *ngFor="let bloodType of bloodTypeOptions" [value]="bloodType">{{ bloodType }}</option>
+                   </select>
+                   <span class="error-message">{{ getFieldError('personalInfo', 'bloodType') }}</span>
+                 </div>
+               </div>
+
+               <!-- Physical Measurements -->
+               <div class="form-grid">
+                 <div class="form-group">
+                   <label>Height (cm)</label>
+                   <input 
+                     type="number" 
+                     formControlName="height"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'height')"
+                     min="100" max="250"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'height') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>Weight (kg)</label>
+                   <input 
+                     type="number" 
+                     formControlName="weight"
+                     class="form-control"
+                     [class.error]="getFieldError('personalInfo', 'weight')"
+                     min="20" max="300"
+                   >
+                   <span class="error-message">{{ getFieldError('personalInfo', 'weight') }}</span>
+                 </div>
+
+                 <div class="form-group">
+                   <label>BMI</label>
+                   <p class="info-value">{{ calculateBMI() }}</p>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
 
     <!-- Medical Information Section -->
     <div class="profile-section">
@@ -214,29 +473,24 @@
       </div>
       
       <div class="section-content">
+          <div formGroupName="personalInfo">
         <!-- Medical History -->
         <div class="form-group full-width">
           <label>Medical History</label>
           <textarea 
-            *ngIf="isEditing"
-            [formControlName]="'medicalHistory'"
+                formControlName="medicalHistory"
             class="form-control"
             [class.error]="getFieldError('personalInfo', 'medicalHistory')"
             rows="4"
             placeholder="Describe any significant medical conditions, surgeries, or health events..."
           ></textarea>
-          <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.medicalHistory || 'No medical history recorded' }}</p>
-          <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'medicalHistory') }}</span>
+              <span class="error-message">{{ getFieldError('personalInfo', 'medicalHistory') }}</span>
         </div>
 
         <!-- Allergies -->
         <div class="list-section">
           <label>Allergies</label>
-          <div *ngIf="!isEditing" class="info-list">
-            <span *ngFor="let allergy of profile.personalInfo.allergies" class="info-tag">{{ allergy }}</span>
-            <span *ngIf="!profile.personalInfo.allergies?.length" class="no-data">No allergies recorded</span>
-          </div>
-          <div *ngIf="isEditing" class="editable-list">
+              <div class="editable-list">
             <div *ngFor="let allergy of profile.personalInfo.allergies; let i = index" class="list-item">
               <input type="text" [value]="allergy" (blur)="onInputChange(profile.personalInfo.allergies, i, $event)" class="form-control">
               <button class="remove-item-btn" (click)="onRemoveItem(profile.personalInfo.allergies, i)">
@@ -255,11 +509,7 @@
         <!-- Current Medications -->
         <div class="list-section">
           <label>Current Medications</label>
-          <div *ngIf="!isEditing" class="info-list">
-            <span *ngFor="let medication of profile.personalInfo.medications" class="info-tag">{{ medication }}</span>
-            <span *ngIf="!profile.personalInfo.medications?.length" class="no-data">No medications recorded</span>
-          </div>
-          <div *ngIf="isEditing" class="editable-list">
+              <div class="editable-list">
             <div *ngFor="let medication of profile.personalInfo.medications; let i = index" class="list-item">
               <input type="text" [value]="medication" (blur)="onInputChange(profile.personalInfo.medications, i, $event)" class="form-control">
               <button class="remove-item-btn" (click)="onRemoveItem(profile.personalInfo.medications, i)">
@@ -271,6 +521,7 @@
               <button class="add-item-btn" (click)="onAddItem(profile.personalInfo.medications, newMedication.value || ''); newMedication.value = ''">
                 <i class="material-icons">add_circle</i>
               </button>
+                </div>
             </div>
           </div>
         </div>
@@ -285,74 +536,71 @@
       </div>
       
       <div class="section-content">
+          <div formGroupName="personalInfo">
         <div class="form-group full-width">
           <label>Address</label>
           <input 
-            *ngIf="isEditing"
             type="text" 
-            [formControlName]="'address'"
+                formControlName="address"
             class="form-control"
             [class.error]="getFieldError('personalInfo', 'address')"
           >
-          <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.address }}</p>
-          <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'address') }}</span>
+              <span class="error-message">{{ getFieldError('personalInfo', 'address') }}</span>
+            </div>
         </div>
 
         <!-- Emergency Contact -->
         <div class="emergency-contact">
           <h3>Emergency Contact</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Contact Name</label>
-              <input 
-                *ngIf="isEditing"
-                type="text" 
-                [formControlName]="'emergencyContact.contactName'"
-                class="form-control"
-                [class.error]="getFieldError('emergencyContact', 'contactName')"
-              >
-              <p *ngIf="!isEditing" class="info-value">{{ profile.emergencyContact?.contactName || 'Not specified' }}</p>
-              <span *ngIf="isEditing" class="error-message">{{ getFieldError('emergencyContact', 'contactName') }}</span>
-            </div>
+          <div formGroupName="emergencyContact">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Contact Name</label>
+                <input 
+                  type="text" 
+                  formControlName="contactName"
+                  class="form-control"
+                  [class.error]="getFieldError('emergencyContact', 'contactName')"
+                  placeholder="Enter emergency contact name"
+                >
+                <span class="error-message">{{ getFieldError('emergencyContact', 'contactName') }}</span>
+              </div>
 
-            <div class="form-group">
-              <label>Relationship</label>
-              <input 
-                *ngIf="isEditing"
-                type="text" 
-                [formControlName]="'emergencyContact.relationship'"
-                class="form-control"
-                [class.error]="getFieldError('emergencyContact', 'relationship')"
-                placeholder="e.g., Spouse, Parent, Sibling"
-              >
-              <p *ngIf="!isEditing" class="info-value">{{ profile.emergencyContact?.relationship || 'Not specified' }}</p>
-              <span *ngIf="isEditing" class="error-message">{{ getFieldError('emergencyContact', 'relationship') }}</span>
-            </div>
+              <div class="form-group">
+                <label>Relationship</label>
+                <input 
+                  type="text" 
+                  formControlName="relationship"
+                  class="form-control"
+                  [class.error]="getFieldError('emergencyContact', 'relationship')"
+                  placeholder="e.g., Spouse, Parent, Sibling"
+                >
+                <span class="error-message">{{ getFieldError('emergencyContact', 'relationship') }}</span>
+              </div>
 
-            <div class="form-group">
-              <label>Contact Number</label>
-              <input 
-                *ngIf="isEditing"
-                type="tel" 
-                [formControlName]="'emergencyContact.contactNumber'"
-                class="form-control"
-                [class.error]="getFieldError('emergencyContact', 'contactNumber')"
-              >
-              <p *ngIf="!isEditing" class="info-value">{{ profile.emergencyContact?.contactNumber || 'Not specified' }}</p>
-              <span *ngIf="isEditing" class="error-message">{{ getFieldError('emergencyContact', 'contactNumber') }}</span>
-            </div>
+              <div class="form-group">
+                <label>Contact Number</label>
+                <input 
+                  type="tel" 
+                  formControlName="contactNumber"
+                  class="form-control"
+                  [class.error]="getFieldError('emergencyContact', 'contactNumber')"
+                  placeholder="Enter emergency contact number"
+                >
+                <span class="error-message">{{ getFieldError('emergencyContact', 'contactNumber') }}</span>
+              </div>
 
-            <div class="form-group">
-              <label>Contact Address</label>
-              <input 
-                *ngIf="isEditing"
-                type="text" 
-                [formControlName]="'emergencyContact.contactAddress'"
-                class="form-control"
-                [class.error]="getFieldError('emergencyContact', 'contactAddress')"
-              >
-              <p *ngIf="!isEditing" class="info-value">{{ profile.emergencyContact?.contactAddress || 'Not specified' }}</p>
-              <span *ngIf="isEditing" class="error-message">{{ getFieldError('emergencyContact', 'contactAddress') }}</span>
+              <div class="form-group">
+                <label>Contact Address</label>
+                <input 
+                  type="text" 
+                  formControlName="contactAddress"
+                  class="form-control"
+                  [class.error]="getFieldError('emergencyContact', 'contactAddress')"
+                  placeholder="Enter emergency contact address"
+                >
+                <span class="error-message">{{ getFieldError('emergencyContact', 'contactAddress') }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -367,45 +615,41 @@
       </div>
       
       <div class="section-content">
+          <div formGroupName="insuranceInfo">
         <div class="form-grid">
           <div class="form-group">
             <label>Insurance Provider</label>
             <input 
-              *ngIf="isEditing"
               type="text" 
-              [formControlName]="'insuranceInfo.providerName'"
+                  formControlName="providerName"
               class="form-control"
               [class.error]="getFieldError('insuranceInfo', 'providerName')"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.insuranceInfo?.providerName || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('insuranceInfo', 'providerName') }}</span>
+                <span class="error-message">{{ getFieldError('insuranceInfo', 'providerName') }}</span>
           </div>
 
           <div class="form-group">
             <label>Policy Number</label>
             <input 
-              *ngIf="isEditing"
               type="text" 
-              [formControlName]="'insuranceInfo.policyNumber'"
+                  formControlName="policyNumber"
               class="form-control"
               [class.error]="getFieldError('insuranceInfo', 'policyNumber')"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.insuranceInfo?.policyNumber || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('insuranceInfo', 'policyNumber') }}</span>
+                <span class="error-message">{{ getFieldError('insuranceInfo', 'policyNumber') }}</span>
           </div>
 
           <div class="form-group">
             <label>Insurance Contact</label>
             <input 
-              *ngIf="isEditing"
               type="text" 
-              [formControlName]="'insuranceInfo.insuranceContact'"
+                  formControlName="insuranceContact"
               class="form-control"
               [class.error]="getFieldError('insuranceInfo', 'insuranceContact')"
               placeholder="Phone number or email"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.insuranceInfo?.insuranceContact || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('insuranceInfo', 'insuranceContact') }}</span>
+                <span class="error-message">{{ getFieldError('insuranceInfo', 'insuranceContact') }}</span>
+              </div>
           </div>
         </div>
       </div>
@@ -419,75 +663,67 @@
       </div>
       
       <div class="section-content">
+          <div formGroupName="personalInfo">
         <div class="form-grid">
           <div class="form-group">
             <label>PhilHealth ID</label>
             <input 
-              *ngIf="isEditing"
               type="text" 
-              [formControlName]="'philHealthId'"
+                  formControlName="philHealthId"
               class="form-control"
               [class.error]="getFieldError('personalInfo', 'philHealthId')"
               placeholder="e.g., 12-345678901-2"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.philHealthId || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'philHealthId') }}</span>
+                <span class="error-message">{{ getFieldError('personalInfo', 'philHealthId') }}</span>
           </div>
 
           <div class="form-group">
             <label>PhilHealth Status</label>
             <select 
-              *ngIf="isEditing"
-              [formControlName]="'philHealthStatus'"
+                  formControlName="philHealthStatus"
               class="form-control"
               [class.error]="getFieldError('personalInfo', 'philHealthStatus')"
             >
               <option value="">Select Status</option>
               <option *ngFor="let status of philHealthStatusOptions" [value]="status">{{ status }}</option>
             </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.philHealthStatus || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'philHealthStatus') }}</span>
+                <span class="error-message">{{ getFieldError('personalInfo', 'philHealthStatus') }}</span>
           </div>
 
           <div class="form-group">
             <label>PhilHealth Category</label>
             <select 
-              *ngIf="isEditing"
-              [formControlName]="'philHealthCategory'"
+                  formControlName="philHealthCategory"
               class="form-control"
               [class.error]="getFieldError('personalInfo', 'philHealthCategory')"
             >
               <option value="">Select Category</option>
               <option *ngFor="let category of philHealthCategoryOptions" [value]="category">{{ category }}</option>
             </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.philHealthCategory || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'philHealthCategory') }}</span>
+                <span class="error-message">{{ getFieldError('personalInfo', 'philHealthCategory') }}</span>
           </div>
 
           <div class="form-group">
             <label>PhilHealth Expiry Date</label>
             <input 
-              *ngIf="isEditing"
               type="date" 
-              [formControlName]="'philHealthExpiry'"
+                  formControlName="philHealthExpiry"
               class="form-control"
               [class.error]="getFieldError('personalInfo', 'philHealthExpiry')"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.philHealthExpiry || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'philHealthExpiry') }}</span>
+                <span class="error-message">{{ getFieldError('personalInfo', 'philHealthExpiry') }}</span>
           </div>
 
           <div class="form-group">
             <label>Member Since</label>
             <input 
-              *ngIf="isEditing"
               type="date" 
-              [formControlName]="'philHealthMemberSince'"
+                  formControlName="philHealthMemberSince"
               class="form-control"
               [class.error]="getFieldError('personalInfo', 'philHealthMemberSince')"
             >
-            <p *ngIf="!isEditing" class="info-value">{{ profile.personalInfo.philHealthMemberSince || 'Not specified' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('personalInfo', 'philHealthMemberSince') }}</span>
+                <span class="error-message">{{ getFieldError('personalInfo', 'philHealthMemberSince') }}</span>
+              </div>
           </div>
         </div>
       </div>
@@ -528,37 +764,36 @@
       </div>
       
       <div class="section-content">
+          <div formGroupName="preferences">
         <div class="form-grid">
           <div class="form-group">
             <label>Preferred Language</label>
             <select 
-              *ngIf="isEditing"
-              [formControlName]="'preferences.language'"
+                  formControlName="language"
               class="form-control"
               [class.error]="getFieldError('preferences', 'language')"
             >
               <option *ngFor="let lang of languageOptions" [value]="lang">{{ lang }}</option>
             </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.preferences.language || 'English' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'language') }}</span>
+                <span class="error-message">{{ getFieldError('preferences', 'language') }}</span>
           </div>
 
           <div class="form-group">
             <label>Communication Preference</label>
             <select 
-              *ngIf="isEditing"
-              [formControlName]="'preferences.communicationMethod'"
+                  formControlName="communicationMethod"
               class="form-control"
               [class.error]="getFieldError('preferences', 'communicationMethod')"
             >
               <option *ngFor="let method of communicationOptions" [value]="method">{{ method }}</option>
             </select>
-            <p *ngIf="!isEditing" class="info-value">{{ profile.preferences.communicationMethod || 'Email' }}</p>
-            <span *ngIf="isEditing" class="error-message">{{ getFieldError('preferences', 'communicationMethod') }}</span>
+                <span class="error-message">{{ getFieldError('preferences', 'communicationMethod') }}</span>
           </div>
         </div>
       </div>
     </div>
+      </div>
+    </form>
   </div>
 </div>
 

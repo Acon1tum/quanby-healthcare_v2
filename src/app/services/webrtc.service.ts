@@ -23,6 +23,8 @@ export interface FaceScanStatus {
   timestamp: number;
   prescriptionData?: any; // Optional prescription data
   diagnosisData?: any; // Optional diagnosis data
+  labRequestData?: any; // Optional lab request data
+  appointmentData?: any; // Optional appointment data
 }
 
 export interface FaceScanRequest {
@@ -54,15 +56,18 @@ export class WebRTCService {
   ) {}
 
   private getSignalingUrl(): string {
-    // Use environment backend API URL if available, otherwise default to localhost:3000
+    // Prefer explicit signaling URL overrides
+    const anyEnv = environment as any;
+    const explicit = anyEnv.webrtcSignalingUrl || anyEnv.signalingUrl || anyEnv.socketUrl;
+    if (explicit && typeof explicit === 'string') return explicit;
+    // Fallback: derive from backendApi by stripping trailing /api
     if (environment.backendApi) {
-      return environment.backendApi.replace('/api', '');
+      return environment.backendApi.replace(/\/?api\/?$/, '');
     }
     return 'http://localhost:3000';
   }
 
   initSocket(signalingUrl?: string): void {
-    if (this.socket) return;
     const url = signalingUrl || this.getSignalingUrl();
     console.log('🔌 Connecting to Socket.IO server:', url);
     
@@ -71,11 +76,24 @@ export class WebRTCService {
     console.log('🔑 User token:', token ? 'Present' : 'Missing');
     console.log('👤 Current user:', this.authService.currentUserValue);
     
-    this.socket = io(url, {
-      transports: ['websocket'],
-      withCredentials: true,
-      auth: token ? { token } : undefined,
-    });
+    if (!this.socket) {
+      this.socket = io(url, {
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 8,
+        reconnectionDelay: 1000,
+        timeout: 6000,
+        withCredentials: true,
+        auth: token ? { token } : undefined,
+      });
+    } else {
+      // Update auth and attempt reconnection if not connected
+      (this.socket as any).auth = token ? { token } : undefined;
+      if (!this.socket.connected) {
+        try { this.socket.connect(); } catch {}
+      }
+    }
     
     // Add connection event listeners for debugging
     this.socket.on('connect', () => {
@@ -91,6 +109,37 @@ export class WebRTCService {
     });
     
     this.registerSocketHandlers();
+  }
+
+  private waitForSocketConnected(timeoutMs = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.socket?.connected) {
+        resolve();
+        return;
+      }
+      let settled = false;
+      const onConnect = () => {
+        if (settled) return;
+        settled = true;
+        this.socket?.off('connect_error', onError);
+        resolve();
+      };
+      const onError = (err: any) => {
+        console.error('❌ Socket connect error (waiting):', err);
+      };
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        this.socket?.off('connect', onConnect);
+        this.socket?.off('connect_error', onError);
+        reject(new Error('Socket connect timeout'));
+      }, timeoutMs);
+      this.socket?.once('connect', () => {
+        clearTimeout(timer);
+        onConnect();
+      });
+      this.socket?.on('connect_error', onError);
+    });
   }
 
   async initPeer(config?: RTCConfiguration): Promise<void> {
@@ -375,11 +424,20 @@ export class WebRTCService {
     this.currentRoomId = roomId;
     console.log('🚪 Attempting to join room:', roomId);
     console.log('🔌 Socket connected:', this.socket?.connected);
-    return new Promise((resolve) => {
+    // Ensure socket is initialized and connected before joining
+    if (!this.socket) {
+      this.initSocket();
+    }
+    return new Promise(async (resolve) => {
+      try {
+        await this.waitForSocketConnected(7000);
+      } catch (e) {
+        console.warn('⚠️ Proceeding to emit join without confirmed connection:', e);
+      }
       this.socket?.emit('webrtc:join', { roomId }, (resp: JoinResponse) => {
         console.log('📨 Join response received:', resp);
         if (resp?.ok && resp.role) this.currentRole = resp.role;
-        console.log('✅ Joined room successfully:', { roomId, role: this.currentRole, participants: resp.participants });
+        console.log('✅ Joined room successfully:', { roomId, role: this.currentRole, participants: resp?.participants });
         resolve(resp);
       });
     });

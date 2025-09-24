@@ -13,9 +13,6 @@
   <div class="profile-header">
     <div class="header-content">
       <div class="back-section">
-        <button class="back-btn" (click)="onBack()">
-          ← Back
-        </button>
         <div class="header-text">
           <h1>My Profile</h1>
           <p>Manage your personal and professional information</p>
@@ -168,7 +165,7 @@
 
 
       <!-- ID Document Uploads Section -->
-      <div class="profile-section">
+      <div class="profile-section" style="display: none;">
         <div class="section-header">
           <h2>ID Document Uploads</h2>
           <p>Upload your PRC ID, PTR ID, and medical license documents</p>
@@ -510,16 +507,9 @@
               
               <div class="image-actions">
                 <button 
-                  *ngIf="selectedImage" 
-                  class="upload-confirm-btn" 
-                  (click)="onUploadImage()"
-                >
-                  Upload
-                </button>
-                <button 
                   *ngIf="profile.personalInfo.profileImage || selectedImage" 
                   class="remove-image-btn" 
-                  (click)="onRemoveImage()"
+                  (click)="openRemoveImageConfirm()"
                 >
                   Remove
                 </button>
@@ -586,7 +576,7 @@
                 <label>Date of Birth</label>
                 <input 
                   type="date" 
-                  [formControlName]="'dateOfBirth'"
+                  formControlName="dateOfBirth"
                   class="form-control"
                   [class.error]="getFieldError('personalInfo', 'dateOfBirth')"
                 >
@@ -993,7 +983,7 @@
     </div>
 
     <!-- ID Document Uploads Section -->
-    <div class="profile-section">
+    <div class="profile-section" *ngIf="isEditing">
       <div class="section-header">
         <h2>ID Document Uploads</h2>
         <p>Upload your PRC ID, PTR ID, and medical license documents</p>
@@ -1516,3 +1506,18 @@
     </form>
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop" *ngIf="showDeleteConfirm"></div>
+<div class="modal" *ngIf="showDeleteConfirm">
+  <div class="modal-content">
+    <h3>Remove profile picture?</h3>
+    <p>This action will permanently remove your current profile picture.</p>
+    <div class="modal-actions">
+      <button class="cancel-btn" (click)="cancelRemoveImage()">Cancel</button>
+      <button class="confirm-btn" [disabled]="deletingImage" (click)="confirmRemoveImage()">
+        {{ deletingImage ? 'Removing...' : 'Remove' }}
+      </button>
+    </div>
+  </div>
+  </div>

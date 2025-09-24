@@ -104,6 +104,9 @@ export class DoctorMyProfileComponent implements OnInit {
   private pendingAuthProfileImage: string | undefined = undefined;
   // Direct source bound to <img [src]>
   avatarSrc: string = '9.png';
+  // Delete confirmation modal state
+  showDeleteConfirm = false;
+  deletingImage = false;
 
   // Lightweight toast notification
   showNotification = false;
@@ -150,28 +153,62 @@ export class DoctorMyProfileComponent implements OnInit {
     private sanitizer: DomSanitizer
   ) {}
 
+  private formatDateForInput(value: string | Date | undefined | null): string {
+    if (!value) return '';
+    const d = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   private normalizeImageDataUrl(image: string | undefined | null): string | undefined {
     if (!image) return undefined;
     const trimmed = image.trim();
+    
+    // If it's already a data URL, return as is
     if (trimmed.startsWith('data:')) return trimmed;
+    
+    // If it's empty, return undefined
+    if (trimmed.length === 0) return undefined;
+    
     // Detect mime type from base64 signature
-    let mime = 'image/png';
-    if (trimmed.startsWith('/9j/')) mime = 'image/jpeg';
-    else if (trimmed.startsWith('iVBORw0KGgo')) mime = 'image/png';
-    else if (trimmed.startsWith('R0lG')) mime = 'image/gif';
-    else if (trimmed.startsWith('Qk')) mime = 'image/bmp';
-    else if (trimmed.slice(0, 10).includes('PHN2Zy') || trimmed.startsWith('PD94bWwg')) mime = 'image/svg+xml';
+    let mime = 'image/png'; // default to PNG
+    
+    // Check for common base64 image signatures
+    if (trimmed.startsWith('/9j/') || trimmed.startsWith('/9j4AAQSkZJRg')) {
+      mime = 'image/jpeg';
+    } else if (trimmed.startsWith('iVBORw0KGgo') || trimmed.startsWith('iVBORw0KGg')) {
+      mime = 'image/png';
+    } else if (trimmed.startsWith('R0lGODlh') || trimmed.startsWith('R0lGOD')) {
+      mime = 'image/gif';
+    } else if (trimmed.startsWith('Qk') || trimmed.startsWith('Qk1G')) {
+      mime = 'image/bmp';
+    } else if (trimmed.includes('PHN2Zy') || trimmed.startsWith('PD94bWwg')) {
+      mime = 'image/svg+xml';
+    } else if (trimmed.startsWith('UklGR')) {
+      mime = 'image/webp';
+    }
+    
     return `data:${mime};base64,${trimmed}`;
   }
 
   ngOnInit(): void {
+    console.log('ngOnInit - currentUserValue exists:', !!this.authService.currentUserValue);
+    console.log('ngOnInit - currentUserValue profilePicture:', this.authService.currentUserValue?.profilePicture ? this.authService.currentUserValue.profilePicture.substring(0, 50) + '...' : 'none');
+    
     // Immediately use current cached user profilePicture if present
     this.setAvatarFromCurrentUser();
 
     // Keep profile image in sync with auth user stream in case it arrives later
     this.authService.currentUser$.subscribe(u => {
+      console.log('currentUser$ subscription triggered, user:', u ? 'exists' : 'null');
+      console.log('currentUser$ profilePicture:', u?.profilePicture ? u.profilePicture.substring(0, 50) + '...' : 'none');
+      
       if (u?.profilePicture) {
         const normalized = this.normalizeImageDataUrl(u.profilePicture);
+        console.log('currentUser$ normalized image:', normalized ? normalized.substring(0, 50) + '...' : 'null');
         this.pendingAuthProfileImage = normalized;
         // Always reflect latest DB image in avatar
         if (normalized) {
@@ -179,6 +216,7 @@ export class DoctorMyProfileComponent implements OnInit {
           if (this.profile?.personalInfo) {
             this.profile.personalInfo.profileImage = normalized;
           }
+          console.log('currentUser$ updated avatarSrc to:', this.avatarSrc.substring(0, 50) + '...');
         }
       }
     });
@@ -189,12 +227,22 @@ export class DoctorMyProfileComponent implements OnInit {
 
   private setAvatarFromCurrentUser(): void {
     const cached = this.authService.currentUserValue?.profilePicture;
+    console.log('setAvatarFromCurrentUser - cached profilePicture:', cached ? cached.substring(0, 50) + '...' : 'null');
+    
     if (cached && typeof cached === 'string') {
       const t = cached.trim();
+      console.log('setAvatarFromCurrentUser - trimmed length:', t.length);
       if (t.length > 0) {
         const src = t.startsWith('data:image') ? t : (this.normalizeImageDataUrl(t) || '');
+        console.log('setAvatarFromCurrentUser - src result:', src ? src.substring(0, 50) + '...' : 'null');
         if (src) {
           this.avatarSrc = src;
+          console.log('setAvatarFromCurrentUser - updated avatarSrc to:', this.avatarSrc.substring(0, 50) + '...');
+          // Also update the profile if it exists
+          if (this.profile?.personalInfo) {
+            this.profile.personalInfo.profileImage = src;
+            console.log('setAvatarFromCurrentUser - updated profile.personalInfo.profileImage');
+          }
         }
       }
     }
@@ -215,7 +263,14 @@ export class DoctorMyProfileComponent implements OnInit {
 
       console.log('Loaded user data:', user);
       console.log('Doctor info:', user.doctorInfo);
+      console.log('Doctor dateOfBirth:', user.doctorInfo?.dateOfBirth);
+      console.log('Doctor firstName:', user.doctorInfo?.firstName);
+      console.log('Doctor lastName:', user.doctorInfo?.lastName);
+      console.log('Doctor gender:', user.doctorInfo?.gender);
+      console.log('Doctor contactNumber:', user.doctorInfo?.contactNumber);
+      console.log('Doctor specialization:', user.doctorInfo?.specialization);
       console.log('profilePicture (raw):', user.profilePicture ? (user.profilePicture.substring(0, 30) + '...') : 'none');
+      console.log('profilePicture length:', user.profilePicture ? user.profilePicture.length : 0);
 
       // Map backend user (User + DoctorInfo) to view model
       const doctor = user.doctorInfo || {
@@ -262,9 +317,9 @@ export class DoctorMyProfileComponent implements OnInit {
           lastName: doctor.lastName || '',
           email: user.email,
           phone: doctor.contactNumber || '',
-          dateOfBirth: doctor.dateOfBirth ? new Date(doctor.dateOfBirth) : new Date(),
+          dateOfBirth: doctor.dateOfBirth ? new Date(doctor.dateOfBirth) : new Date('1990-01-01'),
           gender: (doctor.gender || 'OTHER').toString(),
-          profileImage: this.normalizeImageDataUrl(user.profilePicture) || this.pendingAuthProfileImage
+          profileImage: this.normalizeImageDataUrl(user.profilePicture) || this.pendingAuthProfileImage || undefined
         },
         professionalInfo: {
           licenseNumber: doctor.licenseNumber || '',
@@ -337,12 +392,22 @@ export class DoctorMyProfileComponent implements OnInit {
 
       // Fallback: if for any reason profile image is still empty but auth service holds it, apply it
       if ((!this.profile.personalInfo.profileImage || this.profile.personalInfo.profileImage.length === 0) && this.authService.currentUserValue?.profilePicture) {
-        this.profile.personalInfo.profileImage = this.normalizeImageDataUrl(this.authService.currentUserValue.profilePicture);
-        console.log('Applied fallback profilePicture from auth service');
+        const normalizedImage = this.normalizeImageDataUrl(this.authService.currentUserValue.profilePicture);
+        if (normalizedImage) {
+          this.profile.personalInfo.profileImage = normalizedImage;
+          console.log('Applied fallback profilePicture from auth service');
+        }
       }
 
-      // Set avatar src for the template
-      this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc || '9.png';
+      // Set avatar src for the template - prioritize profile image from backend
+      const profileImage = this.profile.personalInfo.profileImage;
+      if (profileImage && profileImage.length > 0) {
+        this.avatarSrc = profileImage;
+      } else {
+        this.avatarSrc = this.avatarSrc || '9.png';
+      }
+      
+      console.log('Final avatarSrc set to:', this.avatarSrc.substring(0, 50) + '...');
 
       // Initialize form with the loaded data
       this.initForm();
@@ -359,14 +424,24 @@ export class DoctorMyProfileComponent implements OnInit {
       return;
     }
 
-    this.profileForm = this.fb.group({
+    console.log('Initializing form with profile data:', this.profile);
+    console.log('Personal Info:', this.profile.personalInfo);
+    console.log('Professional Info:', this.profile.professionalInfo);
+    console.log('Date of birth value:', this.profile.personalInfo.dateOfBirth);
+    console.log('Formatted date of birth:', this.formatDateForInput(this.profile.personalInfo.dateOfBirth));
+    console.log('First name:', this.profile.personalInfo.firstName);
+    console.log('Last name:', this.profile.personalInfo.lastName);
+    console.log('Gender:', this.profile.personalInfo.gender);
+    console.log('Phone:', this.profile.personalInfo.phone);
+
+      this.profileForm = this.fb.group({
       personalInfo: this.fb.group({
         firstName: [this.profile.personalInfo.firstName, [Validators.required, Validators.minLength(2)]],
         middleName: [this.profile.personalInfo.middleName || ''],
         lastName: [this.profile.personalInfo.lastName, [Validators.required, Validators.minLength(2)]],
         email: [this.profile.personalInfo.email, [Validators.required, Validators.email]],
         phone: [this.profile.personalInfo.phone, [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
-        dateOfBirth: [this.profile.personalInfo.dateOfBirth, Validators.required],
+          dateOfBirth: [this.formatDateForInput(this.profile.personalInfo.dateOfBirth), Validators.required],
         gender: [this.profile.personalInfo.gender, Validators.required]
       }),
       professionalInfo: this.fb.group({
@@ -429,9 +504,78 @@ export class DoctorMyProfileComponent implements OnInit {
     // Refresh profile data from backend before populating form
     await this.loadProfile();
     
+    // Wait a bit to ensure data is fully loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Re-initialize form with fresh data
+    this.initForm();
+    
     // Debug: Log the current profile data
     console.log('Profile data loaded:', this.profile);
     console.log('Form values after population:', this.profileForm.value);
+    
+    // Force form to update by patching values
+    if (this.profile && this.profileForm) {
+      this.profileForm.patchValue({
+        personalInfo: {
+          firstName: this.profile.personalInfo.firstName,
+          middleName: this.profile.personalInfo.middleName,
+          lastName: this.profile.personalInfo.lastName,
+          email: this.profile.personalInfo.email,
+          phone: this.profile.personalInfo.phone,
+          dateOfBirth: this.formatDateForInput(this.profile.personalInfo.dateOfBirth),
+          gender: this.profile.personalInfo.gender
+        },
+        professionalInfo: {
+          licenseNumber: this.profile.professionalInfo.licenseNumber,
+          specialization: this.profile.professionalInfo.specialization,
+          qualifications: this.profile.professionalInfo.qualifications,
+          experience: this.profile.professionalInfo.experience,
+          prcId: this.profile.professionalInfo.prcId,
+          ptrId: this.profile.professionalInfo.ptrId,
+          medicalLicenseLevel: this.profile.professionalInfo.medicalLicenseLevel,
+          philHealthAccreditation: this.profile.professionalInfo.philHealthAccreditation,
+          licenseExpiry: this.formatDateForInput(this.profile.professionalInfo.licenseExpiry),
+          isLicenseActive: this.profile.professionalInfo.isLicenseActive,
+          additionalCertifications: this.profile.professionalInfo.additionalCertifications,
+          licenseIssuedBy: this.profile.professionalInfo.licenseIssuedBy,
+          licenseIssuedDate: this.formatDateForInput(this.profile.professionalInfo.licenseIssuedDate),
+          renewalRequired: this.profile.professionalInfo.renewalRequired
+        },
+        contactInfo: {
+          address: this.profile.contactInfo.address,
+          city: this.profile.contactInfo.city,
+          state: this.profile.contactInfo.state,
+          zipCode: this.profile.contactInfo.zipCode,
+          country: this.profile.contactInfo.country,
+          emergencyContact: {
+            name: this.profile.contactInfo.emergencyContact.name,
+            relationship: this.profile.contactInfo.emergencyContact.relationship,
+            phone: this.profile.contactInfo.emergencyContact.phone,
+            email: this.profile.contactInfo.emergencyContact.email
+          }
+        },
+        bio: {
+          summary: this.profile.bio.summary,
+          expertise: this.profile.bio.expertise,
+          achievements: this.profile.bio.achievements,
+          researchInterests: this.profile.bio.researchInterests
+        },
+        preferences: {
+          consultationFee: this.profile.preferences.consultationFee,
+          availability: this.profile.preferences.availability,
+          notificationSettings: {
+            email: this.profile.preferences.notificationSettings.email,
+            sms: this.profile.preferences.notificationSettings.sms,
+            push: this.profile.preferences.notificationSettings.push
+          },
+          timezone: this.profile.preferences.timezone,
+          language: this.profile.preferences.language
+        }
+      });
+      
+      console.log('Form patched with values:', this.profileForm.value);
+    }
   }
 
   onCancel(): void {
@@ -474,6 +618,7 @@ export class DoctorMyProfileComponent implements OnInit {
     // Map to backend payload
     const p = this.profile;
     const payload: UpdateProfilePayload = {
+      email: p.personalInfo.email,
       firstName: p.personalInfo.firstName,
       lastName: p.personalInfo.lastName,
       middleName: p.personalInfo.middleName || undefined,
@@ -499,6 +644,11 @@ export class DoctorMyProfileComponent implements OnInit {
       licenseIssuedBy: p.professionalInfo.licenseIssuedBy || undefined,
       licenseIssuedDate: p.professionalInfo.licenseIssuedDate ? new Date(p.professionalInfo.licenseIssuedDate).toISOString() : undefined,
       renewalRequired: p.professionalInfo.renewalRequired,
+      // ID Document Uploads
+      prcIdImage: p.idDocuments.prcIdImage || undefined,
+      ptrIdImage: p.idDocuments.ptrIdImage || undefined,
+      medicalLicenseImage: p.idDocuments.medicalLicenseImage || undefined,
+      additionalIdImages: p.idDocuments.additionalIdImages.length > 0 ? JSON.stringify(p.idDocuments.additionalIdImages) : undefined,
     };
 
     try {
@@ -604,7 +754,7 @@ export class DoctorMyProfileComponent implements OnInit {
     try {
       // Remove the profile picture from the User table via backend
       const result = await this.authService.updateProfile({
-        profilePicture: undefined
+        profilePicture: null
       });
       
       if (result.success) {
@@ -634,6 +784,26 @@ export class DoctorMyProfileComponent implements OnInit {
     }
   }
 
+  // Confirmation modal handlers
+  openRemoveImageConfirm(): void {
+    this.showDeleteConfirm = true;
+  }
+
+  async confirmRemoveImage(): Promise<void> {
+    if (this.deletingImage) return;
+    this.deletingImage = true;
+    try {
+      await this.onRemoveImage();
+      this.showDeleteConfirm = false;
+    } finally {
+      this.deletingImage = false;
+    }
+  }
+
+  cancelRemoveImage(): void {
+    this.showDeleteConfirm = false;
+  }
+
   onIdDocumentSelect(event: any, documentType: string): void {
     const file = event.target.files[0];
     if (file) {
@@ -651,22 +821,100 @@ export class DoctorMyProfileComponent implements OnInit {
             this.profile.idDocuments.medicalLicenseImage = base64String;
             break;
         }
+        // Auto-save the document to database
+        this.saveIdDocument(documentType, base64String);
       };
       reader.readAsDataURL(file);
     }
   }
 
-  onRemoveIdDocument(documentType: string): void {
-    switch (documentType) {
-      case 'prcId':
-        this.profile.idDocuments.prcIdImage = '';
-        break;
-      case 'ptrId':
-        this.profile.idDocuments.ptrIdImage = '';
-        break;
-      case 'medicalLicense':
-        this.profile.idDocuments.medicalLicenseImage = '';
-        break;
+  async saveIdDocument(documentType: string, base64String: string): Promise<void> {
+    try {
+      const payload: any = {};
+      
+      switch (documentType) {
+        case 'prcId':
+          payload.prcIdImage = base64String;
+          break;
+        case 'ptrId':
+          payload.ptrIdImage = base64String;
+          break;
+        case 'medicalLicense':
+          payload.medicalLicenseImage = base64String;
+          break;
+      }
+
+      const result = await this.authService.updateProfile(payload);
+      
+      if (result.success) {
+        this.triggerToast(`${documentType.toUpperCase()} document uploaded successfully`, 'success');
+      } else {
+        this.triggerToast(result.message || `Failed to upload ${documentType.toUpperCase()} document`, 'error');
+        // Revert the local change if save failed
+        switch (documentType) {
+          case 'prcId':
+            this.profile.idDocuments.prcIdImage = '';
+            break;
+          case 'ptrId':
+            this.profile.idDocuments.ptrIdImage = '';
+            break;
+          case 'medicalLicense':
+            this.profile.idDocuments.medicalLicenseImage = '';
+            break;
+        }
+      }
+    } catch (error) {
+      console.error(`Error uploading ${documentType} document:`, error);
+      this.triggerToast(`An error occurred while uploading ${documentType.toUpperCase()} document`, 'error');
+      // Revert the local change if save failed
+      switch (documentType) {
+        case 'prcId':
+          this.profile.idDocuments.prcIdImage = '';
+          break;
+        case 'ptrId':
+          this.profile.idDocuments.ptrIdImage = '';
+          break;
+        case 'medicalLicense':
+          this.profile.idDocuments.medicalLicenseImage = '';
+          break;
+      }
+    }
+  }
+
+  async onRemoveIdDocument(documentType: string): Promise<void> {
+    try {
+      const payload: any = {};
+      
+      switch (documentType) {
+        case 'prcId':
+          this.profile.idDocuments.prcIdImage = '';
+          payload.prcIdImage = null;
+          break;
+        case 'ptrId':
+          this.profile.idDocuments.ptrIdImage = '';
+          payload.ptrIdImage = null;
+          break;
+        case 'medicalLicense':
+          this.profile.idDocuments.medicalLicenseImage = '';
+          payload.medicalLicenseImage = null;
+          break;
+      }
+
+      const result = await this.authService.updateProfile(payload);
+      
+      if (result.success) {
+        this.triggerToast(`${documentType.toUpperCase()} document removed successfully`, 'success');
+      } else {
+        this.triggerToast(result.message || `Failed to remove ${documentType.toUpperCase()} document`, 'error');
+        // Revert the local change if save failed
+        // Note: We would need to reload from server to get the correct state
+        await this.loadProfile();
+      }
+    } catch (error) {
+      console.error(`Error removing ${documentType} document:`, error);
+      this.triggerToast(`An error occurred while removing ${documentType.toUpperCase()} document`, 'error');
+      // Revert the local change if save failed
+      await this.loadProfile();
     }
   }
 
@@ -692,10 +940,6 @@ export class DoctorMyProfileComponent implements OnInit {
     if (target && target.value !== undefined) {
       array[index] = target.value;
     }
-  }
-
-  onBack(): void {
-    this.router.navigate(['/doctor/dashboard']);
   }
 
   async refreshProfile(): Promise<void> {
@@ -758,32 +1002,43 @@ export class DoctorMyProfileComponent implements OnInit {
     return `$${this.profile.preferences.consultationFee}`;
   }
 
-  // Safe image URL for template binding
+  // Safe image URL for template binding (if needed for security)
   get profileImageUrl(): SafeUrl {
-    const authRaw = this.authService.currentUserValue?.profilePicture;
-    const authHasDataUrl = typeof authRaw === 'string' && authRaw.trim().startsWith('data:image');
-    const fromAuth = authHasDataUrl ? authRaw!.trim() : this.normalizeImageDataUrl(authRaw);
-    const fromProfile = this.profile?.personalInfo?.profileImage;
-    const src = (fromAuth && fromAuth.length > 0) ? fromAuth : (fromProfile && fromProfile.length > 0 ? fromProfile : '9.png');
-    return this.sanitizer.bypassSecurityTrustUrl(src);
+    return this.sanitizer.bypassSecurityTrustUrl(this.effectiveAvatarSrc);
   }
 
-  // Plain string source for <img [src]> to avoid any SafeUrl binding issues
+  // Plain string source for <img [src]> - same as effectiveAvatarSrc
   get profileImageSrc(): string {
-    const authRaw = this.authService.currentUserValue?.profilePicture;
-    const authHasDataUrl = typeof authRaw === 'string' && authRaw.trim().startsWith('data:image');
-    const fromAuth = authHasDataUrl ? authRaw!.trim() : (this.normalizeImageDataUrl(authRaw) || '');
-    const fromProfile = this.profile?.personalInfo?.profileImage || '';
-    return fromAuth || fromProfile || '9.png';
+    return this.effectiveAvatarSrc;
   }
 
   // Prefer current user's profilePicture (DB) over local avatarSrc
   get effectiveAvatarSrc(): string {
     const raw = this.authService.currentUserValue?.profilePicture;
+    console.log('effectiveAvatarSrc - raw profilePicture:', raw ? raw.substring(0, 50) + '...' : 'null/undefined');
+    console.log('effectiveAvatarSrc - currentUserValue exists:', !!this.authService.currentUserValue);
+    
     if (raw && typeof raw === 'string' && raw.trim().length > 0) {
       const t = raw.trim();
-      return t.startsWith('data:image') ? t : (this.normalizeImageDataUrl(t) || this.avatarSrc || '9.png');
+      console.log('effectiveAvatarSrc - trimmed length:', t.length);
+      console.log('effectiveAvatarSrc - starts with data:image:', t.startsWith('data:image'));
+      
+      // If it's already a data URL, use it directly
+      if (t.startsWith('data:image')) {
+        console.log('effectiveAvatarSrc - using data URL directly');
+        return t;
+      }
+      // Otherwise, normalize it to a proper data URL
+      const normalized = this.normalizeImageDataUrl(t);
+      console.log('effectiveAvatarSrc - normalized result:', normalized ? normalized.substring(0, 50) + '...' : 'null');
+      if (normalized) {
+        console.log('effectiveAvatarSrc - using normalized image');
+        return normalized;
+      }
     }
+    
+    console.log('effectiveAvatarSrc - falling back to avatarSrc:', this.avatarSrc);
+    // Fallback to local avatarSrc or default image
     return this.avatarSrc || '9.png';
   }
 
@@ -807,6 +1062,17 @@ export class DoctorMyProfileComponent implements OnInit {
   getPhilHealthAccreditationLabel(value: string): string {
     const option = this.philHealthAccreditationOptions.find(a => a.value === value);
     return option ? option.label : value;
+  }
+
+  // Debug method to test profile picture functionality
+  debugProfilePicture(): void {
+    console.log('=== Profile Picture Debug Info ===');
+    console.log('currentUserValue exists:', !!this.authService.currentUserValue);
+    console.log('currentUserValue profilePicture:', this.authService.currentUserValue?.profilePicture ? this.authService.currentUserValue.profilePicture.substring(0, 100) + '...' : 'none');
+    console.log('avatarSrc:', this.avatarSrc);
+    console.log('effectiveAvatarSrc:', this.effectiveAvatarSrc);
+    console.log('profile.personalInfo.profileImage:', this.profile?.personalInfo?.profileImage ? this.profile.personalInfo.profileImage.substring(0, 100) + '...' : 'none');
+    console.log('==================================');
   }
 
   getCertificationsList(): string[] {

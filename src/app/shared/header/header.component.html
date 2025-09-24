@@ -5,8 +5,7 @@
         [class.justify-evenly]="isLoggedIn">
   <!-- Logo Section - Only show when not logged in -->
   <div *ngIf="!isLoggedIn" class="flex items-center gap-2 md:gap-3 text-slate-800">
-    <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="h-6 w-6 md:h-8 md:w-8">
-    <h2 class="header-title text-slate-800 text-lg md:text-xl font-bold leading-tight tracking-tight">Quanby Health</h2>
+    <img src="/QHEALTH.png" alt="Quanby Health Logo" class="h-8 w-18 md:h-8 md:w-8">
   </div>
 
   <!-- Mobile Sidebar Button - Only show when logged in on mobile -->
@@ -25,13 +24,12 @@
       <div 
         #sidebarDropdown
         [class.hidden]="!isSidebarOpen"
-        class="mobile-sidebar-dropdown absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+        class="mobile-sidebar-dropdown absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 pb-1 z-50"
       >
       <!-- Mobile Sidebar Header -->
       <div class="px-4 py-2 border-b border-gray-100">
         <div class="flex items-center gap-2">
-          <img src="/qb-logo-2.png" alt="Quanby Health Logo" class="h-6 w-6">
-          <span class="text-sm font-bold text-slate-800">Quanby Health</span>
+          <img src="/QHEALTH.png" alt="Quanby Health Logo" class="h-7 w-17">
         </div>
       </div>
 
@@ -143,7 +141,7 @@
     <div 
       #profileDropdown
       *ngIf="isProfileDropdownOpen"
-      class="mobile-profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+      class="mobile-profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 pb-1 z-50"
     >
       <div class="px-4 py-2 border-b border-gray-100">
         <p class="text-sm font-medium text-slate-800">{{ getUserDisplayName() }}</p>

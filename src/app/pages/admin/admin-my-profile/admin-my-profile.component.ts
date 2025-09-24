@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ApiService, UserProfile } from '../../../api/api.service';
 
 interface AdminProfile {
   id: number;
@@ -42,7 +43,8 @@ interface AdminProfile {
   styleUrl: './admin-my-profile.component.scss'
 })
 export class AdminMyProfileComponent implements OnInit {
-  profile: AdminProfile | null = null;
+  profile: UserProfile | null = null;
+  organization: any = null;
   isEditing = false;
   isChangingPassword = false;
   isSaving = false;
@@ -79,17 +81,22 @@ export class AdminMyProfileComponent implements OnInit {
     { value: 'GMT', label: 'GMT (Greenwich Mean Time)' }
   ];
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private apiService: ApiService) {
     this.profileForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      middleName: [''],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
       gender: ['', Validators.required],
       dateOfBirth: ['', Validators.required],
-      contactNumber: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
+      contactNumber: [''],
       address: ['', [Validators.required, Validators.minLength(10)]],
       bio: ['', [Validators.required, Validators.minLength(20)]],
-      department: ['', Validators.required],
+      department: [''],
+      // Organization fields
+      orgName: [''],
+      orgStatus: [''],
+      orgDescription: [''],
+      orgAddress: [''],
+      orgPhone: [''],
+      orgEmail: [''],
+      orgWebsite: [''],
       emergencyContactName: ['', Validators.required],
       emergencyContactRelationship: ['', Validators.required],
       emergencyContactPhone: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
@@ -114,71 +121,128 @@ export class AdminMyProfileComponent implements OnInit {
   loadProfile(): void {
     this.isLoading = true;
     
-    // Simulate API call delay
-    setTimeout(() => {
-      this.profile = {
-        id: 1,
-        email: 'admin@qhealth.com',
-        firstName: 'John',
-        middleName: 'Michael',
-        lastName: 'Administrator',
-        gender: 'MALE',
-        dateOfBirth: '1985-06-15',
-        contactNumber: '+1 (555) 123-4567',
-        address: '123 Healthcare Drive, Medical District, City, State 12345',
-        bio: 'Experienced healthcare administrator with over 10 years of experience in managing healthcare systems, coordinating patient care, and ensuring operational efficiency. Passionate about improving healthcare delivery and patient outcomes.',
-        profileImage: 'assets/images/admin-avatar.jpg',
-        role: 'System Administrator',
-        department: 'Information Technology',
-        employeeId: 'ADM-001',
-        hireDate: '2020-01-15',
-        emergencyContact: {
-          name: 'Sarah Administrator',
-          relationship: 'Spouse',
-          phone: '+1 (555) 987-6543'
-        },
-        preferences: {
-          language: 'en',
-          timezone: 'EST',
-          notifications: {
-            email: true,
-            sms: false,
-            push: true
+    this.apiService.getCurrentUserProfile().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.profile = response.data;
+          console.log('Profile loaded:', this.profile);
+          console.log('OrganizationId:', this.profile.organizationId);
+          console.log('Organization data:', this.profile.organization);
+          
+          // Set organization data directly from profile if available
+          if (this.profile.organization) {
+            this.organization = this.profile.organization;
+            console.log('Organization set from profile:', this.organization);
+            // Populate form after organization is set
+            this.populateForm();
+          } else if (this.profile.organizationId) {
+            console.log('Loading organization for ID:', this.profile.organizationId);
+            this.loadOrganization();
+          } else {
+            console.log('No organizationId found in profile');
+            // Populate form even without organization
+            this.populateForm();
           }
+        } else {
+          console.error('Failed to load profile:', response);
+          alert('Failed to load profile data');
         }
-      };
-      
-      this.populateForm();
-      this.isLoading = false;
-    }, 1000);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading profile:', error);
+        alert('Error loading profile data');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  loadOrganization(): void {
+    if (this.profile?.organizationId) {
+      console.log('Making API call to get organization:', this.profile.organizationId);
+      this.apiService.getOrganizationById(this.profile.organizationId).subscribe({
+        next: (response) => {
+          console.log('Organization API response:', response);
+          if (response.success) {
+            this.organization = response.data;
+            console.log('Organization loaded successfully:', this.organization);
+            // Populate form after organization is loaded
+            this.populateForm();
+          } else {
+            console.error('Failed to load organization:', response);
+            // Still populate form even if organization loading fails
+            this.populateForm();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading organization:', error);
+          // Still populate form even if organization loading fails
+          this.populateForm();
+        }
+      });
+    }
   }
 
   populateForm(): void {
     if (this.profile) {
+      console.log('Populating form with profile data:', this.profile);
+      console.log('User email:', this.profile.email);
+      console.log('Organization data:', this.organization);
+      
+      // For admin users, we'll use basic user info and create a simplified form
+      const isDoctor = this.profile.doctorInfo;
+      const isPatient = this.profile.patientInfo;
+      
+      // Format date for input field (YYYY-MM-DD format)
+      const formatDateForInput = (dateString: string | undefined): string => {
+        if (!dateString) return '';
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '';
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return '';
+        }
+      };
+      
       this.profileForm.patchValue({
-        firstName: this.profile.firstName,
-        middleName: this.profile.middleName,
-        lastName: this.profile.lastName,
-        gender: this.profile.gender,
-        dateOfBirth: this.profile.dateOfBirth,
-        contactNumber: this.profile.contactNumber,
-        address: this.profile.address,
-        bio: this.profile.bio,
-        department: this.profile.department,
-        emergencyContactName: this.profile.emergencyContact.name,
-        emergencyContactRelationship: this.profile.emergencyContact.relationship,
-        emergencyContactPhone: this.profile.emergencyContact.phone,
-        language: this.profile.preferences.language,
-        timezone: this.profile.preferences.timezone,
-        emailNotifications: this.profile.preferences.notifications.email,
-        smsNotifications: this.profile.preferences.notifications.sms,
-        pushNotifications: this.profile.preferences.notifications.push
+        gender: isDoctor ? this.profile.doctorInfo?.gender : (isPatient ? this.profile.patientInfo?.gender : ''),
+        dateOfBirth: formatDateForInput(isDoctor ? this.profile.doctorInfo?.dateOfBirth : (isPatient ? this.profile.patientInfo?.dateOfBirth : '')),
+        contactNumber: this.profile.email || '',
+        address: isDoctor ? this.profile.doctorInfo?.address : (isPatient ? this.profile.patientInfo?.address : ''),
+        bio: isDoctor ? this.profile.doctorInfo?.bio : '',
+        department: this.organization?.name || 'No Organization',
+        // Organization fields
+        orgName: this.organization?.name || '',
+        orgStatus: this.organization?.isActive ? 'Active' : 'Inactive',
+        orgDescription: this.organization?.description || '',
+        orgAddress: this.organization?.address || '',
+        orgPhone: this.organization?.phone || '',
+        orgEmail: this.organization?.email || '',
+        orgWebsite: this.organization?.website || '',
+        emergencyContactName: isPatient ? this.profile.patientInfo?.emergencyContact?.contactName : '',
+        emergencyContactRelationship: isPatient ? this.profile.patientInfo?.emergencyContact?.relationship : '',
+        emergencyContactPhone: isPatient ? this.profile.patientInfo?.emergencyContact?.contactNumber : '',
+        language: 'en', // Default values for admin
+        timezone: 'UTC',
+        emailNotifications: true,
+        smsNotifications: false,
+        pushNotifications: true
       });
+      
+      console.log('Form populated with values:', this.profileForm.value);
+      console.log('Contact number (email) field value:', this.profileForm.get('contactNumber')?.value);
     }
   }
 
   startEditing(): void {
     this.isEditing = true;
+    // Refresh profile data from backend before populating form
+    this.loadProfile();
   }
 
   cancelEditing(): void {
@@ -211,54 +275,51 @@ export class AdminMyProfileComponent implements OnInit {
     if (this.profileForm.valid) {
       this.isSaving = true;
       
-      // Simulate API call delay
-      setTimeout(() => {
-        if (this.profile) {
-          const formValue = this.profileForm.value;
-          
-          // Update profile object
-          this.profile = {
-            ...this.profile,
-            firstName: formValue.firstName,
-            middleName: formValue.middleName,
-            lastName: formValue.lastName,
-            gender: formValue.gender,
-            dateOfBirth: formValue.dateOfBirth,
-            contactNumber: formValue.contactNumber,
-            address: formValue.address,
-            bio: formValue.bio,
-            department: formValue.department,
-            emergencyContact: {
-              name: formValue.emergencyContactName,
-              relationship: formValue.emergencyContactRelationship,
-              phone: formValue.emergencyContactPhone
-            },
-            preferences: {
-              language: formValue.language,
-              timezone: formValue.timezone,
-              notifications: {
-                email: formValue.emailNotifications,
-                sms: formValue.smsNotifications,
-                push: formValue.pushNotifications
-              }
-            }
-          };
-          
-          // Handle image upload if selected
-          if (this.selectedImage) {
-            // In real app, upload image to server
-            console.log('Uploading image:', this.selectedImage.name);
+      const formValue = this.profileForm.value;
+      
+      // Prepare update data based on user role
+      const updateData: any = {};
+      
+      if (this.profile?.role === 'DOCTOR' && this.profile.doctorInfo) {
+        updateData.bio = formValue.bio;
+        updateData.contactNumber = formValue.contactNumber;
+        updateData.address = formValue.address;
+        updateData.specialization = formValue.department;
+      } else if (this.profile?.role === 'PATIENT' && this.profile.patientInfo) {
+        updateData.contactNumber = formValue.contactNumber;
+        updateData.address = formValue.address;
+        updateData.emergencyContact = {
+          contactName: formValue.emergencyContactName,
+          relationship: formValue.emergencyContactRelationship,
+          contactNumber: formValue.emergencyContactPhone
+        };
+      } else {
+        // For admin users, we'll update basic info
+        // Note: contactNumber field now displays organization email, so we don't save it
+        updateData.address = formValue.address;
+      }
+      
+      this.apiService.updateUserProfile(updateData).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.profile = response.data;
+            this.isEditing = false;
+            this.isSaving = false;
+            this.selectedImage = null;
+            this.imagePreview = null;
+            alert('Profile updated successfully!');
+          } else {
+            console.error('Failed to update profile:', response);
+            alert('Failed to update profile');
+            this.isSaving = false;
           }
-          
-          this.isEditing = false;
+        },
+        error: (error) => {
+          console.error('Error updating profile:', error);
+          alert('Error updating profile');
           this.isSaving = false;
-          this.selectedImage = null;
-          this.imagePreview = null;
-          
-          // Show success message
-          alert('Profile updated successfully!');
         }
-      }, 1500);
+      });
     } else {
       this.markFormGroupTouched();
     }
@@ -278,15 +339,27 @@ export class AdminMyProfileComponent implements OnInit {
     if (this.passwordForm.valid) {
       this.isSaving = true;
       
-      // Simulate API call delay
-      setTimeout(() => {
-        this.isSaving = false;
-        this.isChangingPassword = false;
-        this.passwordForm.reset();
-        
-        // Show success message
-        alert('Password changed successfully!');
-      }, 1500);
+      const formValue = this.passwordForm.value;
+      
+      this.apiService.changePassword(formValue.currentPassword, formValue.newPassword).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.isSaving = false;
+            this.isChangingPassword = false;
+            this.passwordForm.reset();
+            alert('Password changed successfully!');
+          } else {
+            console.error('Failed to change password:', response);
+            alert('Failed to change password');
+            this.isSaving = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error changing password:', error);
+          alert('Error changing password');
+          this.isSaving = false;
+        }
+      });
     } else {
       this.markFormGroupTouched();
     }
@@ -314,33 +387,42 @@ export class AdminMyProfileComponent implements OnInit {
 
   getFullName(): string {
     if (this.profile) {
-      const parts = [this.profile.firstName];
-      if (this.profile.middleName) parts.push(this.profile.middleName);
-      parts.push(this.profile.lastName);
-      return parts.join(' ');
+      if (this.profile.doctorInfo) {
+        const parts = [this.profile.doctorInfo.firstName];
+        if (this.profile.doctorInfo.middleName) parts.push(this.profile.doctorInfo.middleName);
+        parts.push(this.profile.doctorInfo.lastName);
+        return parts.join(' ');
+      } else if (this.profile.patientInfo) {
+        return this.profile.patientInfo.fullName;
+      } else {
+        return 'Administrator';
+      }
     }
     return '';
   }
 
   getAge(): number {
-    if (this.profile?.dateOfBirth) {
-      const birthDate = new Date(this.profile.dateOfBirth);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+    if (this.profile) {
+      const dateOfBirth = this.profile.doctorInfo?.dateOfBirth || this.profile.patientInfo?.dateOfBirth;
+      if (dateOfBirth) {
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        return age;
       }
-      
-      return age;
     }
     return 0;
   }
 
   getYearsOfService(): number {
-    if (this.profile?.hireDate) {
-      const hireDate = new Date(this.profile.hireDate);
+    if (this.profile?.createdAt) {
+      const hireDate = new Date(this.profile.createdAt);
       const today = new Date();
       let years = today.getFullYear() - hireDate.getFullYear();
       const monthDiff = today.getMonth() - hireDate.getMonth();
@@ -355,8 +437,6 @@ export class AdminMyProfileComponent implements OnInit {
   }
 
   // Form getters for easy access
-  get firstName() { return this.profileForm.get('firstName'); }
-  get lastName() { return this.profileForm.get('lastName'); }
   get contactNumber() { return this.profileForm.get('contactNumber'); }
   get address() { return this.profileForm.get('address'); }
   get bio() { return this.profileForm.get('bio'); }
@@ -366,23 +446,51 @@ export class AdminMyProfileComponent implements OnInit {
 
   // Computed properties for template display
   get languageLabel(): string {
-    if (!this.profile) return '';
-    const option = this.languageOptions.find(l => l.value === this.profile!.preferences.language);
-    return option ? option.label : '';
+    return 'English'; // Default for now
   }
 
   get timezoneLabel(): string {
-    if (!this.profile) return '';
-    const option = this.timezoneOptions.find(t => t.value === this.profile!.preferences.timezone);
-    return option ? option.label : '';
+    return 'UTC'; // Default for now
   }
 
   get notificationLabels(): string {
+    return 'Email, Push'; // Default for now
+  }
+
+  get roleLabel(): string {
     if (!this.profile) return '';
-    const notifications = [];
-    if (this.profile.preferences.notifications.email) notifications.push('Email');
-    if (this.profile.preferences.notifications.sms) notifications.push('SMS');
-    if (this.profile.preferences.notifications.push) notifications.push('Push');
-    return notifications.join(', ') || 'None';
+    switch (this.profile.role) {
+      case 'DOCTOR': return 'Doctor';
+      case 'PATIENT': return 'Patient';
+      case 'ADMIN': return 'Administrator';
+      case 'SUPER_ADMIN': return 'Super Administrator';
+      default: return 'User';
+    }
+  }
+
+  get departmentLabel(): string {
+    if (!this.profile) return '';
+    if (this.profile.doctorInfo) {
+      return this.profile.doctorInfo.specialization;
+    } else if (this.profile.patientInfo) {
+      return 'Patient';
+    } else {
+      // For admin users, show organization name instead of department
+      console.log('Getting department label - organization:', this.organization);
+      console.log('Getting department label - organization name:', this.organization?.name);
+      return this.organization?.name || 'Administration';
+    }
+  }
+
+  get organizationName(): string {
+    return this.organization?.name || 'No Organization';
+  }
+
+  get organizationDescription(): string {
+    return this.organization?.description || '';
+  }
+
+  get organizationAddress(): string {
+    return this.organization?.address || '';
   }
 }

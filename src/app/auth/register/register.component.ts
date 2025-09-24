@@ -35,14 +35,14 @@ export class RegisterComponent {
       dateOfBirth: ['', [Validators.required]],
       contactNumber: ['', [Validators.required]],
       address: ['', [Validators.required, Validators.minLength(5)]],
-      weight: [null, [Validators.required, Validators.min(1)]],
-      height: [null, [Validators.required, Validators.min(1)]],
+      weight: ['', [Validators.required, Validators.min(1)]],
+      height: ['', [Validators.required, Validators.min(1)]],
       bloodType: ['', [Validators.required]],
 
       // Emergency contact
-      emergencyContactName: ['', [Validators.required]],
-      emergencyContactRelationship: ['', [Validators.required]],
-      emergencyContactNumber: ['', [Validators.required]],
+      emergencyContactName: [''],
+      emergencyContactRelationship: [''],
+      emergencyContactNumber: [''],
       emergencyContactAddress: [''],
 
       // Medical history
@@ -121,7 +121,7 @@ export class RegisterComponent {
     const res = await this.authService.registerPatient(payload);
     this.isSubmitting = false;
     if (res.success) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/login'], { queryParams: { registered: 'true' } });
     } else {
       alert(res.message);
     }

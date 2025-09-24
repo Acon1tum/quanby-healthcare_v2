@@ -271,10 +271,6 @@ export class MedicalRecordsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onBack(): void {
-    this.router.navigate(['/patient/dashboard']);
-  }
-
   // Helper method to get patient's full name
   getPatientFullName(): string {
     return this.patientInfo?.fullName || this.currentUser?.patientInfo?.fullName || 'Unknown Patient';

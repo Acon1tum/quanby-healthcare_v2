@@ -137,6 +137,20 @@ export class AppointmentsService {
     return this.http.post(`${this.API_URL}/appointments/request`, payload, { headers });
   }
 
+  // Create appointment request by doctor for patient (for scheduling to another doctor)
+  createAppointmentRequestByDoctor(payload: {
+    patientId: string;
+    doctorId: string;
+    requestedDate: string; // YYYY-MM-DD
+    requestedTime: string; // HH:mm
+    reason: string;
+    priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+    notes?: string;
+  }): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.API_URL}/appointments/request-by-doctor`, payload, { headers });
+  }
+
   getAvailableDoctors(): Observable<any> {
     const headers = this.getAuthHeaders();
     return this.http.get(`${this.API_URL}/appointments/doctors`, { headers });

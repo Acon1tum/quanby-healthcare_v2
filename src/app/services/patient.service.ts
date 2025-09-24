@@ -14,7 +14,7 @@ export interface Patient {
 
 export interface PatientInfo {
   id: number;
-  userId: number;
+  userId: string;
   fullName: string;
   gender: string;
   dateOfBirth: Date;
@@ -79,7 +79,7 @@ export class PatientService {
   /**
    * Get patient information by user ID
    */
-  getPatientInfoByUserId(userId: number): Observable<PatientInfoResponse> {
+  getPatientInfoByUserId(userId: string): Observable<PatientInfoResponse> {
     return this.http.get<PatientInfoResponse>(
       `${this.API_URL}/patient-info/${userId}`,
       { headers: this.getHeaders() }

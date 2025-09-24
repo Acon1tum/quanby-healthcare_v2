@@ -73,22 +73,6 @@
         align-items: center;
         gap: 1rem;
 
-        .back-btn {
-          background: none;
-          border: none;
-          color: #64748b;
-          font-size: 1rem;
-          cursor: pointer;
-          padding: 0.5rem;
-          border-radius: 4px;
-          transition: all 0.2s ease;
-
-          &:hover {
-            background: #f1f5f9;
-            color: #1e293b;
-          }
-        }
-
         .header-text {
           h1 {
             margin: 0 0 0.25rem 0;
@@ -110,9 +94,9 @@
         gap: 1rem;
 
         .edit-btn, .cancel-btn, .save-btn {
-          padding: 0.75rem 1.5rem;
+          padding: 0.55rem 1.3rem;
           border-radius: 6px;
-          font-size: 0.875rem;
+          font-size: 0.775rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -460,7 +444,6 @@
 
         .header-actions {
           width: 100%;
-          justify-content: flex-end;
         }
       }
     }
@@ -519,6 +502,57 @@
       }
     }
   }
+}
+
+/* Simple modal styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 420px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.modal .cancel-btn {
+  background: #bdc3c7;
+  color: #2c3e50;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal .confirm-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
   // ID Document Uploads as cards

@@ -1,0 +1,218 @@
+<div class="lab-requests-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="material-icons">science</i>
+        My Lab Requests
+      </h1>
+      <p class="page-subtitle">View and manage your laboratory test requests</p>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="error" class="alert alert-error">
+    <i class="material-icons">error</i>
+    {{ error }}
+    <button class="btn-close" (click)="clearMessages()">&times;</button>
+  </div>
+  
+  <div *ngIf="success" class="alert alert-success">
+    <i class="material-icons">check_circle</i>
+    {{ success }}
+    <button class="btn-close" (click)="clearMessages()">&times;</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3>Filters</h3>
+      <button class="btn btn-secondary btn-sm" (click)="clearFilters()">
+        <i class="material-icons">clear</i>
+        Clear Filters
+      </button>
+    </div>
+    
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()" class="form-control">
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="REJECTED">Rejected</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="dateFrom">From Date</label>
+        <input type="date" id="dateFrom" [(ngModel)]="dateFrom" (change)="onFilterChange()" class="form-control">
+      </div>
+      
+      <div class="filter-group">
+        <label for="dateTo">To Date</label>
+        <input type="date" id="dateTo" [(ngModel)]="dateTo" (change)="onFilterChange()" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading your lab requests...</p>
+  </div>
+
+  <!-- Lab Requests Table -->
+  <div *ngIf="!loading" class="table-container">
+    <div class="table-header">
+      <h3>Your Lab Requests ({{ totalItems }} total)</h3>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="lab-requests-table">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Doctor</th>
+            <th>Laboratory</th>
+            <th>Status</th>
+            <th>Requested Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of paginatedRequests" class="table-row">
+            <td class="request-id">{{ request.id }}</td>
+            <td class="doctor-name">{{ request.doctorName || 'Unknown Doctor' }}</td>
+            <td class="organization-name">{{ request.organizationName || 'Unknown Laboratory' }}</td>
+            <td class="status-cell">
+              <span class="status-badge" [ngClass]="getStatusColorClass(request.status)">
+                {{ getStatusDisplayName(request.status) }}
+              </span>
+            </td>
+            <td class="requested-date">{{ formatDate(request.requestedDate) }}</td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button class="btn btn-sm btn-info" (click)="openDetailsModal(request)" title="View Details">
+                  <i class="material-icons">visibility</i>
+                </button>
+                <button *ngIf="canExport(request)" class="btn btn-sm btn-success" 
+                        (click)="exportAsPDF(request)" title="Export PDF">
+                  <i class="material-icons">picture_as_pdf</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="pagination">
+      <button class="btn btn-sm" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+        <i class="material-icons">chevron_left</i>
+        Previous
+      </button>
+      
+      <span class="pagination-info">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      
+      <button class="btn btn-sm" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+        Next
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredLabRequests.length === 0" class="empty-state">
+    <i class="material-icons">science</i>
+    <h3>No Lab Requests Found</h3>
+    <p>You don't have any lab requests yet. Lab requests are created by your doctor during consultations.</p>
+    <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+  </div>
+</div>
+
+<!-- Lab Request Details Modal -->
+<div *ngIf="showDetailsModal && selectedLabRequest" class="modal-overlay" (click)="closeDetailsModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Lab Request Details</h3>
+      <button class="btn-close" (click)="closeDetailsModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="details-grid">
+        <div class="detail-item">
+          <label>Request ID:</label>
+          <span>{{ selectedLabRequest.id }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Patient:</label>
+          <span>{{ selectedLabRequest.patientName || 'You' }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Doctor:</label>
+          <span>{{ selectedLabRequest.doctorName || 'Unknown Doctor' }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Laboratory:</label>
+          <span>{{ selectedLabRequest.organizationName || 'Unknown Laboratory' }}</span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="status-badge" [ngClass]="getStatusColorClass(selectedLabRequest.status)">
+            {{ getStatusDisplayName(selectedLabRequest.status) }}
+          </span>
+        </div>
+        
+        <div class="detail-item full-width">
+          <label>Status Description:</label>
+          <div class="status-description">
+            {{ getStatusDescription(selectedLabRequest.status) }}
+          </div>
+        </div>
+        
+        <div class="detail-item">
+          <label>Requested Date:</label>
+          <span>{{ formatDateTime(selectedLabRequest.requestedDate) }}</span>
+        </div>
+        
+        <div class="detail-item" *ngIf="selectedLabRequest.approvedDate">
+          <label>Approved Date:</label>
+          <span>{{ formatDateTime(selectedLabRequest.approvedDate) }}</span>
+        </div>
+        
+        <div class="detail-item" *ngIf="selectedLabRequest.completedDate">
+          <label>Completed Date:</label>
+          <span>{{ formatDateTime(selectedLabRequest.completedDate) }}</span>
+        </div>
+        
+        <div class="detail-item full-width">
+          <label>Doctor's Notes:</label>
+          <div class="notes-content">{{ selectedLabRequest.notes || 'No notes provided' }}</div>
+        </div>
+        
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.testResults">
+          <label>Test Results:</label>
+          <div class="test-results-content">{{ selectedLabRequest.testResults }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button *ngIf="canExport(selectedLabRequest)" class="btn btn-primary" (click)="exportAsPDF(selectedLabRequest)">
+        <i class="material-icons">picture_as_pdf</i>
+        Export PDF
+      </button>
+      <button class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+    </div>
+  </div>
+</div>

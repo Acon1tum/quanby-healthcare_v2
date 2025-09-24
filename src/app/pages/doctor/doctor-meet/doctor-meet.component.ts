@@ -5,6 +5,10 @@ import { PrescriptionsService, CreatePrescriptionRequest, Prescription, Patient 
 import { ConsultationsService, CreateDirectConsultationRequest, Consultation } from '../../../services/consultations.service';
 import { DiagnosesService, CreateDiagnosisRequest, Diagnosis, DiagnosisSeverity, DiagnosisStatus } from '../../../services/diagnoses.service';
 import { PatientService, PatientInfo } from '../../../services/patient.service';
+import { AppointmentsService } from '../../../services/appointments.service';
+import { OrganizationsService, Organization } from '../../../services/organizations.service';
+import { DoctorsService } from '../../../services/doctors.service';
+import { LabRequestService, LabRequestForm } from '../../../services/lab-request.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -50,6 +54,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Prescription properties
   showPrescriptionModal: boolean = false;
+  prescriptionForms: any[] = []; // Array to hold multiple prescription forms
   prescriptionForm: any = {
     patientId: null, // Will be auto-populated from consultation context
     consultationId: null, // Will be auto-populated from consultation context
@@ -73,7 +78,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   currentConsultation: any = null;
   currentPatient: any = null;
   consultationId: number | null = null;
-  patientId: number | null = null;
+  patientId: string | null = null;
   
   // Patient details properties
   patientDetails: PatientInfo | null = null;
@@ -81,7 +86,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   patientDetailsError: string = '';
   recentActivity: any[] = [];
   connectedPatientName: string = '';
-  connectedPatientId: number | null = null;
+  connectedPatientId: string | null = null;
   
   // Diagnosis properties
   showDiagnosisModal: boolean = false;
@@ -103,6 +108,36 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isSubmittingDiagnosis: boolean = false;
   diagnosisError: string = '';
   diagnosisSuccess: string = '';
+  
+  // Lab Request properties
+  showLabRequestModal: boolean = false;
+  labRequestForm: LabRequestForm = {
+    patientId: '',
+    doctorId: '',
+    organizationId: '',
+    consultationId: '',
+    notes: ''
+  };
+  isSubmittingLabRequest: boolean = false;
+  labRequestError: string = '';
+  labRequestSuccess: string = '';
+  
+  // Schedule to Another Doctor properties
+  showScheduleModal: boolean = false;
+  scheduleForm: any = {
+    patientId: null,
+    organizationId: null,
+    doctorId: null,
+    appointmentDate: '',
+    appointmentTime: '',
+    priority: 'NORMAL',
+    notes: ''
+  };
+  organizations: Organization[] = [];
+  availableDoctors: any[] = [];
+  isSubmittingSchedule: boolean = false;
+  scheduleError: string = '';
+  scheduleSuccess: string = '';
 
   // Notification properties
   showNotification: boolean = false;
@@ -132,6 +167,10 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     private consultationsService: ConsultationsService,
     private diagnosesService: DiagnosesService,
     private patientService: PatientService,
+    private appointmentService: AppointmentsService,
+    private organizationsService: OrganizationsService,
+    private doctorsService: DoctorsService,
+    private labRequestService: LabRequestService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -889,8 +928,12 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // Initialize consultation context
     this.initializeConsultationContext();
 
+    // Ensure patient data is loaded before showing modal
+    this.ensurePatientDataLoaded();
+
     this.showPrescriptionModal = true;
     this.resetPrescriptionForm();
+    this.initializePrescriptionForms();
     this.prescriptionError = '';
     this.prescriptionSuccess = '';
   }
@@ -907,15 +950,21 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     this.patientId = this.getPatientIdFromContext();
     
-    // Set initial patient info
+    // Set initial patient info (will be updated when patient connects)
     this.currentPatient = {
       id: this.patientId,
-      fullName: 'Emily Anderson', // Will be updated when we load patient data
-      email: 'patient.anderson@email.com'
+      fullName: null, // Will be updated when patient connects and data is loaded
+      email: null
     };
     
-    // Load patient data first, then create consultation
-    this.loadPatientDataAndCreateConsultation();
+    // Create consultation if not already exists
+    console.log('🔍 initializeConsultationContext - consultationId:', this.consultationId, 'patientId:', this.patientId);
+    if (!this.consultationId && this.patientId) {
+      console.log('🏥 Creating consultation because consultationId is null and patientId exists');
+      this.createConsultation();
+    } else {
+      console.log('⏭️ Skipping consultation creation - consultationId:', this.consultationId, 'patientId:', this.patientId);
+    }
   }
 
   // Load patient data and create consultation
@@ -962,7 +1011,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Ensure we still have a valid patient ID for testing
         if (!this.patientId) {
-          this.patientId = 5; // Fallback to first seeded patient (after admin/doctors)
+          this.patientId = '550e8400-e29b-41d4-a716-446655440005'; // Fallback to first seeded patient UUID
           this.prescriptionForm.patientId = this.patientId;
           if (this.diagnosisForm) {
             this.diagnosisForm.patientId = this.patientId;
@@ -1012,6 +1061,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           console.log('✅ Consultation created successfully:', this.currentConsultation);
           console.log('📋 Updated prescription form consultationId:', this.prescriptionForm.consultationId);
           console.log('📋 Updated diagnosis form consultationId:', this.diagnosisForm?.consultationId);
+          console.log('🔍 consultationId type:', typeof this.consultationId, 'value:', this.consultationId);
+          console.log('🔍 currentConsultation.id type:', typeof this.currentConsultation.id, 'value:', this.currentConsultation.id);
         } else {
           console.warn('⚠️ Failed to create consultation:', response.message);
           this.consultationId = null;
@@ -1064,7 +1115,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Ensure we still have a valid patient ID for testing
         if (!this.patientId) {
-          this.patientId = 5; // Fallback to first seeded patient (after admin/doctors)
+          this.patientId = '550e8400-e29b-41d4-a716-446655440005'; // Fallback to first seeded patient UUID
           this.prescriptionForm.patientId = this.patientId;
           if (this.diagnosisForm) {
             this.diagnosisForm.patientId = this.patientId;
@@ -1084,22 +1135,28 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Get patient ID from context (in real app, this would come from consultation data)
-  private getPatientIdFromContext(): number {
+  private getPatientIdFromContext(): string {
     // In production, this should be extracted from:
     // 1. Consultation data
     // 2. WebRTC connection context
     // 3. Route parameters
     // 4. Service call
     
+    // Use connected patient ID if available, otherwise fallback to seeded patient
+    if (this.connectedPatientId) {
+      return this.connectedPatientId;
+    }
+    
     // For now, return the first available patient ID from seeded data
     // Based on seed.ts: Admin(1), Doctors(2,3), Patients(4,5,6)
     // In real implementation, this would be the actual patient ID from the consultation
-    return 5; // First patient ID from seeded data (IDs 2-4 are doctors)
+    return '550e8400-e29b-41d4-a716-446655440005'; // First patient UUID from seeded data
   }
 
   closePrescriptionModal(): void {
     this.showPrescriptionModal = false;
     this.resetPrescriptionForm();
+    this.initializePrescriptionForms(); // Initialize with one empty form
     this.prescriptionError = '';
     this.prescriptionSuccess = '';
   }
@@ -1121,14 +1178,181 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     };
   }
 
+  // Initialize prescription forms array with one empty form
+  initializePrescriptionForms(): void {
+    this.prescriptionForms = [{
+      id: 1,
+      patientId: this.patientId,
+      consultationId: this.consultationId || null,
+      medicationName: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: '',
+      quantity: null,
+      refills: 0,
+      prescribedAt: new Date(),
+      expiresAt: null,
+      notes: ''
+    }];
+  }
+
+  // Add a new prescription form
+  addPrescriptionForm(): void {
+    const newId = this.prescriptionForms.length > 0 ? Math.max(...this.prescriptionForms.map(f => f.id)) + 1 : 1;
+    this.prescriptionForms.push({
+      id: newId,
+      patientId: this.patientId,
+      consultationId: this.consultationId || null,
+      medicationName: '',
+      dosage: '',
+      frequency: '',
+      duration: '',
+      instructions: '',
+      quantity: null,
+      refills: 0,
+      prescribedAt: new Date(),
+      expiresAt: null,
+      notes: ''
+    });
+  }
+
+  // Remove a prescription form (only if more than one exists)
+  removePrescriptionForm(index: number): void {
+    if (this.prescriptionForms.length > 1) {
+      this.prescriptionForms.splice(index, 1);
+    }
+  }
+
+  // Get the next available ID for prescription forms
+  getNextPrescriptionId(): number {
+    return this.prescriptionForms.length > 0 ? Math.max(...this.prescriptionForms.map(f => f.id)) + 1 : 1;
+  }
+
+  // Ensure patient data is loaded before showing prescription modal
+  private ensurePatientDataLoaded(): void {
+    // If we already have patient details, use that
+    if (this.patientDetails && this.patientDetails.fullName) {
+      this.currentPatient = {
+        id: this.patientId,
+        fullName: this.patientDetails.fullName,
+        email: 'Not provided'
+      };
+      return;
+    }
+
+    // If we have connected patient name, use that
+    if (this.connectedPatientName) {
+      this.currentPatient = {
+        id: this.patientId,
+        fullName: this.connectedPatientName,
+        email: 'Not provided'
+      };
+      return;
+    }
+
+    // If we have currentPatient but no fullName, try to load it
+    if (this.patientId) {
+      this.loadPatientDetails();
+    }
+  }
+
+  // Get current patient name from multiple sources
+  getCurrentPatientName(): string {
+    // First check if a patient is actually connected
+    if (!this.remoteStream) {
+      console.log('🔍 getCurrentPatientName: No remote stream, returning "No Patient Connected"');
+      return 'No Patient Connected';
+    }
+    
+    console.log('🔍 getCurrentPatientName: Remote stream exists, checking patient data');
+    console.log('🔍 patientDetails:', this.patientDetails);
+    console.log('🔍 currentPatient:', this.currentPatient);
+    console.log('🔍 connectedPatientName:', this.connectedPatientName);
+    
+    // Priority order: patientDetails > currentPatient > connectedPatientName > fallback
+    if (this.patientDetails && this.patientDetails.fullName) {
+      console.log('🔍 Returning patientDetails.fullName:', this.patientDetails.fullName);
+      return this.patientDetails.fullName;
+    }
+    
+    if (this.currentPatient && this.currentPatient.fullName) {
+      console.log('🔍 Returning currentPatient.fullName:', this.currentPatient.fullName);
+      return this.currentPatient.fullName;
+    }
+    
+    if (this.connectedPatientName) {
+      console.log('🔍 Returning connectedPatientName:', this.connectedPatientName);
+      return this.connectedPatientName;
+    }
+    
+    console.log('🔍 Returning "Patient Name Loading..."');
+    return 'Patient Name Loading...';
+  }
+
+  // Update prescription forms with current patient data
+  private updatePrescriptionFormsWithPatientData(): void {
+    if (this.prescriptionForms && this.prescriptionForms.length > 0) {
+      this.prescriptionForms.forEach(form => {
+        form.patientId = this.patientId;
+        form.consultationId = this.consultationId;
+      });
+    }
+  }
+
+  // Refresh patient name display (useful for debugging or manual refresh)
+  refreshPatientNameDisplay(): void {
+    // Force update the current patient object with the latest data
+    if (this.patientDetails && this.patientDetails.fullName) {
+      this.currentPatient = {
+        id: this.patientId,
+        fullName: this.patientDetails.fullName,
+        email: 'Not provided'
+      };
+    }
+  }
+
+  // Ensure patient name is loaded before showing diagnosis modal
+  ensurePatientNameLoaded(): void {
+    // If we don't have patient details, try to load them
+    if (!this.patientDetails || !this.patientDetails.fullName) {
+      console.log('🔄 Ensuring patient name is loaded for diagnosis modal...');
+      this.loadPatientDetails();
+    }
+    
+    // If we have patient details but currentPatient is not set, update it
+    if (this.patientDetails && this.patientDetails.fullName && (!this.currentPatient || !this.currentPatient.fullName)) {
+      this.currentPatient = {
+        id: this.patientId || this.connectedPatientId,
+        fullName: this.patientDetails.fullName,
+        email: 'Not provided'
+      };
+      console.log('✅ Updated currentPatient for diagnosis modal:', this.currentPatient);
+    }
+    
+    // If we still don't have a name, try to get it from connected patient name
+    if ((!this.currentPatient || !this.currentPatient.fullName) && this.connectedPatientName) {
+      this.currentPatient = {
+        id: this.patientId || this.connectedPatientId,
+        fullName: this.connectedPatientName,
+        email: 'Not provided'
+      };
+      console.log('✅ Used connectedPatientName for diagnosis modal:', this.currentPatient);
+    }
+  }
+
 
   async submitPrescription(): Promise<void> {
-    if (!this.validatePrescriptionForm()) {
+    // Update prescription forms with current patient and consultation data
+    this.updatePrescriptionFormsWithPatientData();
+    
+    // Validate all prescription forms
+    if (!this.validateAllPrescriptionForms()) {
       return;
     }
 
     // Ensure we have valid patient context
-    if (!this.prescriptionForm.patientId) {
+    if (!this.patientId) {
       this.prescriptionError = 'Patient context is required to create a prescription.';
       this.showNotificationMessage('❌ Patient context is required to create a prescription.', 'error');
       return;
@@ -1146,73 +1370,92 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.prescriptionSuccess = '';
 
     try {
-      // Prepare prescription data for API
-      const prescriptionData: CreatePrescriptionRequest = {
-        patientId: this.prescriptionForm.patientId,
-        consultationId: this.prescriptionForm.consultationId, // Now we always have a consultation ID
-        medicationName: this.prescriptionForm.medicationName,
-        dosage: this.prescriptionForm.dosage,
-        frequency: this.prescriptionForm.frequency,
-        duration: this.prescriptionForm.duration,
-        instructions: this.prescriptionForm.instructions,
-        quantity: this.prescriptionForm.quantity,
-        refills: this.prescriptionForm.refills,
-        expiresAt: this.prescriptionForm.expiresAt ? new Date(this.prescriptionForm.expiresAt) : undefined,
-        notes: this.prescriptionForm.notes
-      };
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
 
-      console.log('📋 Submitting prescription with data:', prescriptionData);
-      console.log('👤 Current patient ID:', this.patientId);
-      console.log('🏥 Current consultation ID:', this.consultationId);
+      // Process each prescription form
+      for (let i = 0; i < this.prescriptionForms.length; i++) {
+        const form = this.prescriptionForms[i];
+        
+        // Skip empty forms (where medication name is not filled)
+        if (!form.medicationName || form.medicationName.trim() === '') {
+          continue;
+        }
 
-      // Validate prescription data
-      const validation = this.prescriptionsService.validatePrescriptionData(prescriptionData);
-      if (!validation.isValid) {
-        this.prescriptionError = validation.errors.join(', ');
-        this.showNotificationMessage('❌ Please fix validation errors before submitting.', 'error');
-        return;
-      }
+        // Prepare prescription data for API
+        const prescriptionData: CreatePrescriptionRequest = {
+          patientId: this.patientId, // Use the main patientId property
+          consultationId: this.consultationId, // Use the main consultationId property
+          medicationName: form.medicationName,
+          dosage: form.dosage,
+          frequency: form.frequency,
+          duration: form.duration,
+          instructions: form.instructions,
+          quantity: form.quantity,
+          refills: form.refills,
+          expiresAt: form.expiresAt ? new Date(form.expiresAt) : undefined,
+          notes: form.notes
+        };
 
-      // Create prescription via API
-      this.prescriptionsService.createPrescription(prescriptionData).subscribe({
-        next: (response) => {
-          if (response.success && response.data) {
+        console.log(`📋 Submitting prescription ${i + 1} with data:`, prescriptionData);
+        console.log(`🔍 Debug - Main consultationId: ${this.consultationId}, patientId: ${this.patientId}`);
+        console.log(`🔍 Debug - Form consultationId: ${form.consultationId}, patientId: ${form.patientId}`);
+
+        // Validate prescription data
+        const validation = this.prescriptionsService.validatePrescriptionData(prescriptionData);
+        if (!validation.isValid) {
+          errors.push(`Prescription ${i + 1}: ${validation.errors.join(', ')}`);
+          errorCount++;
+          continue;
+        }
+
+        // Create prescription via API
+        try {
+          const response = await this.prescriptionsService.createPrescription(prescriptionData).toPromise();
+          
+          if (response && response.success && response.data) {
             // Add to local prescriptions list
             this.prescriptions.push(response.data as Prescription);
+            successCount++;
 
             // Send prescription notification to patient via WebRTC data channel
             this.webrtc.sendFaceScanStatus({
               type: 'face-scan-status',
               status: `Prescription Created: ${prescriptionData.medicationName} - ${prescriptionData.dosage}`,
               timestamp: Date.now(),
-              prescriptionData: response.data // Send the complete prescription data
+              prescriptionData: response.data
             });
             
-            console.log('✅ Prescription created successfully:', response.data);
-            
-            // Close modal and reset form
-            this.closePrescriptionModal();
-            
-            // Show success notification
-            this.showNotificationMessage('✅ Prescription created and saved successfully!', 'success');
-            
+            console.log(`✅ Prescription ${i + 1} created successfully:`, response.data);
           } else {
-            this.prescriptionError = response.message || 'Failed to create prescription';
+            errors.push(`Prescription ${i + 1}: ${response?.message || 'Failed to create prescription'}`);
+            errorCount++;
           }
-        },
-        error: (error) => {
-          console.error('❌ Error creating prescription:', error);
-          this.prescriptionError = error.error?.message || 'Error creating prescription. Please try again.';
-          this.showNotificationMessage('❌ Failed to create prescription. Please try again.', 'error');
-        },
-        complete: () => {
-          this.isSubmittingPrescription = false;
+        } catch (error: any) {
+          console.error(`❌ Error creating prescription ${i + 1}:`, error);
+          errors.push(`Prescription ${i + 1}: ${error.error?.message || 'Error creating prescription'}`);
+          errorCount++;
         }
-      });
+      }
+
+      // Show results
+      if (successCount > 0 && errorCount === 0) {
+        this.closePrescriptionModal();
+        this.showNotificationMessage(`✅ ${successCount} prescription(s) created and saved successfully!`, 'success');
+      } else if (successCount > 0 && errorCount > 0) {
+        this.prescriptionError = `Partially successful: ${successCount} prescription(s) created, ${errorCount} failed. Errors: ${errors.join('; ')}`;
+        this.showNotificationMessage(`⚠️ ${successCount} prescription(s) created, ${errorCount} failed.`, 'info');
+      } else {
+        this.prescriptionError = `All prescriptions failed. Errors: ${errors.join('; ')}`;
+        this.showNotificationMessage('❌ Failed to create prescriptions. Please try again.', 'error');
+      }
       
     } catch (error) {
-      console.error('❌ Error submitting prescription:', error);
-      this.prescriptionError = 'Error submitting prescription. Please try again.';
+      console.error('❌ Error submitting prescriptions:', error);
+      this.prescriptionError = 'Error submitting prescriptions. Please try again.';
+      this.showNotificationMessage('❌ Failed to create prescriptions. Please try again.', 'error');
+    } finally {
       this.isSubmittingPrescription = false;
     }
   }
@@ -1246,6 +1489,64 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       return false;
     }
 
+    return true;
+  }
+
+  validateAllPrescriptionForms(): boolean {
+    // Check if at least one prescription form has medication name filled
+    const hasValidPrescription = this.prescriptionForms.some(form => 
+      form.medicationName && form.medicationName.trim() !== ''
+    );
+
+    if (!hasValidPrescription) {
+      this.prescriptionError = 'At least one prescription with medication name is required.';
+      this.showNotificationMessage('❌ At least one prescription with medication name is required.', 'error');
+      return false;
+    }
+
+    // Validate each filled prescription form
+    const requiredFields = ['medicationName', 'dosage', 'frequency', 'duration'];
+    
+    for (let i = 0; i < this.prescriptionForms.length; i++) {
+      const form = this.prescriptionForms[i];
+      
+      // Skip empty forms
+      if (!form.medicationName || form.medicationName.trim() === '') {
+        continue;
+      }
+
+      // Validate required fields for this form
+      for (const field of requiredFields) {
+        if (!form[field] || form[field].toString().trim() === '') {
+          const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+          this.prescriptionError = `Prescription ${i + 1}: ${fieldName} is required.`;
+          this.showNotificationMessage(`❌ Prescription ${i + 1}: Please fill in the ${fieldName} field.`, 'error');
+          return false;
+        }
+      }
+
+      // Validate quantity if provided
+      if (form.quantity && (isNaN(form.quantity) || form.quantity <= 0)) {
+        this.prescriptionError = `Prescription ${i + 1}: Quantity must be a positive number.`;
+        this.showNotificationMessage(`❌ Prescription ${i + 1}: Quantity must be a positive number.`, 'error');
+        return false;
+      }
+
+      // Validate refills
+      if (form.refills < 0) {
+        this.prescriptionError = `Prescription ${i + 1}: Refills cannot be negative.`;
+        this.showNotificationMessage(`❌ Prescription ${i + 1}: Refills cannot be negative.`, 'error');
+        return false;
+      }
+
+      // Validate expiration date if provided
+      if (form.expiresAt && new Date(form.expiresAt) <= new Date()) {
+        this.prescriptionError = `Prescription ${i + 1}: Expiration date must be in the future.`;
+        this.showNotificationMessage(`❌ Prescription ${i + 1}: Expiration date must be in the future.`, 'error');
+        return false;
+      }
+    }
+    
     return true;
   }
 
@@ -1287,6 +1588,9 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.consultationId) {
       this.initializeConsultationContext();
     }
+
+    // Ensure patient details are loaded before showing modal
+    this.ensurePatientNameLoaded();
 
     this.showDiagnosisModal = true;
     this.resetDiagnosisForm();
@@ -1458,6 +1762,368 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Lab Request methods
+  openLabRequestModal(): void {
+    // Check if patient is connected
+    if (!this.remoteStream) {
+      this.labRequestError = 'Patient must be connected to create a lab request.';
+      return;
+    }
+
+    // Check if doctor is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.role !== 'DOCTOR') {
+      this.labRequestError = 'Only doctors can create lab requests.';
+      return;
+    }
+
+    // Initialize consultation context if not already done
+    if (!this.consultationId) {
+      this.initializeConsultationContext();
+    }
+
+    // Ensure patient details are loaded before showing modal
+    this.ensurePatientNameLoaded();
+
+    this.showLabRequestModal = true;
+    this.resetLabRequestForm();
+    this.loadOrganizations();
+    this.labRequestError = '';
+    this.labRequestSuccess = '';
+  }
+
+  closeLabRequestModal(): void {
+    this.showLabRequestModal = false;
+    this.resetLabRequestForm();
+    this.labRequestError = '';
+    this.labRequestSuccess = '';
+  }
+
+  resetLabRequestForm(): void {
+    this.labRequestForm = {
+      patientId: this.connectedPatientId || this.patientId || '',
+      doctorId: '',
+      organizationId: '',
+      consultationId: this.consultationId?.toString() || '',
+      notes: ''
+    };
+  }
+
+  onLabRequestOrganizationChange(): void {
+    this.labRequestForm.doctorId = '';
+    this.availableDoctors = [];
+    
+    if (this.labRequestForm.organizationId) {
+      this.loadDoctorsByOrganization(this.labRequestForm.organizationId);
+    }
+  }
+
+  isLabRequestFormValid(): boolean {
+    // Check if patient is connected
+    if (!this.remoteStream) {
+      return false;
+    }
+    
+    // Check if patient name is not "No Patient Connected"
+    if (this.getCurrentPatientName() === 'No Patient Connected') {
+      return false;
+    }
+    
+    // Check if consultation ID is available
+    if (!this.currentConsultation && !this.consultationId) {
+      return false;
+    }
+    
+    // Check if all required form fields are filled
+    return !!(
+      this.labRequestForm.patientId &&
+      this.labRequestForm.organizationId &&
+      this.labRequestForm.doctorId
+    );
+  }
+
+  async submitLabRequest(): Promise<void> {
+    if (!this.isLabRequestFormValid()) {
+      // Provide specific error messages based on what's missing
+      if (!this.remoteStream) {
+        this.labRequestError = 'Patient must be connected to submit lab request.';
+      } else if (this.getCurrentPatientName() === 'No Patient Connected') {
+        this.labRequestError = 'Patient information is not available.';
+      } else if (!this.currentConsultation && !this.consultationId) {
+        this.labRequestError = 'Consultation ID is not available.';
+      } else {
+        this.labRequestError = 'Please fill in all required fields (Organization and Doctor).';
+      }
+      return;
+    }
+
+    this.isSubmittingLabRequest = true;
+    this.labRequestError = '';
+    this.labRequestSuccess = '';
+
+    try {
+      console.log('🧪 Submitting lab request:', this.labRequestForm);
+      console.log('🔍 Current user:', JSON.parse(localStorage.getItem('currentUser') || '{}'));
+      console.log('🔍 Token exists:', !!localStorage.getItem('token'));
+
+      // Validate that we have all required data
+      if (!this.labRequestForm.patientId) {
+        throw new Error('Patient ID is required');
+      }
+      if (!this.labRequestForm.doctorId) {
+        throw new Error('Doctor ID is required');
+      }
+      if (!this.labRequestForm.organizationId) {
+        throw new Error('Organization ID is required');
+      }
+
+      // Create the lab request using the service
+      const labRequestData: LabRequestForm = {
+        patientId: this.labRequestForm.patientId,
+        doctorId: this.labRequestForm.doctorId,
+        organizationId: this.labRequestForm.organizationId,
+        consultationId: this.labRequestForm.consultationId,
+        notes: this.labRequestForm.notes
+      };
+
+      console.log('🔍 Lab request data to send:', labRequestData);
+
+      const createdLabRequest = await this.labRequestService.createLabRequest(labRequestData).toPromise();
+      
+      console.log('✅ Lab request created successfully:', createdLabRequest);
+      
+      this.labRequestSuccess = 'Lab request submitted successfully!';
+      
+      // Show success notification
+      this.showNotificationMessage('🧪 Lab request submitted successfully!', 'success');
+      
+      // Send notification to patient via WebRTC data channel
+      this.webrtc.sendFaceScanStatus({
+        type: 'face-scan-status',
+        status: 'Lab Request Created: Your doctor has submitted a lab request for you',
+        timestamp: Date.now(),
+        labRequestData: createdLabRequest
+      });
+      
+      // Close modal after a short delay
+      setTimeout(() => {
+        this.closeLabRequestModal();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('❌ Error submitting lab request:', error);
+      console.error('❌ Error details:', {
+        message: error?.message,
+        status: error?.status,
+        statusText: error?.statusText,
+        error: error?.error
+      });
+      
+      // Extract more specific error message
+      let errorMessage = 'Error submitting lab request. Please try again.';
+      if (error?.error?.message) {
+        errorMessage = error.error.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Handle specific error cases
+      if (error?.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
+        // Clear localStorage and redirect to login
+        localStorage.clear();
+        this.showNotificationMessage('❌ Session expired. Please log in again.', 'error');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (error?.status === 400) {
+        errorMessage = 'Invalid data. Please check your input.';
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      this.labRequestError = errorMessage;
+      
+      // Show error notification
+      this.showNotificationMessage(`❌ ${errorMessage}`, 'error');
+    } finally {
+      this.isSubmittingLabRequest = false;
+    }
+  }
+
+  // Schedule to Another Doctor Methods
+  openScheduleModal(): void {
+    // Check if patient is connected
+    if (!this.remoteStream) {
+      this.scheduleError = 'Patient must be connected to schedule appointment.';
+      return;
+    }
+
+    // Check if doctor is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.role !== 'DOCTOR') {
+      this.scheduleError = 'Only doctors can schedule appointments.';
+      return;
+    }
+
+    // Ensure patient details are loaded
+    this.ensurePatientNameLoaded();
+
+    // Initialize form with current patient data
+    this.scheduleForm.patientId = this.patientId || this.connectedPatientId;
+    
+    this.showScheduleModal = true;
+    this.resetScheduleForm();
+    this.scheduleError = '';
+    this.scheduleSuccess = '';
+    
+    // Load organizations and doctoaars
+    this.loadOrganizations();
+  }
+
+  closeScheduleModal(): void {
+    this.showScheduleModal = false;
+    this.resetScheduleForm();
+    this.scheduleError = '';
+    this.scheduleSuccess = '';
+    this.organizations = [];
+    this.availableDoctors = [];
+  }
+
+  resetScheduleForm(): void {
+    this.scheduleForm = {
+      patientId: this.patientId || this.connectedPatientId,
+      organizationId: null,
+      doctorId: null,
+      appointmentDate: '',
+      appointmentTime: '',
+      priority: 'NORMAL',
+      notes: ''
+    };
+  }
+
+  loadOrganizations(): void {
+    this.organizationsService.getOrganizations().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.organizations = response.data;
+          console.log('✅ Loaded organizations:', this.organizations);
+        } else {
+          console.warn('⚠️ Failed to load organizations:', response.message);
+          this.organizations = [];
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error loading organizations:', error);
+        this.organizations = [];
+      }
+    });
+  }
+
+  onOrganizationChange(): void {
+    this.scheduleForm.doctorId = null; // Reset doctor selection
+    this.loadDoctorsByOrganization(this.scheduleForm.organizationId);
+  }
+
+  loadDoctorsByOrganization(organizationId: string): void {
+    if (!organizationId) {
+      this.availableDoctors = [];
+      return;
+    }
+
+    this.organizationsService.getDoctorsByOrganization(organizationId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.availableDoctors = response.data.map(doctor => ({
+            id: doctor.id,
+            firstName: doctor.name.split(' ')[0] || 'Dr.',
+            lastName: doctor.name.split(' ').slice(1).join(' ') || '',
+            specialization: doctor.specialization
+          }));
+          console.log('✅ Loaded doctors for organization:', this.availableDoctors);
+        } else {
+          console.warn('⚠️ Failed to load doctors:', response.message);
+          this.availableDoctors = [];
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error loading doctors:', error);
+        this.availableDoctors = [];
+      }
+    });
+  }
+
+  getMinDate(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  isScheduleFormValid(): boolean {
+    return !!(
+      this.scheduleForm.patientId &&
+      this.scheduleForm.organizationId &&
+      this.scheduleForm.doctorId &&
+      this.scheduleForm.appointmentDate &&
+      this.scheduleForm.appointmentTime
+    );
+  }
+
+  async submitSchedule(): Promise<void> {
+    if (!this.isScheduleFormValid()) {
+      this.scheduleError = 'Please fill in all required fields.';
+      return;
+    }
+
+    this.isSubmittingSchedule = true;
+    this.scheduleError = '';
+    this.scheduleSuccess = '';
+
+    try {
+      // Combine date and time
+      const appointmentDateTime = new Date(`${this.scheduleForm.appointmentDate}T${this.scheduleForm.appointmentTime}`);
+      
+      const appointmentData = {
+        patientId: this.scheduleForm.patientId,
+        doctorId: this.scheduleForm.doctorId,
+        requestedDate: this.scheduleForm.appointmentDate, // Send date in YYYY-MM-DD format
+        requestedTime: this.scheduleForm.appointmentTime,
+        reason: 'Referred by current doctor',
+        priority: this.scheduleForm.priority,
+        notes: this.scheduleForm.notes
+      };
+
+      console.log('📅 Submitting appointment request:', appointmentData);
+
+      // Call the real API
+      const response = await this.appointmentService.createAppointmentRequestByDoctor(appointmentData).toPromise();
+
+      if (response.success) {
+        this.scheduleSuccess = `Appointment scheduled successfully for ${this.getCurrentPatientName()}`;
+        this.showNotificationMessage('📅 Appointment scheduled successfully!', 'success');
+        
+        // Send notification to patient via WebRTC data channel
+        this.webrtc.sendFaceScanStatus({
+          type: 'face-scan-status',
+          status: 'Appointment Scheduled: Your doctor has scheduled an appointment with another doctor for you',
+          timestamp: Date.now(),
+          appointmentData: response.data
+        });
+        
+        // Close modal after a short delay
+        setTimeout(() => {
+          this.closeScheduleModal();
+        }, 2000);
+      } else {
+        this.scheduleError = response.message || 'Failed to schedule appointment';
+      }
+    } catch (error: any) {
+      console.error('❌ Error scheduling appointment:', error);
+      this.scheduleError = error?.error?.message || 'An error occurred while scheduling the appointment';
+    } finally {
+      this.isSubmittingSchedule = false;
+    }
+  }
+
   // Patient Details Methods
   loadPatientDetails(): void {
     if (!this.connectedPatientId && !this.patientId) {
@@ -1481,7 +2147,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Fetch real patient details from API
-  private fetchRealPatientDetails(patientId: number): void {
+  private fetchRealPatientDetails(patientId: string): void {
     console.log('🔍 Fetching real patient details for ID:', patientId);
     
     this.patientService.getPatientInfoByUserId(patientId).subscribe({
@@ -1502,6 +2168,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
             fullName: response.data.fullName,
             email: 'Not provided' // Email not included in PatientInfo
           };
+
+          // If prescription modal is open, update the prescription forms with current patient data
+          if (this.showPrescriptionModal) {
+            this.updatePrescriptionFormsWithPatientData();
+          }
           
           // Load recent activity (placeholder)
           this.loadRecentActivity(patientId);
@@ -1526,7 +2197,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Load recent activity for the patient
-  private loadRecentActivity(patientId: number): void {
+  private loadRecentActivity(patientId: string): void {
     // This would typically fetch from consultations, prescriptions, etc.
     // For now, we'll use mock data
     this.recentActivity = [
@@ -1552,18 +2223,18 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // Mock patient data - in real implementation, this would come from API
     this.patientDetails = {
       id: 1,
-      userId: this.connectedPatientId || this.patientId || 5,
-      fullName: this.connectedPatientName || 'Emily Anderson',
-      gender: 'FEMALE',
-      dateOfBirth: new Date('1990-05-15'),
-      contactNumber: '+1-555-0123',
-      address: '123 Health Street, Medical City, MC 12345',
-      weight: 63.5,
-      height: 168.0,
-      bloodType: 'O+',
-      medicalHistory: 'Type 2 Diabetes, Hypertension',
-      allergies: 'Penicillin, Shellfish',
-      medications: 'Metformin 500mg daily, Lisinopril 10mg daily'
+      userId: this.connectedPatientId || this.patientId || 'Unknown ID',
+      fullName: this.connectedPatientName || 'Unknown Patient',
+      gender: '',
+      dateOfBirth: new Date(),
+      contactNumber: '',
+      address: '',
+      weight: 0,
+      height: 0,
+      bloodType: '',
+      medicalHistory: '',
+      allergies: '',
+      medications: ''
     };
 
     // Mock recent activity
@@ -1639,8 +2310,23 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       console.warn('Unable to send doctor info:', e);
     }
     
+    // Clear any existing mock data when patient joins
+    this.clearMockData();
+    
     // Load patient details (will be updated when patient info is received)
     this.loadPatientDetails();
+  }
+
+  // Clear mock data when patient joins
+  private clearMockData(): void {
+    console.log('🧹 Clearing mock patient data');
+    this.patientDetails = null;
+    this.currentPatient = {
+      id: null,
+      fullName: null,
+      email: null
+    };
+    this.recentActivity = [];
   }
 
   // Handle patient leaving the meeting
@@ -1649,6 +2335,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.connectedPatientName = '';
     this.connectedPatientId = null;
     this.patientDetails = null;
+    this.currentPatient = {
+      id: null,
+      fullName: null,
+      email: null
+    };
     this.recentActivity = [];
   }
 

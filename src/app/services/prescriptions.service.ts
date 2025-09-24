@@ -5,8 +5,8 @@ import { environment } from '../../environments/environment';
 
 export interface Prescription {
   id?: number;
-  patientId: number;
-  doctorId: number;
+  patientId: string;
+  doctorId: string;
   consultationId?: number;
   medicationName: string;
   dosage: string;
@@ -27,7 +27,7 @@ export interface Prescription {
 }
 
 export interface CreatePrescriptionRequest {
-  patientId: number;
+  patientId: string;
   consultationId?: number;
   medicationName: string;
   dosage: string;
@@ -54,7 +54,7 @@ export interface UpdatePrescriptionRequest {
 }
 
 export interface Patient {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   contactNumber: string;
@@ -114,7 +114,7 @@ export class PrescriptionsService {
   /**
    * Get prescriptions for a specific patient
    */
-  getPatientPrescriptions(patientId: number): Observable<PrescriptionResponse> {
+  getPatientPrescriptions(patientId: string): Observable<PrescriptionResponse> {
     return this.http.get<PrescriptionResponse>(
       `${this.API_URL}/patient/${patientId}`,
       { headers: this.getHeaders() }
@@ -191,7 +191,7 @@ export class PrescriptionsService {
   validatePrescriptionData(data: CreatePrescriptionRequest): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!data.patientId || data.patientId <= 0) {
+    if (!data.patientId || data.patientId.trim() === '') {
       errors.push('Patient ID is required and must be valid');
     }
 

@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
-import { AuthService, User } from '../../../auth/auth.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { AuthService, User, UpdateProfilePayload } from '../../../auth/auth.service';
 
 // Interfaces based on Prisma schema
 interface PatientPersonalInfo {
@@ -74,7 +75,27 @@ export class PatientMyProfileComponent implements OnInit {
   profile!: PatientProfile;
   isEditing = false;
   selectedImage: File | null = null;
+  imagePreview: string | null = null;
   age: number = 0;
+  
+  // Track pending (not yet uploaded) image state
+  private imagePendingUpload = false;
+  private previousProfileImage: string | undefined = undefined;
+  private pendingAuthProfileImage: string | undefined = undefined;
+  // Direct source bound to <img [src]>
+  avatarSrc: string = '33.png';
+  // Track pending deletion to apply on Save
+  private pendingProfileImageRemoval = false;
+  
+  // Delete confirmation modal state
+  showDeleteConfirm = false;
+  deletingImage = false;
+
+  // Lightweight toast notification
+  showNotification = false;
+  notificationMessage = '';
+  notificationType: 'success' | 'error' | 'info' = 'success';
+  private notificationTimeoutHandle: any = null;
 
   // Verification modal properties
   showVerificationModal = false;
@@ -106,15 +127,98 @@ export class PatientMyProfileComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private sanitizer: DomSanitizer
   ) {
     this.initializeProfile();
     this.createForm();
   }
 
+  private normalizeImageDataUrl(image: string | undefined | null): string | undefined {
+    if (!image) return undefined;
+    const trimmed = image.trim();
+    
+    // If it's already a data URL, return as is
+    if (trimmed.startsWith('data:')) return trimmed;
+    
+    // If it's empty, return undefined
+    if (trimmed.length === 0) return undefined;
+    
+    // Detect mime type from base64 signature
+    let mime = 'image/png'; // default to PNG
+    
+    // Check for common base64 image signatures
+    if (trimmed.startsWith('/9j/') || trimmed.startsWith('/9j4AAQSkZJRg')) {
+      mime = 'image/jpeg';
+    } else if (trimmed.startsWith('iVBORw0KGgo') || trimmed.startsWith('iVBORw0KGg')) {
+      mime = 'image/png';
+    } else if (trimmed.startsWith('R0lGODlh') || trimmed.startsWith('R0lGOD')) {
+      mime = 'image/gif';
+    } else if (trimmed.startsWith('Qk') || trimmed.startsWith('Qk1G')) {
+      mime = 'image/bmp';
+    } else if (trimmed.includes('PHN2Zy') || trimmed.startsWith('PD94bWwg')) {
+      mime = 'image/svg+xml';
+    } else if (trimmed.startsWith('UklGR')) {
+      mime = 'image/webp';
+    }
+    
+    return `data:${mime};base64,${trimmed}`;
+  }
+
   ngOnInit(): void {
+    console.log('ngOnInit - currentUserValue exists:', !!this.authService.currentUserValue);
+    console.log('ngOnInit - currentUserValue profilePicture:', this.authService.currentUserValue?.profilePicture ? this.authService.currentUserValue.profilePicture.substring(0, 50) + '...' : 'none');
+    
+    // Immediately use current cached user profilePicture if present
+    this.setAvatarFromCurrentUser();
+
+    // Keep profile image in sync with auth user stream in case it arrives later
+    this.authService.currentUser$.subscribe(u => {
+      console.log('currentUser$ subscription triggered, user:', u ? 'exists' : 'null');
+      console.log('currentUser$ profilePicture:', u?.profilePicture ? u.profilePicture.substring(0, 50) + '...' : 'none');
+      
+      if (u?.profilePicture) {
+        const normalized = this.normalizeImageDataUrl(u.profilePicture);
+        console.log('currentUser$ normalized image:', normalized ? normalized.substring(0, 50) + '...' : 'null');
+        this.pendingAuthProfileImage = normalized;
+        // Always reflect latest DB image in avatar
+        if (normalized) {
+          this.avatarSrc = normalized;
+          if (this.profile?.personalInfo) {
+            this.profile.personalInfo.profileImage = normalized;
+          }
+          console.log('currentUser$ updated avatarSrc to:', this.avatarSrc.substring(0, 50) + '...');
+        }
+      }
+    });
+    
     this.calculateAge();
     this.loadProfile();
+    // Ensure avatar reflects current user after initial map
+    this.setAvatarFromCurrentUser();
+  }
+
+  private setAvatarFromCurrentUser(): void {
+    const cached = this.authService.currentUserValue?.profilePicture;
+    console.log('setAvatarFromCurrentUser - cached profilePicture:', cached ? cached.substring(0, 50) + '...' : 'null');
+    
+    if (cached && typeof cached === 'string') {
+      const t = cached.trim();
+      console.log('setAvatarFromCurrentUser - trimmed length:', t.length);
+      if (t.length > 0) {
+        const src = t.startsWith('data:image') ? t : (this.normalizeImageDataUrl(t) || '');
+        console.log('setAvatarFromCurrentUser - src result:', src ? src.substring(0, 50) + '...' : 'null');
+        if (src) {
+          this.avatarSrc = src;
+          console.log('setAvatarFromCurrentUser - updated avatarSrc to:', this.avatarSrc.substring(0, 50) + '...');
+          // Also update the profile if it exists
+          if (this.profile?.personalInfo) {
+            this.profile.personalInfo.profileImage = src;
+            console.log('setAvatarFromCurrentUser - updated profile.personalInfo.profileImage');
+          }
+        }
+      }
+    }
   }
 
   private initializeProfile(): void {
@@ -197,69 +301,106 @@ export class PatientMyProfileComponent implements OnInit {
   }
 
   private async loadProfile(): Promise<void> {
-    const user = this.authService.currentUserValue || await this.authService.getProfile();
-    if (!user) {
-      this.router.navigate(['/login']);
-      return;
+    try {
+      // Guard: must be logged in and a patient
+      const user = await this.authService.getProfile();
+      if (!user) {
+        this.router.navigate(['/login']);
+        return;
+      }
+      if (user.role !== 'PATIENT') {
+        this.authService.redirectBasedOnRole();
+        return;
+      }
+
+      console.log('Loaded user data:', user);
+      console.log('Patient info:', user.patientInfo);
+      console.log('profilePicture (raw):', user.profilePicture ? (user.profilePicture.substring(0, 30) + '...') : 'none');
+      console.log('profilePicture length:', user.profilePicture ? user.profilePicture.length : 0);
+
+      const p = user.patientInfo || {
+        fullName: '',
+        gender: 'OTHER',
+        dateOfBirth: '1990-01-01',
+        contactNumber: '',
+        address: '',
+        weight: 0,
+        height: 0,
+        bloodType: '',
+        medicalHistory: '',
+        allergies: [],
+        medications: [],
+        emergencyContact: undefined,
+        insuranceInfo: undefined
+      };
+
+      this.profile = {
+        personalInfo: {
+          fullName: p.fullName || '',
+          email: user.email,
+          gender: p.gender || 'OTHER',
+          dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth).toISOString().split('T')[0] : '1990-01-01',
+          contactNumber: p.contactNumber || '',
+          address: p.address || '',
+          weight: p.weight || 0,
+          height: p.height || 0,
+          bloodType: p.bloodType || '',
+          medicalHistory: p.medicalHistory || '',
+          allergies: Array.isArray(p.allergies) ? p.allergies : (p.allergies ? [p.allergies] : []),
+          medications: Array.isArray(p.medications) ? p.medications : (p.medications ? [p.medications] : []),
+          profileImage: this.normalizeImageDataUrl(user.profilePicture) || this.pendingAuthProfileImage || undefined,
+          philHealthId: p.philHealthId || '',
+          philHealthStatus: p.philHealthStatus || '',
+          philHealthCategory: p.philHealthCategory || '',
+          philHealthExpiry: p.philHealthExpiry ? new Date(p.philHealthExpiry).toISOString().split('T')[0] : '',
+          philHealthMemberSince: p.philHealthMemberSince ? new Date(p.philHealthMemberSince).toISOString().split('T')[0] : ''
+        },
+        emergencyContact: p.emergencyContact ? {
+          contactName: p.emergencyContact.contactName || '',
+          relationship: p.emergencyContact.relationship || '',
+          contactNumber: p.emergencyContact.contactNumber || '',
+          contactAddress: p.emergencyContact.contactAddress || ''
+        } : {
+          contactName: '',
+          relationship: '',
+          contactNumber: '',
+          contactAddress: ''
+        },
+        insuranceInfo: p.insuranceInfo ? {
+          providerName: p.insuranceInfo.providerName,
+          policyNumber: p.insuranceInfo.policyNumber,
+          insuranceContact: p.insuranceInfo.insuranceContact
+        } : undefined,
+        preferences: this.profile.preferences
+      };
+
+      console.log('Mapped profile data:', this.profile);
+
+      // Fallback: if for any reason profile image is still empty but auth service holds it, apply it
+      if ((!this.profile.personalInfo.profileImage || this.profile.personalInfo.profileImage.length === 0) && this.authService.currentUserValue?.profilePicture) {
+        const normalizedImage = this.normalizeImageDataUrl(this.authService.currentUserValue.profilePicture);
+        if (normalizedImage) {
+          this.profile.personalInfo.profileImage = normalizedImage;
+          console.log('Applied fallback profilePicture from auth service');
+        }
+      }
+
+      // Set avatar src for the template - prioritize profile image from backend
+      const profileImage = this.profile.personalInfo.profileImage;
+      if (profileImage && profileImage.length > 0) {
+        this.avatarSrc = profileImage;
+      } else {
+        this.avatarSrc = this.avatarSrc || '33.png';
+      }
+      
+      console.log('Final avatarSrc set to:', this.avatarSrc.substring(0, 50) + '...');
+
+      this.profileForm.patchValue(this.profile);
+      this.calculateAge();
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Handle error appropriately - maybe show a toast or redirect
     }
-    if (user.role !== 'PATIENT') {
-      this.authService.redirectBasedOnRole();
-      return;
-    }
-
-    const p = user.patientInfo || {
-      fullName: '',
-      gender: 'OTHER',
-      dateOfBirth: '1990-01-01',
-      contactNumber: '',
-      address: '',
-      weight: 0,
-      height: 0,
-      bloodType: '',
-      medicalHistory: '',
-      allergies: [],
-      medications: [],
-      emergencyContact: undefined,
-      insuranceInfo: undefined
-    };
-
-    this.profile = {
-      personalInfo: {
-        fullName: p.fullName || '',
-        email: user.email,
-        gender: p.gender || 'OTHER',
-        dateOfBirth: p.dateOfBirth || '1990-01-01',
-        contactNumber: p.contactNumber || '',
-        address: p.address || '',
-        weight: p.weight || 0,
-        height: p.height || 0,
-        bloodType: p.bloodType || '',
-        medicalHistory: p.medicalHistory || '',
-        allergies: Array.isArray(p.allergies) ? p.allergies : (p.allergies ? [p.allergies] : []),
-        medications: Array.isArray(p.medications) ? p.medications : (p.medications ? [p.medications] : []),
-        profileImage: undefined,
-        philHealthId: p.philHealthId || '',
-        philHealthStatus: p.philHealthStatus || '',
-        philHealthCategory: p.philHealthCategory || '',
-        philHealthExpiry: p.philHealthExpiry ? new Date(p.philHealthExpiry).toISOString().split('T')[0] : '',
-        philHealthMemberSince: p.philHealthMemberSince ? new Date(p.philHealthMemberSince).toISOString().split('T')[0] : ''
-      },
-      emergencyContact: p.emergencyContact ? {
-        contactName: p.emergencyContact.contactName,
-        relationship: p.emergencyContact.relationship,
-        contactNumber: p.emergencyContact.contactNumber,
-        contactAddress: p.emergencyContact.contactAddress
-      } : undefined,
-      insuranceInfo: p.insuranceInfo ? {
-        providerName: p.insuranceInfo.providerName,
-        policyNumber: p.insuranceInfo.policyNumber,
-        insuranceContact: p.insuranceInfo.insuranceContact
-      } : undefined,
-      preferences: this.profile.preferences
-    };
-
-    this.profileForm.patchValue(this.profile);
-    this.calculateAge();
   }
 
   private calculateAge(): void {
@@ -274,11 +415,6 @@ export class PatientMyProfileComponent implements OnInit {
     }
   }
 
-  // Public methods
-  onBack(): void {
-    this.router.navigate(['/patient/dashboard']);
-  }
-
   onEdit(): void {
     this.isEditing = true;
     this.profileForm.patchValue(this.profile);
@@ -291,16 +427,85 @@ export class PatientMyProfileComponent implements OnInit {
     this.loadProfile();
   }
 
-  onSave(): void {
-    if (this.profileForm.valid) {
-      // In a real app, this would save to a service
-      this.profile = this.profileForm.value;
-      this.calculateAge();
-      this.isEditing = false;
-      this.selectedImage = null;
-      console.log('Profile saved:', this.profile);
-    } else {
+  async onSave(): Promise<void> {
+    if (!this.profileForm.valid) {
       this.markFormGroupTouched();
+      this.triggerToast('Please fix the highlighted fields before saving.', 'error');
+      return;
+    }
+
+    // Merge form values into local profile state
+    this.profile = {
+      ...this.profile,
+      personalInfo: {
+        ...this.profile.personalInfo,
+        ...this.profileForm.value.personalInfo
+      },
+      emergencyContact: {
+        ...this.profile.emergencyContact,
+        ...this.profileForm.value.emergencyContact
+      },
+      insuranceInfo: {
+        ...this.profile.insuranceInfo,
+        ...this.profileForm.value.insuranceInfo
+      },
+      preferences: {
+        ...this.profile.preferences,
+        ...this.profileForm.value.preferences
+      }
+    };
+
+    // Map to backend payload
+    const p = this.profile;
+    // Determine profile picture payload based on pending removal or current image
+    let profilePicturePayload: string | null | undefined = undefined;
+    if (this.pendingProfileImageRemoval) {
+      profilePicturePayload = null;
+    } else if (p.personalInfo.profileImage) {
+      profilePicturePayload = p.personalInfo.profileImage;
+    }
+
+    const payload: UpdateProfilePayload = {
+      email: p.personalInfo.email,
+      firstName: p.personalInfo.fullName.split(' ')[0] || '',
+      lastName: p.personalInfo.fullName.split(' ').slice(1).join(' ') || '',
+      bio: p.personalInfo.medicalHistory || '',
+      contactNumber: p.personalInfo.contactNumber,
+      address: p.personalInfo.address,
+      gender: p.personalInfo.gender as any,
+      dateOfBirth: p.personalInfo.dateOfBirth ? new Date(p.personalInfo.dateOfBirth).toISOString() : undefined,
+      // Patient-specific fields
+      weight: typeof p.personalInfo.weight === 'number' ? p.personalInfo.weight : undefined,
+      height: typeof p.personalInfo.height === 'number' ? p.personalInfo.height : undefined,
+      bloodType: p.personalInfo.bloodType || undefined,
+      medicalHistory: p.personalInfo.medicalHistory || undefined,
+      allergies: Array.isArray(p.personalInfo.allergies) ? p.personalInfo.allergies.join(', ') : (p.personalInfo.allergies as any),
+      medications: Array.isArray(p.personalInfo.medications) ? p.personalInfo.medications.join(', ') : (p.personalInfo.medications as any),
+      // Profile Picture
+      profilePicture: profilePicturePayload,
+      // Emergency Contact
+      emergencyContact: p.emergencyContact ? {
+        contactName: p.emergencyContact.contactName,
+        relationship: p.emergencyContact.relationship,
+        contactNumber: p.emergencyContact.contactNumber,
+        contactAddress: p.emergencyContact.contactAddress
+      } : undefined,
+    } as UpdateProfilePayload;
+
+    try {
+      const result = await this.authService.updateProfile(payload);
+      if (result.success) {
+        this.isEditing = false;
+        // Clear pending deletion flag upon successful save
+        this.pendingProfileImageRemoval = false;
+        // Refresh profile from backend to reflect saved data
+        await this.refreshProfile();
+        this.triggerToast('Profile updated successfully', 'success');
+      } else {
+        this.triggerToast(result.message || 'Profile update failed', 'error');
+      }
+    } catch (e) {
+      this.triggerToast('An error occurred while updating the profile.', 'error');
     }
   }
 
@@ -308,23 +513,91 @@ export class PatientMyProfileComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       this.selectedImage = file;
-    }
-  }
-
-  onUploadImage(): void {
-    if (this.selectedImage) {
-      // In a real app, this would upload to a service
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.profile.personalInfo.profileImage = e.target.result;
-        this.selectedImage = null;
+        this.imagePreview = e.target.result;
+        // Remember previous image and show preview immediately
+        this.previousProfileImage = this.profile?.personalInfo?.profileImage;
+        this.profile.personalInfo.profileImage = this.imagePreview as string;
+        this.imagePendingUpload = true;
+        // Reflect in avatar immediately
+        this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc;
       };
-      reader.readAsDataURL(this.selectedImage);
+      reader.readAsDataURL(file);
     }
   }
 
-  onRemoveImage(): void {
+  async onUploadImage(): Promise<void> {
+    if (this.selectedImage && this.imagePreview) {
+      try {
+        console.log('Uploading profile picture:', this.selectedImage.name);
+        
+        // Update the profile picture in the User table via backend
+        const result = await this.authService.updateProfile({
+          profilePicture: this.imagePreview
+        });
+        
+        if (result.success) {
+          // Update local profile state
+          this.profile.personalInfo.profileImage = this.imagePreview;
+          this.imagePendingUpload = false;
+          this.previousProfileImage = undefined;
+          this.avatarSrc = this.profile.personalInfo.profileImage || this.avatarSrc;
+          
+          // Clear the selected image and preview
+          this.selectedImage = null;
+          this.imagePreview = null;
+          
+          // Update the form with the new image
+          if (this.isEditing) {
+            this.profileForm.patchValue({
+              personalInfo: {
+                ...this.profileForm.value.personalInfo,
+                profileImage: this.profile.personalInfo.profileImage
+              }
+            });
+          }
+          
+          this.triggerToast('Profile picture updated successfully', 'success');
+        } else {
+          this.triggerToast(result.message || 'Failed to update profile picture', 'error');
+        }
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        this.triggerToast('An error occurred while uploading the profile picture', 'error');
+      }
+    }
+  }
+
+  async onRemoveImage(): Promise<void> {
+    // If there is a newly selected image that hasn't been uploaded yet,
+    // just clear the preview and restore the previous image without calling the backend.
+    if (this.imagePendingUpload) {
+      this.selectedImage = null;
+      this.imagePreview = null;
+      this.profile.personalInfo.profileImage = this.previousProfileImage;
+      this.imagePendingUpload = false;
+      this.previousProfileImage = undefined;
+    }
+
+    // Defer backend deletion until Save; update UI immediately
+    this.pendingProfileImageRemoval = true;
     this.profile.personalInfo.profileImage = undefined;
+    this.selectedImage = null;
+    this.imagePreview = null;
+    this.avatarSrc = '33.png';
+
+    // Update the form
+    if (this.isEditing) {
+      this.profileForm.patchValue({
+        personalInfo: {
+          ...this.profileForm.value.personalInfo,
+          profileImage: undefined
+        }
+      });
+    }
+
+    this.triggerToast('Profile picture will be removed on Save', 'info');
   }
 
   onAddItem(array: string[], value: string): void {
@@ -399,6 +672,75 @@ export class PatientMyProfileComponent implements OnInit {
         control?.markAsTouched();
       }
     });
+  }
+
+  private triggerToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+    if (this.notificationTimeoutHandle) {
+      clearTimeout(this.notificationTimeoutHandle);
+    }
+    this.notificationTimeoutHandle = setTimeout(() => {
+      this.showNotification = false;
+      this.notificationMessage = '';
+    }, 3000);
+  }
+
+  async refreshProfile(): Promise<void> {
+    // No need to refresh from server since updateProfile already updates the global state
+    // The profile data is already up to date from the save operation
+    console.log('Profile refresh completed - data already up to date');
+  }
+
+  // Confirmation modal handlers
+  openRemoveImageConfirm(): void {
+    // Directly perform removal without modal
+    void this.onRemoveImage();
+  }
+
+  async confirmRemoveImage(): Promise<void> { }
+
+  cancelRemoveImage(): void { }
+
+  // Safe image URL for template binding (if needed for security)
+  get profileImageUrl(): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(this.effectiveAvatarSrc);
+  }
+
+  // Plain string source for <img [src]> - same as effectiveAvatarSrc
+  get profileImageSrc(): string {
+    return this.effectiveAvatarSrc;
+  }
+
+  // Prefer current user's profilePicture (DB) over local avatarSrc
+  get effectiveAvatarSrc(): string {
+    const raw = this.authService.currentUserValue?.profilePicture;
+    console.log('effectiveAvatarSrc - raw profilePicture:', raw ? raw.substring(0, 50) + '...' : 'null/undefined');
+    console.log('effectiveAvatarSrc - currentUserValue exists:', !!this.authService.currentUserValue);
+    
+    if (raw && typeof raw === 'string' && raw.trim().length > 0 && !this.pendingProfileImageRemoval) {
+      const t = raw.trim();
+      console.log('effectiveAvatarSrc - trimmed length:', t.length);
+      console.log('effectiveAvatarSrc - starts with data:image:', t.startsWith('data:image'));
+      
+      // If it's already a data URL, use it directly
+      if (t.startsWith('data:image')) {
+        console.log('effectiveAvatarSrc - using data URL directly');
+        return t;
+      }
+      // Otherwise, normalize it to a proper data URL
+      const normalized = this.normalizeImageDataUrl(t);
+      console.log('effectiveAvatarSrc - normalized result:', normalized ? normalized.substring(0, 50) + '...' : 'null');
+      if (normalized) {
+        console.log('effectiveAvatarSrc - using normalized image');
+        return normalized;
+      }
+    }
+    
+    console.log('effectiveAvatarSrc - falling back to avatarSrc:', this.avatarSrc);
+    // Fallback to local avatarSrc or default image
+    return this.avatarSrc || '33.png';
   }
 
   get fullName(): string {

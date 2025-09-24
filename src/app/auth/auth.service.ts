@@ -10,7 +10,7 @@ export interface User {
   role: 'SUPER_ADMIN' | 'ADMIN' | 'DOCTOR' | 'PATIENT';
   token?: string;
   refreshToken?: string;
-  profilePicture?: string;
+  profilePicture?: string | null;
   profilePictureVerified?: boolean;
   profilePictureVerifiedBy?: string;
   profilePictureVerifiedAt?: string;
@@ -137,6 +137,7 @@ export interface BackendLoginResponse {
 }
 
 export interface UpdateProfilePayload {
+  email?: string;
   firstName?: string;
   lastName?: string;
   middleName?: string;
@@ -156,7 +157,7 @@ export interface UpdateProfilePayload {
   allergies?: string;
   medications?: string;
   // Profile Picture (for all users)
-  profilePicture?: string;
+  profilePicture?: string | null;
   // Doctor license fields
   prcId?: string;
   ptrId?: string;
@@ -174,6 +175,13 @@ export interface UpdateProfilePayload {
   ptrIdImage?: string;
   medicalLicenseImage?: string;
   additionalIdImages?: string;
+  // Emergency Contact (for patients) - Updated interface
+  emergencyContact?: {
+    contactName: string;
+    relationship: string;
+    contactNumber: string;
+    contactAddress?: string;
+  };
 }
 
 @Injectable({
@@ -230,9 +238,9 @@ export class AuthService {
 
       if (!response) return null;
 
-      // Some backends wrap in { success, data }; support both
-      const payload = response.data?.user ? response.data : response;
-      const userData = payload.user || payload;
+      // Normalize payload: support raw user or { success, data }
+      const envelope = (response && typeof response === 'object' && 'data' in response) ? response.data : response;
+      const userData = (envelope && typeof envelope === 'object' && 'user' in envelope) ? (envelope as any).user : envelope;
 
       const normalizeImage = (img?: string) => {
         if (!img) return undefined;
@@ -494,11 +502,22 @@ export class AuthService {
       // Don't automatically refresh the global user state to avoid affecting sidebar
       // Let the individual components handle their own refresh if needed
       if (ok) {
-        // Only update the current user's doctorInfo or patientInfo if we have the updated data
+        // Update the current user with the updated data
         const currentUser = this.currentUserValue;
         if (currentUser && response?.data) {
           const updatedUser = { ...currentUser };
           
+          // Update email if it was updated
+          if (payload.email !== undefined) {
+            updatedUser.email = payload.email;
+          }
+          
+          // Update profilePicture if it was updated
+          if (payload.profilePicture !== undefined) {
+            updatedUser.profilePicture = payload.profilePicture;
+          }
+          
+          // Update role-specific info
           if (currentUser.role === 'DOCTOR' && response.data.doctorInfo) {
             updatedUser.doctorInfo = { ...currentUser.doctorInfo, ...response.data.doctorInfo };
           } else if (currentUser.role === 'PATIENT' && response.data.patientInfo) {

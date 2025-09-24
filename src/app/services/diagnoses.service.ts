@@ -5,8 +5,8 @@ import { environment } from '../../environments/environment';
 
 export interface Diagnosis {
   id: number;
-  patientId: number;
-  doctorId: number;
+  patientId: string;
+  doctorId: string;
   consultationId?: number;
   diagnosisCode?: string;
   diagnosisName: string;
@@ -57,7 +57,7 @@ export enum DiagnosisStatus {
 }
 
 export interface CreateDiagnosisRequest {
-  patientId: number;
+  patientId: string;
   consultationId?: number;
   diagnosisCode?: string;
   diagnosisName: string;
@@ -118,7 +118,7 @@ export class DiagnosesService {
   /**
    * Get diagnoses for a specific patient
    */
-  getPatientDiagnoses(patientId: number): Observable<DiagnosisResponse> {
+  getPatientDiagnoses(patientId: string): Observable<DiagnosisResponse> {
     return this.http.get<DiagnosisResponse>(
       `${this.API_URL}/patient/${patientId}`,
       { headers: this.getHeaders() }

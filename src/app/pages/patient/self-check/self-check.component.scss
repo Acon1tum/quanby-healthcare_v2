@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Medical Professional Color Palette
 $primary-color: #2c3e50;
 $secondary-color: #34495e;
@@ -393,7 +395,7 @@ $border-radius-xl: 16px;
               transition: all 0.2s ease;
 
               &:hover {
-                background: darken($accent-color, 10%);
+                background: color.adjust($accent-color, $lightness: -10%);
                 transform: scale(1.1);
               }
 
@@ -478,7 +480,7 @@ $border-radius-xl: 16px;
         color: white;
 
         &:hover {
-          background: darken($accent-color, 10%);
+          background: color.adjust($accent-color, $lightness: -10%);
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
@@ -546,7 +548,7 @@ $border-radius-xl: 16px;
             transition: all 0.2s ease;
 
             &:hover:not(:disabled) {
-              background: darken($accent-color, 10%);
+              background: color.adjust($accent-color, $lightness: -10%);
               transform: translateY(-1px);
             }
 
@@ -705,7 +707,7 @@ $border-radius-xl: 16px;
       margin: 0 auto;
 
       &:hover {
-        background: darken($accent-color, 10%);
+        background: color.adjust($accent-color, $lightness: -10%);
         transform: translateY(-1px);
       }
     }

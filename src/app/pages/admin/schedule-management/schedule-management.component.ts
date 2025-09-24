@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ApiService, UserProfile } from '../../../api/api.service';
 
 interface DoctorSchedule {
-  id: number;
-  doctorId: number;
+  id: string;
+  doctorId: string;
   doctorName: string;
   specialization: string;
   dayOfWeek: string;
@@ -45,6 +46,7 @@ export class ScheduleManagementComponent implements OnInit {
   consultations: Consultation[] = [];
   doctors: any[] = [];
   patients: any[] = [];
+  currentUser: UserProfile | null = null;
   
   selectedView: 'schedules' | 'consultations' = 'schedules';
   isAddScheduleModalOpen = false;
@@ -71,7 +73,7 @@ export class ScheduleManagementComponent implements OnInit {
     'scheduled', 'in-progress', 'completed', 'cancelled'
   ];
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private apiService: ApiService) {
     this.scheduleForm = this.fb.group({
       doctorId: ['', Validators.required],
       dayOfWeek: ['', Validators.required],
@@ -95,24 +97,66 @@ export class ScheduleManagementComponent implements OnInit {
   loadData(): void {
     this.isLoading = true;
     
-    // Simulate API call delay
-    setTimeout(() => {
-      this.loadDoctors();
-      this.loadPatients();
-      this.loadDoctorSchedules();
-      this.loadConsultations();
-      this.isLoading = false;
-    }, 1000);
+    // First load current user profile to get organization info
+    this.apiService.getCurrentUserProfile().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.currentUser = response.data;
+          this.loadDoctors(); // This will also load doctor schedules
+          this.loadPatients();
+          this.loadConsultations();
+        } else {
+          console.error('Failed to load user profile:', response);
+          alert('Failed to load user profile');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading user profile:', error);
+        alert('Error loading user profile');
+        this.isLoading = false;
+      }
+    });
   }
 
   loadDoctors(): void {
-    this.doctors = [
-      { id: 1, name: 'Dr. John Smith', specialization: 'Cardiologist' },
-      { id: 2, name: 'Dr. Sarah Johnson', specialization: 'Dermatologist' },
-      { id: 3, name: 'Dr. Michael Brown', specialization: 'Neurologist' },
-      { id: 4, name: 'Dr. Emily Davis', specialization: 'Pediatrician' },
-      { id: 5, name: 'Dr. Robert Wilson', specialization: 'Orthopedic' }
-    ];
+    // Load doctors with their schedules based on admin's organization
+    if (this.currentUser?.organizationId) {
+      this.apiService.getDoctorsByOrganization(this.currentUser.organizationId).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.doctors = response.data;
+            // Load schedules for each doctor
+            this.loadDoctorSchedules();
+          } else {
+            console.error('Failed to load doctors:', response);
+            this.doctors = [];
+          }
+        },
+        error: (error) => {
+          console.error('Error loading doctors:', error);
+          this.doctors = [];
+        }
+      });
+    } else {
+      // If no organization, try to get all doctors (will be filtered by backend based on admin's organization)
+      this.apiService.getDoctors().subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.doctors = response.data;
+            // Load schedules for each doctor
+            this.loadDoctorSchedules();
+          } else {
+            console.error('Failed to load doctors:', response);
+            this.doctors = [];
+          }
+        },
+        error: (error) => {
+          console.error('Error loading doctors:', error);
+          this.doctors = [];
+        }
+      });
+    }
   }
 
   loadPatients(): void {
@@ -126,58 +170,32 @@ export class ScheduleManagementComponent implements OnInit {
   }
 
   loadDoctorSchedules(): void {
-    this.doctorSchedules = [
-      {
-        id: 1,
-        doctorId: 1,
-        doctorName: 'Dr. John Smith',
-        specialization: 'Cardiologist',
-        dayOfWeek: 'Monday',
-        startTime: '09:00',
-        endTime: '17:00',
-        isAvailable: true
-      },
-      {
-        id: 2,
-        doctorId: 1,
-        doctorName: 'Dr. John Smith',
-        specialization: 'Cardiologist',
-        dayOfWeek: 'Wednesday',
-        startTime: '09:00',
-        endTime: '17:00',
-        isAvailable: true
-      },
-      {
-        id: 3,
-        doctorId: 2,
-        doctorName: 'Dr. Sarah Johnson',
-        specialization: 'Dermatologist',
-        dayOfWeek: 'Tuesday',
-        startTime: '10:00',
-        endTime: '18:00',
-        isAvailable: true
-      },
-      {
-        id: 4,
-        doctorId: 2,
-        doctorName: 'Dr. Sarah Johnson',
-        specialization: 'Dermatologist',
-        dayOfWeek: 'Thursday',
-        startTime: '10:00',
-        endTime: '18:00',
-        isAvailable: true
-      },
-      {
-        id: 5,
-        doctorId: 3,
-        doctorName: 'Dr. Michael Brown',
-        specialization: 'Neurologist',
-        dayOfWeek: 'Friday',
-        startTime: '08:00',
-        endTime: '16:00',
-        isAvailable: true
-      }
-    ];
+    this.doctorSchedules = [];
+    
+    // Load schedules for each doctor
+    this.doctors.forEach(doctor => {
+      this.apiService.getDoctorAvailability(doctor.id).subscribe({
+        next: (schedules) => {
+          // Convert the availability data to our DoctorSchedule format
+          schedules.forEach((schedule: any) => {
+            const doctorSchedule: DoctorSchedule = {
+              id: `${doctor.id}-${schedule.dayOfWeek}`,
+              doctorId: doctor.id,
+              doctorName: doctor.name,
+              specialization: doctor.specialization,
+              dayOfWeek: schedule.dayOfWeek,
+              startTime: schedule.startTime,
+              endTime: schedule.endTime,
+              isAvailable: schedule.isAvailable
+            };
+            this.doctorSchedules.push(doctorSchedule);
+          });
+        },
+        error: (error) => {
+          console.error(`Error loading schedule for doctor ${doctor.name}:`, error);
+        }
+      });
+    });
   }
 
   loadConsultations(): void {
@@ -282,7 +300,7 @@ export class ScheduleManagementComponent implements OnInit {
       } else {
         // Add new schedule
         const newSchedule: DoctorSchedule = {
-          id: Date.now(),
+          id: `${formValue.doctorId}-${formValue.dayOfWeek}`,
           doctorId: formValue.doctorId,
           doctorName: this.doctors.find(d => d.id === formValue.doctorId)?.name || '',
           specialization: this.doctors.find(d => d.id === formValue.doctorId)?.specialization || '',
@@ -297,13 +315,13 @@ export class ScheduleManagementComponent implements OnInit {
     }
   }
 
-  deleteSchedule(scheduleId: number): void {
+  deleteSchedule(scheduleId: string): void {
     if (confirm('Are you sure you want to delete this schedule?')) {
       this.doctorSchedules = this.doctorSchedules.filter(s => s.id !== scheduleId);
     }
   }
 
-  toggleScheduleAvailability(scheduleId: number): void {
+  toggleScheduleAvailability(scheduleId: string): void {
     const schedule = this.doctorSchedules.find(s => s.id === scheduleId);
     if (schedule) {
       schedule.isAvailable = !schedule.isAvailable;
@@ -441,7 +459,7 @@ export class ScheduleManagementComponent implements OnInit {
     });
   }
 
-  getDoctorById(doctorId: number): any {
+  getDoctorById(doctorId: string): any {
     return this.doctors.find(d => d.id === doctorId);
   }
 

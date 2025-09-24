@@ -108,6 +108,125 @@
       </div>
     </div>
 
+    <!-- ID Documents Section -->
+    <div class="detail-section">
+      <h3>ID Documents</h3>
+      <div class="documents-grid">
+        <!-- PRC ID Document -->
+        <div class="document-card">
+          <div class="document-header">
+            <h4>PRC ID Document</h4>
+            <span class="document-status" [class.uploaded]="hasDocument('prcId')" [class.not-uploaded]="!hasDocument('prcId')">
+              {{ hasDocument('prcId') ? 'Uploaded' : 'Not Uploaded' }}
+            </span>
+          </div>
+          
+          <div class="document-content">
+            <div *ngIf="hasDocument('prcId')" class="document-preview">
+              <img [src]="doctor.doctorInfo?.prcIdImage" alt="PRC ID" class="document-image">
+            </div>
+            
+            <div *ngIf="!hasDocument('prcId')" class="document-placeholder">
+              <i class="material-icons">description</i>
+              <p>No PRC ID document uploaded</p>
+            </div>
+            
+            <div *ngIf="hasDocument('prcId')" class="document-actions">
+              <button class="action-btn view-btn" (click)="viewDocument('prcId')">
+                <i class="material-icons">visibility</i>
+                View Document
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PTR ID Document -->
+        <div class="document-card">
+          <div class="document-header">
+            <h4>PTR ID Document</h4>
+            <span class="document-status" [class.uploaded]="hasDocument('ptrId')" [class.not-uploaded]="!hasDocument('ptrId')">
+              {{ hasDocument('ptrId') ? 'Uploaded' : 'Not Uploaded' }}
+            </span>
+          </div>
+          
+          <div class="document-content">
+            <div *ngIf="hasDocument('ptrId')" class="document-preview">
+              <img [src]="doctor.doctorInfo?.ptrIdImage" alt="PTR ID" class="document-image">
+            </div>
+            
+            <div *ngIf="!hasDocument('ptrId')" class="document-placeholder">
+              <i class="material-icons">description</i>
+              <p>No PTR ID document uploaded</p>
+            </div>
+            
+            <div *ngIf="hasDocument('ptrId')" class="document-actions">
+              <button class="action-btn view-btn" (click)="viewDocument('ptrId')">
+                <i class="material-icons">visibility</i>
+                View Document
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Medical License Document -->
+        <div class="document-card">
+          <div class="document-header">
+            <h4>Medical License</h4>
+            <span class="document-status" [class.uploaded]="hasDocument('medicalLicense')" [class.not-uploaded]="!hasDocument('medicalLicense')">
+              {{ hasDocument('medicalLicense') ? 'Uploaded' : 'Not Uploaded' }}
+            </span>
+          </div>
+          
+          <div class="document-content">
+            <div *ngIf="hasDocument('medicalLicense')" class="document-preview">
+              <img [src]="doctor.doctorInfo?.medicalLicenseImage" alt="Medical License" class="document-image">
+            </div>
+            
+            <div *ngIf="!hasDocument('medicalLicense')" class="document-placeholder">
+              <i class="material-icons">description</i>
+              <p>No Medical License uploaded</p>
+            </div>
+            
+            <div *ngIf="hasDocument('medicalLicense')" class="document-actions">
+              <button class="action-btn view-btn" (click)="viewDocument('medicalLicense')">
+                <i class="material-icons">visibility</i>
+                View Document
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document Verification Status -->
+      <div class="verification-status" *ngIf="doctor.doctorInfo?.idDocumentsVerified !== undefined">
+        <div class="verification-header">
+          <h4>Document Verification Status</h4>
+          <span class="verification-badge" [class.verified]="doctor.doctorInfo?.idDocumentsVerified" [class.pending]="!doctor.doctorInfo?.idDocumentsVerified">
+            <i class="material-icons">{{ doctor.doctorInfo?.idDocumentsVerified ? 'verified' : 'schedule' }}</i>
+            {{ doctor.doctorInfo?.idDocumentsVerified ? 'Verified' : 'Pending Verification' }}
+          </span>
+        </div>
+        
+        <div class="verification-details" *ngIf="doctor.doctorInfo?.idDocumentsVerified">
+          <div class="verification-info">
+            <div class="verification-item">
+              <label>Verified By:</label>
+              <span class="info-value">{{ doctor.doctorInfo?.idDocumentsVerifiedBy || 'System Administrator' }}</span>
+            </div>
+            <div class="verification-item">
+              <label>Verified At:</label>
+              <span class="info-value">{{ doctor.doctorInfo?.idDocumentsVerifiedAt | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="verification-note" *ngIf="!doctor.doctorInfo?.idDocumentsVerified">
+          <i class="material-icons">info</i>
+          <p>Documents are under review. Verification status will be updated once review is complete.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Consultation History -->
     <div class="detail-section">
       <h3>Consultation History</h3>
@@ -557,6 +676,86 @@
         <p>This is a regular {{ selectedSchedule.dayOfWeek }} schedule from {{ formatTime(selectedSchedule.startTime) }} to {{ formatTime(selectedSchedule.endTime) }}.</p>
         <p>Total working hours: 8 hours</p>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document View Modal -->
+<div *ngIf="isDocumentModalOpen" class="modal-overlay" (click)="closeDocumentModal()">
+  <div class="modal-content document-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedDocument?.title }}</h3>
+      <button class="close-btn" (click)="closeDocumentModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body document-modal-body">
+      <div class="document-viewer">
+        <!-- Show PDF viewer for PDF documents -->
+        <div *ngIf="selectedDocument?.imageUrl?.startsWith('data:application/pdf')" class="pdf-viewer">
+          <div class="pdf-info">
+            <i class="material-icons">picture_as_pdf</i>
+            <h3>PDF Document</h3>
+            <p>This document is in PDF format and cannot be displayed as an image.</p>
+            <p class="pdf-details">Click the download button below to view the PDF document.</p>
+          </div>
+        </div>
+        
+        <!-- Show image for image documents -->
+        <img 
+          *ngIf="!selectedDocument?.imageUrl?.startsWith('data:application/pdf')"
+          [src]="selectedDocument?.imageUrl" 
+          [alt]="selectedDocument?.title" 
+          class="document-full-image"
+          (error)="onImageError($event)"
+          (load)="onImageLoad($event)">
+          
+        <div *ngIf="imageLoadError" class="image-error-message">
+          <i class="material-icons">error_outline</i>
+          <p>Failed to load document image</p>
+          <p class="error-details">The document image may be corrupted or in an unsupported format.</p>
+          <div class="error-actions">
+            <button class="btn btn-secondary" (click)="retryImageLoad()">
+              <i class="material-icons">refresh</i>
+              Retry
+            </button>
+            <button class="btn btn-primary" (click)="downloadDocument()">
+              <i class="material-icons">download</i>
+              Download Anyway
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="document-info">
+        <div class="info-item">
+          <label>Document Type:</label>
+          <span>{{ selectedDocument?.title }}</span>
+        </div>
+        <div class="info-item">
+          <label>Doctor:</label>
+          <span>{{ getDoctorFullName(doctor!) }}</span>
+        </div>
+        <div class="info-item">
+          <label>Verification Status:</label>
+          <span class="verification-badge" [class.verified]="doctor?.doctorInfo?.idDocumentsVerified" [class.pending]="!doctor?.doctorInfo?.idDocumentsVerified">
+            <i class="material-icons">{{ doctor?.doctorInfo?.idDocumentsVerified ? 'verified' : 'schedule' }}</i>
+            {{ doctor?.doctorInfo?.idDocumentsVerified ? 'Verified' : 'Pending Verification' }}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDocumentModal()">
+        <i class="material-icons">close</i>
+        Close
+      </button>
+      <button class="btn btn-primary" (click)="downloadDocument()">
+        <i class="material-icons">download</i>
+        Download
+      </button>
     </div>
   </div>
 </div>

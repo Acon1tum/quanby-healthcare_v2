@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService, LoginCredentials } from '../auth.service';
 
 @Component({
@@ -16,11 +16,13 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  showRegistrationSuccess = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -34,6 +36,26 @@ export class LoginComponent implements OnInit {
     if (this.authService.isLoggedIn) {
       this.authService.redirectBasedOnRole();
     }
+
+    // Check if user just registered successfully
+    this.route.queryParams.subscribe(params => {
+      if (params['registered'] === 'true') {
+        this.showRegistrationSuccess = true;
+        this.successMessage = 'Account created successfully! Please log in with your credentials.';
+        
+        // Auto-dismiss notification after 5 seconds
+        setTimeout(() => {
+          this.showRegistrationSuccess = false;
+          this.successMessage = '';
+          // Clean up URL by removing query parameter
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {},
+            replaceUrl: true
+          });
+        }, 5000);
+      }
+    });
   }
 
   async onSubmit(): Promise<void> {
@@ -130,5 +152,16 @@ export class LoginComponent implements OnInit {
       password: 'superadmin123'
     });
     this.onSubmit();
+  }
+
+  dismissRegistrationNotification(): void {
+    this.showRegistrationSuccess = false;
+    this.successMessage = '';
+    // Clean up URL by removing query parameter
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true
+    });
   }
 }

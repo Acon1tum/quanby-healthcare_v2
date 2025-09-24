@@ -272,12 +272,37 @@ main {
 
 .brand-bar .logo {
   height: 40px;
-  width: 40px;
+  width: 100px;
   border-radius: 4px;
 }
 
 .brand-bar .brand-title {
-  font-size: 18Ipx;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.2px;
+}
+
+// Animation for registration success notification
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out, pulse 2s ease-in-out infinite;
 }

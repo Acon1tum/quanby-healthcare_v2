@@ -111,11 +111,6 @@ export class SidebarComponent implements OnInit {
                 route: '/admin/system-administration/doctor-management'
               },
               {
-                label: 'Patient Management',
-                icon: 'people',
-                route: '/admin/system-administration/patient-management'
-              },
-              {
                 label: 'Reports',
                 icon: 'bar_chart',
                 route: '/admin/system-administration/reports'
@@ -156,6 +151,11 @@ export class SidebarComponent implements OnInit {
             icon: 'folder',
             route: '/doctor/patient-records'
           },
+          {
+            label: 'Lab Request Management',
+            icon: 'science',
+            route: '/doctor/lab-requests'
+          },
         ];
 
       case 'PATIENT':
@@ -189,6 +189,11 @@ export class SidebarComponent implements OnInit {
             label: 'Self Check',
             icon: 'check_circle',
             route: '/patient/self-check'
+          },
+          {
+            label: 'Lab Request Management',
+            icon: 'science',
+            route: '/patient/lab-requests'
           }
         ];
 
