@@ -730,8 +730,8 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       this.faceScanStatus = `Data channel not ready (${dataChannelStatus}). Waiting for connection...`;
       console.warn('⚠️ Data channel not ready, waiting for connection...');
       
-      // Wait for data channel to be ready
-      this.waitForDataChannel();
+      // Wait for data channel to be ready using the improved method
+      this.waitForDataChannelAndSendRequest();
       return;
     }
     
@@ -860,39 +860,44 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     return `Socket: ${socketStatus}, Peer: ${peerStatus}, Data: ${dataChannelStatus}`;
   }
 
-  // Wait for data channel to be ready
-  private waitForDataChannel(): void {
-    console.log('⏳ Waiting for data channel to be ready...');
-    const checkInterval = setInterval(() => {
-      const status = this.webrtc.getDataChannelStatus();
-      console.log('🔍 Data channel status check:', status);
+  // Wait for data channel to be ready and send face scan request
+  private async waitForDataChannelAndSendRequest(): Promise<void> {
+    try {
+      console.log('⏳ Waiting for data channel to be ready...');
+      const isReady = await this.webrtc.waitForDataChannel(15000); // Wait up to 15 seconds
       
-      if (status === 'open') {
-        clearInterval(checkInterval);
+      if (isReady) {
         console.log('✅ Data channel is now ready, proceeding with face scan...');
         this.faceScanStatus = 'Data channel ready. Sending face scan request...';
         
-        // Retry sending the face scan request
+        // Send the face scan request
         setTimeout(() => {
           this.webrtc.sendFaceScanRequest({
             type: 'face-scan-request',
             roomId: this.roomId,
             timestamp: Date.now()
           });
+          
+          console.log('✅ Face scan request sent successfully');
           this.monitorPatientScanProgress();
+          this.setFaceScanTimeout();
         }, 1000);
-      }
-    }, 2000); // Check every 2 seconds
-    
-    // Set a maximum wait time
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      if (this.webrtc.getDataChannelStatus() !== 'open') {
+      } else {
         this.faceScanStatus = 'Data channel failed to connect. Please check your connection.';
         this.isFaceScanning = false;
         console.error('❌ Data channel failed to connect within timeout');
       }
-    }, 30000); // 30 second timeout
+    } catch (error) {
+      console.error('❌ Error waiting for data channel:', error);
+      this.faceScanStatus = 'Error waiting for connection. Please try again.';
+      this.isFaceScanning = false;
+    }
+  }
+
+  // Legacy method for backward compatibility
+  private waitForDataChannel(): void {
+    console.log('⚠️ Using legacy waitForDataChannel method, consider updating to waitForDataChannelAndSendRequest');
+    this.waitForDataChannelAndSendRequest();
   }
 
   // Set timeout for face scan completion

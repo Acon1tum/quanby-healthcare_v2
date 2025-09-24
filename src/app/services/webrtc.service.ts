@@ -146,11 +146,16 @@ export class WebRTCService {
     if (this.peer) return;
     const defaultIceServers: RTCIceServer[] = [
       { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
     ];
     // Allow optional TURN/STUN overrides via environment
     const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
     const defaultConfig: RTCConfiguration = config ?? {
       iceServers: envIceServers?.length ? envIceServers : defaultIceServers,
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
     };
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
@@ -219,13 +224,38 @@ export class WebRTCService {
     this.peer.onconnectionstatechange = async () => {
       const state = this.peer?.connectionState;
       console.log('🔗 Peer connection state changed:', state);
-      if (state === 'failed' || state === 'disconnected') {
-        console.warn('⚠️ Connection degraded. Attempting ICE restart...');
+      
+      if (state === 'failed') {
+        console.warn('⚠️ Connection failed. Attempting ICE restart...');
         try {
           await this.attemptIceRestart();
         } catch (e) {
           console.error('❌ ICE restart failed:', e);
+          // If ICE restart fails, try to reinitialize the connection
+          setTimeout(async () => {
+            console.log('🔄 Attempting connection recovery...');
+            try {
+              await this.triggerNegotiation();
+            } catch (err) {
+              console.error('❌ Connection recovery failed:', err);
+            }
+          }, 2000);
         }
+      } else if (state === 'disconnected') {
+        console.warn('⚠️ Connection disconnected. Waiting for reconnection...');
+        // Give some time for automatic reconnection before attempting ICE restart
+        setTimeout(async () => {
+          if (this.peer?.connectionState === 'disconnected') {
+            console.log('🔄 Still disconnected, attempting ICE restart...');
+            try {
+              await this.attemptIceRestart();
+            } catch (e) {
+              console.error('❌ ICE restart failed:', e);
+            }
+          }
+        }, 3000);
+      } else if (state === 'connected') {
+        console.log('✅ Connection established successfully');
       }
     };
 
@@ -257,11 +287,20 @@ export class WebRTCService {
     try {
       // Create data channel for face scan communication
       this.dataChannel = this.peer.createDataChannel('face-scan-channel', {
-        ordered: true
+        ordered: true,
+        maxRetransmits: 3
       });
       
       this.dataChannel.onopen = () => {
         console.log('📡 Data channel opened for face scan communication');
+        // Notify that data channel is ready
+        this.zone.run(() => {
+          this.dataChannelSubject.next({
+            type: 'face-scan-status',
+            status: 'data-channel-ready',
+            timestamp: Date.now()
+          });
+        });
       };
       
       this.dataChannel.onclose = () => {
@@ -274,7 +313,7 @@ export class WebRTCService {
       
       this.dataChannel.onmessage = (event) => {
         try {
-          const data: FaceScanData = JSON.parse(event.data);
+          const data: FaceScanData | FaceScanStatus | FaceScanRequest = JSON.parse(event.data);
           console.log('📡 Data channel message received:', data);
           this.zone.run(() => {
             this.dataChannelSubject.next(data);
@@ -402,8 +441,46 @@ export class WebRTCService {
         console.error('📡 Error sending patient info:', error);
       }
     } else {
-      console.warn('📡 Data channel not ready for sending patient info');
+      console.warn('📡 Data channel not ready for sending patient info, current state:', this.dataChannel?.readyState);
     }
+  }
+
+  // Check if data channel is ready
+  isDataChannelReady(): boolean {
+    return this.dataChannel?.readyState === 'open';
+  }
+
+  // Wait for data channel to be ready
+  waitForDataChannel(timeoutMs = 10000): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.dataChannel?.readyState === 'open') {
+        resolve(true);
+        return;
+      }
+      
+      let settled = false;
+      const onOpen = () => {
+        if (settled) return;
+        settled = true;
+        this.dataChannel?.removeEventListener('open', onOpen);
+        resolve(true);
+      };
+      
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        this.dataChannel?.removeEventListener('open', onOpen);
+        console.warn('⚠️ Data channel timeout after', timeoutMs, 'ms');
+        resolve(false);
+      }, timeoutMs);
+      
+      if (this.dataChannel) {
+        this.dataChannel.addEventListener('open', onOpen);
+      } else {
+        clearTimeout(timer);
+        resolve(false);
+      }
+    });
   }
 
   // Send doctor information via data channel
@@ -504,9 +581,18 @@ export class WebRTCService {
       if (!this.peer) return;
       
       try {
-        await this.peer.setRemoteDescription(new RTCSessionDescription(sdp));
-        console.log('✅ Remote description (answer) set successfully');
-        console.log('🔗 Connection should now be established');
+        // Check current signaling state before setting remote description
+        const currentState = this.peer.signalingState;
+        console.log('🔍 Current signaling state:', currentState);
+        
+        // Only set remote description if we're in the right state
+        if (currentState === 'have-local-offer' || currentState === 'have-remote-pranswer') {
+          await this.peer.setRemoteDescription(new RTCSessionDescription(sdp));
+          console.log('✅ Remote description (answer) set successfully');
+          console.log('🔗 Connection should now be established');
+        } else {
+          console.warn('⚠️ Ignoring answer - wrong signaling state:', currentState);
+        }
       } catch (error) {
         console.error('❌ Error handling answer:', error);
       }
@@ -517,8 +603,13 @@ export class WebRTCService {
       if (!this.peer || !candidate) return;
       
       try {
-        await this.peer.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log('✅ ICE candidate added successfully');
+        // Check if remote description is set before adding ICE candidates
+        if (this.peer.remoteDescription) {
+          await this.peer.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log('✅ ICE candidate added successfully');
+        } else {
+          console.warn('⚠️ Ignoring ICE candidate - no remote description set yet');
+        }
       } catch (error) {
         console.error('❌ Error adding ICE candidate:', error);
       }

@@ -407,12 +407,12 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Wait for data channel to be ready and then send patient info
-  private waitForDataChannelAndSendInfo(currentUser: any): void {
-    const checkDataChannel = () => {
-      const dataChannelStatus = this.webrtc.getDataChannelStatus();
-      console.log('🔍 Data channel status for patient info:', dataChannelStatus);
+  private async waitForDataChannelAndSendInfo(currentUser: any): Promise<void> {
+    try {
+      console.log('🔍 Waiting for data channel to be ready...');
+      const isReady = await this.webrtc.waitForDataChannel(15000); // Wait up to 15 seconds
       
-      if (dataChannelStatus === 'open') {
+      if (isReady) {
         // Data channel is ready, send patient information
         const patientInfo = {
           type: 'patient-info' as const,
@@ -425,14 +425,20 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log('📡 Sending patient information:', patientInfo);
         this.webrtc.sendPatientInfo(patientInfo);
       } else {
-        // Data channel not ready yet, retry after a short delay
-        console.log('⏳ Data channel not ready, retrying in 1 second...');
-        setTimeout(checkDataChannel, 1000);
+        console.warn('⚠️ Data channel failed to become ready within timeout');
+        // Fallback: try to send anyway (it will warn if not ready)
+        const patientInfo = {
+          type: 'patient-info' as const,
+          patientName: currentUser.patientInfo?.fullName || currentUser.email || 'Unknown Patient',
+          patientId: currentUser.id,
+          email: currentUser.email,
+          timestamp: Date.now()
+        };
+        this.webrtc.sendPatientInfo(patientInfo);
       }
-    };
-    
-    // Start checking after a short delay to allow connection to establish
-    setTimeout(checkDataChannel, 2000);
+    } catch (error) {
+      console.error('❌ Error waiting for data channel:', error);
+    }
   }
 
   refreshRemoteStream() {
