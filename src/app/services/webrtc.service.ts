@@ -49,6 +49,11 @@ export class WebRTCService {
   private dataChannel?: RTCDataChannel;
   private dataChannelSubject = new BehaviorSubject<FaceScanData | FaceScanStatus | FaceScanRequest | undefined>(undefined);
   public dataChannel$ = this.dataChannelSubject.asObservable();
+  
+  // Signaling state management
+  private isNegotiating = false;
+  private lastOffer?: RTCSessionDescriptionInit;
+  private lastAnswer?: RTCSessionDescriptionInit;
 
   constructor(
     private zone: NgZone,
@@ -296,9 +301,15 @@ export class WebRTCService {
     this.peer.onnegotiationneeded = async () => {
       try {
         console.log('🧩 onnegotiationneeded fired, creating offer...');
+        // Prevent multiple simultaneous negotiations
+        if (this.isNegotiating) {
+          console.log('⚠️ Already negotiating, skipping onnegotiationneeded');
+          return;
+        }
         await this.createAndSendOffer();
       } catch (e) {
         console.error('❌ Failed to renegotiate onnegotiationneeded:', e);
+        this.isNegotiating = false;
       }
     };
   }
@@ -331,6 +342,13 @@ export class WebRTCService {
       
       this.dataChannel.onerror = (error) => {
         console.error('📡 Data channel error:', error);
+        // Attempt to recreate data channel on error
+        setTimeout(() => {
+          if (this.peer && this.peer.connectionState === 'connected') {
+            console.log('🔄 Attempting to recreate data channel...');
+            this.createDataChannel();
+          }
+        }, 2000);
       };
       
       this.dataChannel.onmessage = (event) => {
@@ -565,7 +583,24 @@ export class WebRTCService {
       console.log('📥 Received offer:', sdp);
       if (!this.peer) await this.initPeer();
       
+      // Prevent duplicate processing
+      if (this.isNegotiating) {
+        console.log('⚠️ Already negotiating, ignoring duplicate offer');
+        return;
+      }
+      
       try {
+        this.isNegotiating = true;
+        
+        // Check if this is a duplicate offer
+        if (this.lastOffer && this.lastOffer.sdp === sdp.sdp) {
+          console.log('⚠️ Duplicate offer received, ignoring');
+          this.isNegotiating = false;
+          return;
+        }
+        
+        this.lastOffer = sdp;
+        
         // Ensure local tracks are attached to current peer before answering
         try {
           if (this.localStream && this.peer) {
@@ -588,6 +623,8 @@ export class WebRTCService {
         await this.peer!.setLocalDescription(answer);
         console.log('✅ Local description set successfully');
         
+        this.lastAnswer = answer;
+        
         console.log('📤 Sending answer:', answer);
         if (this.currentRoomId) {
           this.socket?.emit('webrtc:answer', { roomId: this.currentRoomId, sdp: answer });
@@ -595,6 +632,8 @@ export class WebRTCService {
         }
       } catch (error) {
         console.error('❌ Error handling offer:', error);
+      } finally {
+        this.isNegotiating = false;
       }
     });
 
@@ -607,16 +646,32 @@ export class WebRTCService {
         const currentState = this.peer.signalingState;
         console.log('🔍 Current signaling state:', currentState);
         
+        // Check if this is a duplicate answer
+        if (this.lastAnswer && this.lastAnswer.sdp === sdp.sdp) {
+          console.log('⚠️ Duplicate answer received, ignoring');
+          return;
+        }
+        
         // Only set remote description if we're in the right state
         if (currentState === 'have-local-offer' || currentState === 'have-remote-pranswer') {
           await this.peer.setRemoteDescription(new RTCSessionDescription(sdp));
           console.log('✅ Remote description (answer) set successfully');
           console.log('🔗 Connection should now be established');
+          this.lastAnswer = sdp;
         } else {
           console.warn('⚠️ Ignoring answer - wrong signaling state:', currentState);
         }
       } catch (error) {
         console.error('❌ Error handling answer:', error);
+        // If there's an SDP mismatch, try to recover
+        if (error instanceof Error && error.message?.includes('m-lines')) {
+          console.log('🔄 SDP m-line mismatch detected, attempting recovery...');
+          try {
+            await this.attemptConnectionRecovery();
+          } catch (recoveryError) {
+            console.error('❌ Connection recovery failed:', recoveryError);
+          }
+        }
       }
     });
 
@@ -645,23 +700,45 @@ export class WebRTCService {
 
   private async createAndSendOffer(): Promise<void> {
     if (!this.peer) return;
-    // Ensure local tracks are attached before offering
+    
+    // Prevent duplicate offers
+    if (this.isNegotiating) {
+      console.log('⚠️ Already negotiating, skipping offer creation');
+      return;
+    }
+    
+    this.isNegotiating = true;
+    
     try {
-      if (this.localStream && this.peer) {
-        const senders = this.peer.getSenders();
-        this.localStream.getTracks().forEach((track) => {
-          const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
-          if (!hasSender) {
-            try { this.peer!.addTrack(track, this.localStream!); } catch {}
-          }
-        });
-      }
-    } catch {}
+      // Ensure local tracks are attached before offering
+      try {
+        if (this.localStream && this.peer) {
+          const senders = this.peer.getSenders();
+          this.localStream.getTracks().forEach((track) => {
+            const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
+            if (!hasSender) {
+              try { this.peer!.addTrack(track, this.localStream!); } catch {}
+            }
+          });
+        }
+      } catch {}
 
-    const offer = await this.peer.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-    await this.peer.setLocalDescription(offer);
-    if (this.currentRoomId) {
-      this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+      const offer = await this.peer.createOffer({ 
+        offerToReceiveAudio: true, 
+        offerToReceiveVideo: true 
+      });
+      
+      await this.peer.setLocalDescription(offer);
+      this.lastOffer = offer;
+      
+      if (this.currentRoomId) {
+        this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+        console.log('📤 Offer sent successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error creating/sending offer:', error);
+    } finally {
+      this.isNegotiating = false;
     }
   }
 
@@ -718,6 +795,43 @@ export class WebRTCService {
     }
   }
 
+  /**
+   * Attempt connection recovery when SDP mismatches occur
+   */
+  private async attemptConnectionRecovery(): Promise<void> {
+    if (!this.peer) return;
+    
+    console.log('🔄 Attempting connection recovery...');
+    
+    try {
+      // Reset negotiation state
+      this.isNegotiating = false;
+      this.lastOffer = undefined;
+      this.lastAnswer = undefined;
+      
+      // Close current peer and create new one
+      this.peer.close();
+      this.peer = undefined;
+      
+      // Wait a bit before reinitializing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reinitialize peer connection
+      await this.initPeer();
+      
+      // Reattach local stream
+      if (this.localStream) {
+        this.localStream.getTracks().forEach((track) => {
+          try { this.peer?.addTrack(track, this.localStream!); } catch {}
+        });
+      }
+      
+      console.log('✅ Connection recovery completed');
+    } catch (error) {
+      console.error('❌ Connection recovery failed:', error);
+    }
+  }
+
   async leave(): Promise<void> {
     if (this.currentRoomId) {
       this.socket?.emit('webrtc:leave', { roomId: this.currentRoomId });
@@ -736,6 +850,12 @@ export class WebRTCService {
     this.remoteStream = undefined;
     // Reset remote stream subject
     this.remoteStreamSubject.next(undefined);
+    
+    // Reset signaling state
+    this.isNegotiating = false;
+    this.lastOffer = undefined;
+    this.lastAnswer = undefined;
+    
     if (closeSocketRoom) {
       this.currentRoomId = undefined;
       this.currentRole = undefined;
