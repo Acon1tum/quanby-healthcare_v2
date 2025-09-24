@@ -59,12 +59,20 @@ export class WebRTCService {
     // Prefer explicit signaling URL overrides
     const anyEnv = environment as any;
     const explicit = anyEnv.webrtcSignalingUrl || anyEnv.signalingUrl || anyEnv.socketUrl;
-    if (explicit && typeof explicit === 'string') return explicit;
+    if (explicit && typeof explicit === 'string') {
+      console.log('🔗 Using explicit signaling URL:', explicit);
+      return explicit;
+    }
     // Fallback: derive from backendApi by stripping trailing /api
     if (environment.backendApi) {
-      return environment.backendApi.replace(/\/?api\/?$/, '');
+      const derivedUrl = environment.backendApi.replace(/\/?api\/?$/, '');
+      console.log('🔗 Using derived signaling URL:', derivedUrl);
+      return derivedUrl;
     }
-    return 'http://localhost:3000';
+    // Final fallback with environment detection
+    const fallbackUrl = environment.production ? 'https://qhealth-backend-v2.onrender.com' : 'http://localhost:3000';
+    console.log('🔗 Using fallback signaling URL:', fallbackUrl);
+    return fallbackUrl;
   }
 
   initSocket(signalingUrl?: string): void {
@@ -83,9 +91,15 @@ export class WebRTCService {
         reconnection: true,
         reconnectionAttempts: 8,
         reconnectionDelay: 1000,
-        timeout: 6000,
+        timeout: 10000, // Increased timeout for production
         withCredentials: true,
         auth: token ? { token } : undefined,
+        // Production-specific configuration
+        forceNew: true,
+        upgrade: true,
+        rememberUpgrade: true,
+        // Enhanced error handling for production
+        autoConnect: true,
       });
     } else {
       // Update auth and attempt reconnection if not connected
@@ -98,10 +112,14 @@ export class WebRTCService {
     // Add connection event listeners for debugging
     this.socket.on('connect', () => {
       console.log('✅ Socket.IO connected successfully');
+      console.log('🌐 Connection URL:', url);
+      console.log('🔧 Environment:', environment.production ? 'Production' : 'Development');
     });
     
     this.socket.on('connect_error', (error) => {
       console.error('❌ Socket.IO connection error:', error);
+      console.error('🌐 Failed URL:', url);
+      console.error('🔧 Environment:', environment.production ? 'Production' : 'Development');
     });
     
     this.socket.on('disconnect', (reason) => {
@@ -148,6 +166,8 @@ export class WebRTCService {
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' },
     ];
     // Allow optional TURN/STUN overrides via environment
     const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
@@ -156,6 +176,8 @@ export class WebRTCService {
       iceCandidatePoolSize: 10,
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require',
+      // Enhanced configuration for production
+      iceTransportPolicy: 'all',
     };
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
