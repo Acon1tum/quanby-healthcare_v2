@@ -545,12 +545,20 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('✅ User media obtained:', mediaStream);
       console.log('📹 Media tracks:', mediaStream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled })));
       
+      // Log debug information before joining
+      console.log('🔍 Pre-join debug info:');
+      this.webrtc.logDebugInfo();
+      
       const result = await this.webrtc.join(this.roomId);
       if (result.ok) {
         this.isJoined = true;
         this.participants = result.participants || 0;
         this.currentRole = result.role || '';
         console.log('✅ Doctor joined room successfully:', result);
+        
+        // Log debug information after joining
+        console.log('🔍 Post-join debug info:');
+        this.webrtc.logDebugInfo();
         
         // Set local stream and bind video
         this.localStream = mediaStream;
@@ -567,23 +575,38 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         }, 500);
         
-        // Nudge remote stream binding after join
+        // Enhanced remote stream binding with better timing for remote connections
         setTimeout(() => {
           this.refreshRemoteStream();
+          console.log('🔍 Debug after first remote stream refresh:');
+          this.webrtc.logDebugInfo();
         }, 1500);
+        
         setTimeout(() => {
           this.refreshRemoteStream();
+          console.log('🔍 Debug after second remote stream refresh:');
+          this.webrtc.logDebugInfo();
         }, 3000);
-        // Nudge negotiation in case tracks didn't sync
+        
+        // Nudge negotiation in case tracks didn't sync - important for remote connections
         setTimeout(() => {
+          console.log('🔄 Triggering negotiation for remote connection...');
           this.webrtc.triggerNegotiation();
         }, 1800);
+        
+        // Additional negotiation attempts for remote connections
+        setTimeout(() => {
+          console.log('🔄 Second negotiation attempt for remote connection...');
+          this.webrtc.triggerNegotiation();
+        }, 5000);
 
         // Load patient details when doctor joins
         this.loadPatientDetails();
       } else {
         this.errorMessage = result.error || 'Failed to join room';
         console.error('❌ Failed to join room:', result);
+        console.log('🔍 Debug info after failed join:');
+        this.webrtc.logDebugInfo();
       }
     } catch (error) {
       console.error('❌ Error during join process:', error);

@@ -134,29 +134,50 @@ export class WebRTCService {
     this.registerSocketHandlers();
   }
 
-  private waitForSocketConnected(timeoutMs = 5000): Promise<void> {
+  private waitForSocketConnected(timeoutMs = 10000): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.socket?.connected) {
         resolve();
         return;
       }
       let settled = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
       const onConnect = () => {
         if (settled) return;
         settled = true;
         this.socket?.off('connect_error', onError);
         resolve();
       };
+      
       const onError = (err: any) => {
-        console.error('❌ Socket connect error (waiting):', err);
+        console.error('❌ Socket connect error (attempt', retryCount + 1, '):', err);
+        retryCount++;
+        
+        // If we haven't exceeded max retries and haven't settled, try to reconnect
+        if (retryCount < maxRetries && !settled) {
+          console.log('🔄 Attempting to reconnect...');
+          setTimeout(() => {
+            if (this.socket && !this.socket.connected) {
+              try {
+                this.socket.connect();
+              } catch (reconnectErr) {
+                console.error('❌ Reconnection failed:', reconnectErr);
+              }
+            }
+          }, 2000 * retryCount); // Exponential backoff
+        }
       };
+      
       const timer = setTimeout(() => {
         if (settled) return;
         settled = true;
         this.socket?.off('connect', onConnect);
         this.socket?.off('connect_error', onError);
-        reject(new Error('Socket connect timeout'));
+        reject(new Error(`Socket connect timeout after ${timeoutMs}ms and ${retryCount} retries`));
       }, timeoutMs);
+      
       this.socket?.once('connect', () => {
         clearTimeout(timer);
         onConnect();
@@ -167,13 +188,40 @@ export class WebRTCService {
 
   async initPeer(config?: RTCConfiguration): Promise<void> {
     if (this.peer) return;
+    
+    // Enhanced ICE servers with TURN for NAT traversal
     const defaultIceServers: RTCIceServer[] = [
+      // Google STUN servers
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
       { urls: 'stun:stun3.l.google.com:19302' },
       { urls: 'stun:stun4.l.google.com:19302' },
+      // Additional STUN servers for better connectivity
+      { urls: 'stun:stun.stunprotocol.org:3478' },
+      { urls: 'stun:stun.voiparound.com' },
+      { urls: 'stun:stun.voipbuster.com' },
+      { urls: 'stun:stun.voipstunt.com' },
+      { urls: 'stun:stun.counterpath.com' },
+      { urls: 'stun:stun.1und1.de' },
+      // Free TURN servers (these may have limitations but help with NAT traversal)
+      {
+        urls: 'turn:numb.viagenie.ca',
+        credential: 'muazkh',
+        username: 'webrtc@live.com'
+      },
+      {
+        urls: 'turn:192.158.29.39:3478?transport=udp',
+        credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+        username: '28224511:1379330808'
+      },
+      {
+        urls: 'turn:192.158.29.39:3478?transport=tcp',
+        credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+        username: '28224511:1379330808'
+      }
     ];
+    
     // Allow optional TURN/STUN overrides via environment
     const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
     const defaultConfig: RTCConfiguration = config ?? {
@@ -181,8 +229,8 @@ export class WebRTCService {
       iceCandidatePoolSize: 10,
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require',
-      // Enhanced configuration for production
-      iceTransportPolicy: 'all',
+      // Enhanced configuration for production and remote connections
+      iceTransportPolicy: 'all'
     };
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
@@ -247,10 +295,11 @@ export class WebRTCService {
       });
     };
 
-    // Add connection state change handler
+    // Add connection state change handler with enhanced monitoring
     this.peer.onconnectionstatechange = async () => {
       const state = this.peer?.connectionState;
-      console.log('🔗 Peer connection state changed:', state);
+      const iceState = this.peer?.iceConnectionState;
+      console.log('🔗 Peer connection state changed:', state, 'ICE state:', iceState);
       
       if (state === 'failed') {
         console.warn('⚠️ Connection failed. Attempting ICE restart...');
@@ -265,6 +314,15 @@ export class WebRTCService {
               await this.triggerNegotiation();
             } catch (err) {
               console.error('❌ Connection recovery failed:', err);
+              // Last resort: try to recreate the peer connection
+              setTimeout(async () => {
+                console.log('🔄 Attempting peer recreation...');
+                try {
+                  await this.recreatePeerConnection();
+                } catch (recreateErr) {
+                  console.error('❌ Peer recreation failed:', recreateErr);
+                }
+              }, 5000);
             }
           }, 2000);
         }
@@ -283,6 +341,10 @@ export class WebRTCService {
         }, 3000);
       } else if (state === 'connected') {
         console.log('✅ Connection established successfully');
+        // Start connection quality monitoring
+        this.startConnectionQualityMonitoring();
+      } else if (state === 'connecting') {
+        console.log('🔄 Connection in progress...');
       }
     };
 
@@ -423,6 +485,60 @@ export class WebRTCService {
     return this.dataChannel?.readyState || 'Not Ready';
   }
 
+  // Enhanced debug information for troubleshooting remote connections
+  getConnectionDebugInfo(): any {
+    return {
+      socket: {
+        connected: this.socket?.connected || false,
+        id: this.socket?.id || 'N/A',
+        url: this.getSignalingUrl()
+      },
+      peer: {
+        connectionState: this.peer?.connectionState || 'Not Ready',
+        iceConnectionState: this.peer?.iceConnectionState || 'Not Ready',
+        iceGatheringState: this.peer?.iceGatheringState || 'Not Ready',
+        signalingState: this.peer?.signalingState || 'Not Ready'
+      },
+      streams: {
+        localStream: !!this.localStream,
+        remoteStream: !!this.remoteStream,
+        localTracks: this.localStream?.getTracks().length || 0,
+        remoteTracks: this.remoteStream?.getTracks().length || 0
+      },
+      dataChannel: {
+        readyState: this.dataChannel?.readyState || 'Not Ready',
+        label: this.dataChannel?.label || 'N/A'
+      },
+      room: {
+        roomId: this.currentRoomId || 'N/A',
+        role: this.currentRole || 'N/A'
+      },
+      environment: {
+        production: environment.production,
+        signalingUrl: this.getSignalingUrl(),
+        iceServersCount: (environment as any).webrtcIceServers?.length || 0
+      }
+    };
+  }
+
+  // Log comprehensive debug information
+  logDebugInfo(): void {
+    const debugInfo = this.getConnectionDebugInfo();
+    console.log('🔍 WebRTC Debug Information:', debugInfo);
+    
+    // Additional peer connection stats if available
+    if (this.peer) {
+      this.peer.getStats().then((stats) => {
+        console.log('📊 Peer Connection Stats:');
+        stats.forEach((report) => {
+          console.log(`  ${report.type}:`, report);
+        });
+      }).catch((error) => {
+        console.error('❌ Error getting peer stats:', error);
+      });
+    }
+  }
+
   // Send face scan results via data channel
   sendFaceScanResults(results: any, status: string): void {
     if (this.dataChannel && this.dataChannel.readyState === 'open') {
@@ -541,21 +657,37 @@ export class WebRTCService {
     this.currentRoomId = roomId;
     console.log('🚪 Attempting to join room:', roomId);
     console.log('🔌 Socket connected:', this.socket?.connected);
+    
     // Ensure socket is initialized and connected before joining
     if (!this.socket) {
       this.initSocket();
     }
-    return new Promise(async (resolve) => {
+    
+    return new Promise(async (resolve, reject) => {
       try {
-        await this.waitForSocketConnected(7000);
+        // Wait longer for connection in remote scenarios
+        await this.waitForSocketConnected(15000);
       } catch (e) {
-        console.warn('⚠️ Proceeding to emit join without confirmed connection:', e);
+        console.warn('⚠️ Socket connection timeout, but proceeding with join attempt:', e);
       }
+      
+      // Set a timeout for the join operation itself
+      const joinTimeout = setTimeout(() => {
+        reject(new Error('Join operation timed out'));
+      }, 10000);
+      
       this.socket?.emit('webrtc:join', { roomId }, (resp: JoinResponse) => {
+        clearTimeout(joinTimeout);
         console.log('📨 Join response received:', resp);
-        if (resp?.ok && resp.role) this.currentRole = resp.role;
-        console.log('✅ Joined room successfully:', { roomId, role: this.currentRole, participants: resp?.participants });
-        resolve(resp);
+        
+        if (resp?.ok && resp.role) {
+          this.currentRole = resp.role;
+          console.log('✅ Joined room successfully:', { roomId, role: this.currentRole, participants: resp?.participants });
+          resolve(resp);
+        } else {
+          console.error('❌ Failed to join room:', resp?.error || 'Unknown error');
+          reject(new Error(resp?.error || 'Failed to join room'));
+        }
       });
     });
   }
@@ -792,6 +924,103 @@ export class WebRTCService {
       await this.attemptIceRestart();
     } catch (e) {
       console.error('❌ Manual ICE restart failed:', e);
+    }
+  }
+
+  /**
+   * Start monitoring connection quality for remote connections
+   */
+  private startConnectionQualityMonitoring(): void {
+    if (!this.peer) return;
+    
+    const monitoringInterval = setInterval(() => {
+      if (!this.peer || this.peer.connectionState !== 'connected') {
+        clearInterval(monitoringInterval);
+        return;
+      }
+      
+      // Get connection statistics
+      this.peer.getStats().then((stats) => {
+        let hasAudio = false;
+        let hasVideo = false;
+        let bytesReceived = 0;
+        let bytesSent = 0;
+        let packetsLost = 0;
+        
+        stats.forEach((report) => {
+          if (report.type === 'inbound-rtp') {
+            if (report.kind === 'audio') hasAudio = true;
+            if (report.kind === 'video') hasVideo = true;
+            bytesReceived += report.bytesReceived || 0;
+            packetsLost += report.packetsLost || 0;
+          } else if (report.type === 'outbound-rtp') {
+            bytesSent += report.bytesSent || 0;
+          }
+        });
+        
+        console.log('📊 Connection quality:', {
+          hasAudio,
+          hasVideo,
+          bytesReceived,
+          bytesSent,
+          packetsLost,
+          connectionState: this.peer?.connectionState,
+          iceConnectionState: this.peer?.iceConnectionState
+        });
+        
+        // If we're not receiving data and connection seems stable, try to trigger negotiation
+        if (bytesReceived === 0 && this.peer?.connectionState === 'connected') {
+          console.warn('⚠️ No data received despite connected state, triggering negotiation...');
+          this.triggerNegotiation();
+        }
+      }).catch((error) => {
+        console.error('❌ Error getting connection stats:', error);
+      });
+    }, 5000); // Check every 5 seconds
+  }
+
+  /**
+   * Recreate peer connection as a last resort
+   */
+  private async recreatePeerConnection(): Promise<void> {
+    if (!this.peer) return;
+    
+    console.log('🔄 Recreating peer connection...');
+    
+    try {
+      // Store current state
+      const currentRoomId = this.currentRoomId;
+      const currentRole = this.currentRole;
+      const currentLocalStream = this.localStream;
+      
+      // Clean up current peer
+      if (this.peer) {
+        this.cleanupPeer(false);
+      }
+      
+      // Wait a bit
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reinitialize
+      await this.initPeer();
+      
+      // Restore state
+      this.currentRoomId = currentRoomId;
+      this.currentRole = currentRole;
+      
+      // Reattach local stream
+      if (currentLocalStream) {
+        currentLocalStream.getTracks().forEach((track) => {
+          try { this.peer?.addTrack(track, currentLocalStream); } catch {}
+        });
+      }
+      
+      // Trigger negotiation
+      await this.triggerNegotiation();
+      
+      console.log('✅ Peer connection recreated successfully');
+    } catch (error) {
+      console.error('❌ Failed to recreate peer connection:', error);
     }
   }
 
