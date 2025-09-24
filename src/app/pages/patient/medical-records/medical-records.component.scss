@@ -1,3 +1,6 @@
+// Import medical records styles
+@import 'medical-records-styles.scss';
+
 // Global styles for health scan results table - clean and professional
 :host ::ng-deep .health-scan-results {
   background: white !important;

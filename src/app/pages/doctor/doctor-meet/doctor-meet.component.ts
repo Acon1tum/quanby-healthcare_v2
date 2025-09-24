@@ -2382,9 +2382,9 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   // Load Medical Lottie Animation
   private async loadMedicalAnimation(): Promise<void> {
     try {
-      // Dynamically import lottie-web
-      const lottieModule = await import('lottie-web');
-      const lottieInstance = lottieModule.default;
+      // Dynamically import lottie-web with proper ESM handling
+      const lottieModule = await import('lottie-web/build/player/lottie_light');
+      const lottieInstance = lottieModule.default || lottieModule;
       
       if (this.medicalAnimationRef && this.medicalAnimationRef.nativeElement) {
         // Load the medical animation from the public folder
