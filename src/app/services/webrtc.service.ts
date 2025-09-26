@@ -73,6 +73,7 @@ export class WebRTCService {
     console.log('🔑 User token:', token ? 'Present' : 'Missing');
     console.log('👤 Current user:', this.authService.currentUserValue);
     
+    // Simple socket configuration - just websocket transport
     this.socket = io(url, {
       transports: ['websocket'],
       withCredentials: true,
@@ -97,11 +98,17 @@ export class WebRTCService {
 
   async initPeer(config?: RTCConfiguration): Promise<void> {
     if (this.peer) return;
+    
+    // ICE server configuration - use environment servers if available, otherwise fallback to simple config
+    const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
     const defaultConfig: RTCConfiguration = config ?? {
-      iceServers: [
+      iceServers: envIceServers?.length ? envIceServers : [
+        // Fallback to simple STUN server if no environment config
         { urls: 'stun:stun.l.google.com:19302' },
       ],
     };
+    
+    console.log('🧊 Using ICE servers:', defaultConfig.iceServers);
     this.peer = new RTCPeerConnection(defaultConfig);
     this.remoteStream = new MediaStream();
 
