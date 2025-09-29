@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { WebRTCService } from '../../../services/webrtc.service';
+import { ActivatedRoute } from '@angular/router';
 import { FaceScanService, FaceScanRequest } from '../../../services/face-scan.service';
 import { PrescriptionsService, CreatePrescriptionRequest, Prescription, Patient } from '../../../services/prescriptions.service';
 import { ConsultationsService, CreateDirectConsultationRequest, Consultation } from '../../../services/consultations.service';
@@ -171,10 +172,27 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     private organizationsService: OrganizationsService,
     private doctorsService: DoctorsService,
     private labRequestService: LabRequestService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute
+
   ) {}
 
   ngOnInit() {
+    // Check for roomId in query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['roomId']) {
+        this.roomId = params['roomId'];
+        console.log('🏠 Room ID from query params, auto-joining:', this.roomId);
+        // Auto-join the meeting when roomId is provided
+        setTimeout(() => {
+          this.join();
+        }, 1000); // Small delay to ensure WebRTC is initialized
+      } else {
+        // Generate a random room ID for the doctor if no roomId provided
+        this.generateRoomId();
+      }
+    });
+
     // Generate a random room ID for the doctor
     this.generateRoomId();
     

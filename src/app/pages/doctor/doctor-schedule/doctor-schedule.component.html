@@ -27,7 +27,7 @@
         <tr *ngFor="let r of paginatedPendingRequests">
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
-          <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ formatAppointmentDate(r.requestedAt) }}</td>
           <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
           <td>
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
@@ -61,7 +61,7 @@
           </div>
           <div class="mobile-card-row">
             <span class="mobile-card-label">Requested:</span>
-            <span class="mobile-card-value">{{ r.requestedAt | date:'MMM d, h:mm a' }}</span>
+            <span class="mobile-card-value">{{ formatAppointmentDate(r.requestedAt) }}</span>
           </div>
           <div class="mobile-card-row">
             <span class="mobile-card-label">Start:</span>
@@ -129,7 +129,7 @@
         <tr *ngFor="let r of paginatedConfirmedRequests">
           <td>{{ r.patient }}</td>
           <td>{{ r.reason }}</td>
-          <td>{{ r.requestedAt | date:'MMM d, y, h:mm a' }}</td>
+          <td>{{ formatAppointmentDate(r.requestedAt) }}</td>
           <td>{{ r.start | date:'MMM d, y, h:mm a' }}</td>
           <td>
             <span class="badge" [ngClass]="r.status">{{ r.status }}</span>
@@ -160,7 +160,7 @@
           </div>
           <div class="mobile-card-row">
             <span class="mobile-card-label">Requested:</span>
-            <span class="mobile-card-value">{{ r.requestedAt | date:'MMM d, h:mm a' }}</span>
+            <span class="mobile-card-value">{{ formatAppointmentDate(r.requestedAt) }}</span>
           </div>
           <div class="mobile-card-row">
             <span class="mobile-card-label">Start:</span>
@@ -219,7 +219,11 @@
     <div class="calendar-grid">
       <div class="dow" *ngFor="let d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']">{{ d }}</div>
       <ng-container *ngFor="let week of weeks">
-        <div class="day" *ngFor="let c of week" [class.out]="!c.inMonth" [class.appt]="c.hasAppt">
+        <div class="day" *ngFor="let c of week" 
+             [class.out]="!c.inMonth" 
+             [class.appt]="c.hasAppt"
+             [class.clickable]="c.hasAppt && c.inMonth"
+             (click)="onCalendarDayClick(c.date, c.hasAppt)">
           <span class="num">{{ c.date.getDate() }}</span>
         </div>
       </ng-container>
@@ -346,6 +350,65 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeRescheduleModal()">Cancel</button>
       <button class="btn btn-accept" [disabled]="!rescheduleReason.trim()" (click)="submitReschedule()">Send Reschedule Requests</button>
+    </div>
+  </div>
+
+  <!-- Appointment Details Modal -->
+  <div class="modal-backdrop" *ngIf="showAppointmentModal" (click)="closeAppointmentModal()"></div>
+  <div class="modal" *ngIf="showAppointmentModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Appointments for {{ selectedDate | date:'EEEE, MMMM d, y' }}</h3>
+      <button class="btn btn-ghost" (click)="closeAppointmentModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="selectedDateAppointments.length === 0" class="no-appointments">
+        <p>No appointments scheduled for this date.</p>
+      </div>
+      
+      <div *ngIf="selectedDateAppointments.length > 0" class="appointment-list">
+        <div class="appointment-item" *ngFor="let appointment of selectedDateAppointments">
+          <div class="appointment-header">
+            <div class="appointment-patient">
+              <h4>{{ appointment.patient }}</h4>
+              <span class="appointment-time">{{ formatAppointmentTime(appointment.start) }}</span>
+            </div>
+            <div class="appointment-actions">
+              <span class="badge" [ngClass]="appointment.status">{{ appointment.status }}</span>
+              <div class="meeting-status" *ngIf="appointment.status === 'accepted'" [class.meeting-available]="isJoinMeetingEnabled(appointment)">
+                {{ getMeetingStatusText(appointment) }}
+              </div>
+              <button 
+                *ngIf="appointment.status === 'accepted'" 
+                class="btn btn-join-meeting" 
+                [class.btn-loading]="isCreatingConsultation || isJoiningMeeting"
+                [disabled]="!isJoinMeetingEnabled(appointment) || isCreatingConsultation || isJoiningMeeting"
+                (click)="joinMeeting(appointment)"
+                title="Join video consultation">
+                <span class="meeting-icon" *ngIf="!isCreatingConsultation && !isJoiningMeeting">📹</span>
+                <span class="loading-spinner" *ngIf="isCreatingConsultation || isJoiningMeeting">⏳</span>
+                {{ isCreatingConsultation ? 'Creating Meeting...' : (isJoiningMeeting ? 'Joining Meeting...' : 'Join Meeting') }}
+              </button>
+            </div>
+          </div>
+          <div class="appointment-details">
+            <div class="appointment-reason">
+              <strong>Reason:</strong> {{ appointment.reason }}
+            </div>
+            <div class="appointment-requested">
+              <strong>Requested:</strong> {{ formatAppointmentDate(appointment.requestedAt) }}
+            </div>
+            <div *ngIf="appointment.consultationCode" class="consultation-code">
+              <strong>Room Code:</strong> {{ appointment.consultationCode }}
+            </div>
+            <div *ngIf="consultationError" class="consultation-error">
+              <strong>Error:</strong> {{ consultationError }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAppointmentModal()">Close</button>
     </div>
   </div>
 </div>

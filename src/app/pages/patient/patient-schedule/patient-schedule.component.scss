@@ -185,6 +185,17 @@
   background: #f0f9ff;
 }
 
+.calendar-grid .day.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-grid .day.clickable:hover {
+  background: #e0f2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
 .calendar-grid .day .num {
   position: absolute;
   top: 6px; 
@@ -673,6 +684,51 @@ h2 {
     height: 28px;
     font-size: 13px;
   }
+
+  // Appointment details modal mobile adjustments
+  .appointment-item {
+    padding: 12px;
+  }
+
+  .appointment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .appointment-doctor h4 {
+    font-size: 15px;
+  }
+
+  .appointment-specialty {
+    font-size: 13px;
+  }
+
+  .appointment-time {
+    font-size: 13px;
+  }
+
+  .appointment-details {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .appointment-reason,
+  .appointment-scheduled {
+    font-size: 13px;
+  }
+
+  .appointment-actions-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .appointment-actions-buttons .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 40px;
+    font-size: 14px;
+  }
 }
 
 // Hide mobile cards on desktop by default
@@ -702,6 +758,145 @@ h2 {
     width: auto;
     min-width: 120px;
   }
+}
+
+// Appointment Details Modal Styles
+.no-appointments {
+  text-align: center;
+  padding: 32px 16px;
+  color: #6b7280;
+}
+
+.appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.appointment-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.appointment-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.appointment-doctor h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.appointment-specialty {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.appointment-time {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.appointment-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.appointment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.appointment-reason,
+.appointment-scheduled {
+  font-size: 14px;
+  color: #475569;
+}
+
+.appointment-reason strong,
+.appointment-scheduled strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.appointment-actions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.appointment-actions-buttons .btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  min-width: 80px;
+}
+
+.meeting-status {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.meeting-status.meeting-available {
+  color: #059669;
+  background: #d1fae5;
+  font-weight: 500;
+}
+
+.btn-join-meeting {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #2563eb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-join-meeting:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-join-meeting:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.meeting-icon {
+  font-size: 14px;
 }
 
 // Modal open styles - dim header and sidebar

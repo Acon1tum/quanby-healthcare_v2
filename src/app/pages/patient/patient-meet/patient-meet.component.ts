@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HealthReportDisplayComponent, HealthScanResults } from '../../../shared/components/health-report-display/health-report-display.component';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 // Type declaration for lottie-web
 declare const lottie: any;
@@ -98,10 +99,25 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     private faceScanService: FaceScanService,
     private healthScanService: HealthScanService,
     private authService: AuthService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute
+
+    
   ) {}
 
   ngOnInit() {
+    // Check for roomId in query parameters
+    this.route.queryParams.subscribe(params => {
+      if (params['roomId']) {
+        this.roomId = params['roomId'];
+        console.log('🏠 Room ID from query params, auto-joining:', this.roomId);
+        // Auto-join the meeting when roomId is provided
+        setTimeout(() => {
+          this.join();
+        }, 1000); // Small delay to ensure WebRTC is initialized
+      }
+    });
+
     // Initialize WebRTC service
     this.webrtc.initSocket();
     this.webrtc.initPeer();

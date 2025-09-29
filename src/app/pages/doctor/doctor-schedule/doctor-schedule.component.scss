@@ -98,6 +98,15 @@
 }
 .calendar-grid .day.out { background: #f9fafb; }
 .calendar-grid .day.appt { outline: 2px solid #2563eb; outline-offset: -2px; }
+.calendar-grid .day.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.calendar-grid .day.clickable:hover {
+  background: #f0f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
 .calendar-grid .day .num {
   position: absolute;
   top: 6px; left: 8px;
@@ -612,6 +621,58 @@ h3 {
     height: 28px;
     font-size: 13px;
   }
+
+  // Appointment details modal mobile adjustments
+  .appointment-item {
+    padding: 12px;
+  }
+
+  .appointment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .appointment-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .appointment-patient h4 {
+    font-size: 15px;
+  }
+
+  .appointment-time {
+    font-size: 13px;
+  }
+
+  .appointment-details {
+    gap: 6px;
+  }
+
+  .appointment-reason,
+  .appointment-requested {
+    font-size: 13px;
+  }
+
+  .btn-join-meeting {
+    padding: 10px 12px;
+    font-size: 12px;
+    min-height: 40px;
+  }
+
+  .consultation-code {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .consultation-error {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
 }
 
 // Hide mobile cards on desktop by default
@@ -650,5 +711,171 @@ body.modal-open .sidebar {
   opacity: 0.6;
   filter: grayscale(20%);
   transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+// Appointment Details Modal Styles
+.no-appointments {
+  text-align: center;
+  padding: 32px 16px;
+  color: #6b7280;
+}
+
+.appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.appointment-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.appointment-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.appointment-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.meeting-status {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.meeting-status.meeting-available {
+  color: #059669;
+  background: #d1fae5;
+  font-weight: 500;
+}
+
+.appointment-patient h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.appointment-time {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.appointment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.appointment-reason,
+.appointment-requested {
+  font-size: 14px;
+  color: #475569;
+}
+
+.appointment-reason strong,
+.appointment-requested strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.consultation-code {
+  font-size: 14px;
+  color: #475569;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+}
+
+.consultation-code strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.consultation-error {
+  font-size: 14px;
+  color: #dc2626;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+}
+
+.consultation-error strong {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.btn-join-meeting {
+  background: #3b82f6;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-join-meeting:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-join-meeting:active {
+  transform: translateY(0);
+}
+
+.meeting-icon {
+  font-size: 14px;
+}
+
+.btn-join-meeting.btn-loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  font-size: 14px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
