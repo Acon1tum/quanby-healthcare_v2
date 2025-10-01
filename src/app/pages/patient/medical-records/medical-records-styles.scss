@@ -101,8 +101,12 @@
 
 .patient-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .info-section h3 {
@@ -126,11 +130,15 @@
   margin-top: 0.125rem;
   color: #667eea;
   font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .info-item span {
   flex: 1;
   font-size: 0.875rem;
   color: #475569;
-  line-height: 1.5;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
