@@ -57,6 +57,9 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   showSaveSuccessModal: boolean = false;
   showSaveErrorModal: boolean = false;
 
+  // Authentication state
+  isLoggedIn: boolean = false;
+
   // Modal state for metric details
   showMetricModal: boolean = false;
   selectedMetric: any = null;
@@ -72,6 +75,9 @@ export class FaceScanComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Check authentication state
+    this.checkAuthenticationState();
+    
     // Enable detailed debugging
     this.enableDebugging();
     
@@ -193,8 +199,10 @@ export class FaceScanComponent implements OnInit, OnDestroy {
         // Convert to HealthScanResults format for health-report-display
         this.healthScanResults = this.convertToHealthScanResults(processedResults);
         
-        // Save results to database
-        this.saveHealthScanResults();
+        // Save results to database only if user is logged in
+        if (this.isLoggedIn) {
+          this.saveHealthScanResults();
+        }
       } else {
         console.log('⚠️ Failed to process VSE Plugin results, showing mock data');
         // this.showMockResults(); // REMOVED
@@ -353,6 +361,15 @@ export class FaceScanComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+  }
+
+  /**
+   * Check if user is logged in
+   */
+  private checkAuthenticationState(): void {
+    const token = localStorage.getItem('accessToken');
+    this.isLoggedIn = !!token;
+    console.log('🔐 Authentication state:', { isLoggedIn: this.isLoggedIn, hasToken: !!token });
   }
 
   startScan(): void {
@@ -546,8 +563,10 @@ export class FaceScanComponent implements OnInit, OnDestroy {
       // Convert to HealthScanResults format for health-report-display
       this.healthScanResults = this.convertToHealthScanResults(results);
       
-      // Save results to database
-      this.saveHealthScanResults();
+      // Save results to database only if user is logged in
+      if (this.isLoggedIn) {
+        this.saveHealthScanResults();
+      }
     } else {
       console.log('⚠️ No results found in health analysis message, showing mock results');
       console.log('📊 Raw health analysis data keys:', Object.keys(data));
@@ -1910,15 +1929,10 @@ export class FaceScanComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if user is logged in
+    // This method should only be called for logged-in users
     const token = localStorage.getItem('accessToken');
     if (!token) {
       console.log('⚠️ User not logged in, cannot save health scan results');
-      this.saveStatus = 'Please log in to save your health data.';
-      this.showSaveErrorModal = true;
-      setTimeout(() => {
-        this.showSaveErrorModal = false;
-      }, 5000);
       return;
     }
 

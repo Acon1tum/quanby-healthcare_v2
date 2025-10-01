@@ -231,7 +231,8 @@
       </div>
 
       <div *ngIf="scanComplete">
-        <div class="scan-result-container bg-gray-50 rounded-2xl shadow-lg p-6 max-w-2xl mx-auto mt-6">
+        <!-- Green Results Display - For non-logged-in users -->
+        <div *ngIf="!isLoggedIn" class="scan-result-container bg-gray-50 rounded-2xl shadow-lg p-6 max-w-2xl mx-auto mt-6">
           <!-- Scan Complete Header -->
           <div class="scan-complete-header text-center mb-6">
             <h2 class="text-4xl font-extrabold text-green-600 mb-2 flex items-center justify-center gap-3">
@@ -243,6 +244,16 @@
               Face Scan Complete
             </h2>
             <p class="text-green-600 mb-4 text-lg">Your health analysis has been completed successfully!</p>
+            
+            <!-- Login Prompt for Non-logged Users -->
+            <div class="login-prompt bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <span class="text-blue-800 font-semibold">Please log in to save your health data.</span>
+              </div>
+            </div>
             
             <!-- Save Status Indicator -->
             <div *ngIf="isSavingToDatabase || saveStatus" class="save-status-container mb-4">
@@ -430,9 +441,41 @@
           </div>
         </div>
 
-        <!-- Health Report Display Component -->
-        <div *ngIf="healthScanResults" class="health-report-container mt-8">
-          <app-health-report-display [results]="healthScanResults"></app-health-report-display>
+        <!-- Blue Results Display - For logged-in users -->
+        <div *ngIf="isLoggedIn" class="logged-in-results-container mt-8">
+          <!-- Scan Complete Header for Logged Users -->
+          <div class="scan-complete-header text-center mb-6">
+            <h2 class="text-4xl font-extrabold text-blue-600 mb-2 flex items-center justify-center gap-3">
+              <span class="inline-block bg-blue-500 text-white rounded-full p-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              </span>
+              Face Scan Complete
+            </h2>
+            <p class="text-blue-600 mb-4 text-lg">Your health analysis has been completed successfully!</p>
+            
+            <!-- Save Status Indicator for Logged Users -->
+            <div *ngIf="isSavingToDatabase || saveStatus" class="save-status-container mb-4">
+              <div *ngIf="isSavingToDatabase" class="bg-blue-100 border border-blue-300 rounded-lg px-4 py-3 inline-block">
+                <div class="flex items-center gap-2">
+                  <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="text-blue-800 font-semibold">{{ saveStatus }}</span>
+                </div>
+              </div>
+              <div *ngIf="!isSavingToDatabase && saveStatus && !showSaveSuccessModal && !showSaveErrorModal" class="bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 inline-block">
+                <span class="text-gray-800 font-semibold">{{ saveStatus }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Health Report Display Component - Only for logged-in users -->
+          <div *ngIf="healthScanResults" class="health-report-container mt-8">
+            <app-health-report-display [results]="healthScanResults"></app-health-report-display>
+          </div>
         </div>
 
         <div class="action-buttons flex justify-center gap-4 mt-6">
@@ -452,7 +495,8 @@
           </button>
         </div>
 
-        <div class="send-email-section flex flex-col items-center justify-center mt-8 mb-4">
+        <!-- Email Section - Only for non-logged-in users -->
+        <div *ngIf="!isLoggedIn" class="send-email-section flex flex-col items-center justify-center mt-8 mb-4">
           <div class="text-lg font-semibold text-gray-700 mb-2">Send Your Results to Email</div>
           <form (ngSubmit)="sendResultsToEmail()" #emailForm="ngForm" class="send-email-form w-full flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl">
             <input
@@ -548,8 +592,8 @@
   </div>
 </div>
 
-<!-- Save Success Modal -->
-<div *ngIf="showSaveSuccessModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+<!-- Save Success Modal - Only for logged-in users -->
+<div *ngIf="showSaveSuccessModal && isLoggedIn" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
   <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
     <div class="modal-icon bg-green-100 rounded-full p-4 mb-4">
       <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -562,8 +606,8 @@
   </div>
 </div>
 
-<!-- Save Error Modal -->
-<div *ngIf="showSaveErrorModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+<!-- Save Error Modal - Only for logged-in users -->
+<div *ngIf="showSaveErrorModal && isLoggedIn" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
   <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
     <div class="modal-icon bg-red-100 rounded-full p-4 mb-4">
       <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
