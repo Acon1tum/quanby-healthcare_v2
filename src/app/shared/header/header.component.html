@@ -4,8 +4,8 @@
         [class.justify-between]="!isLoggedIn"
         [class.justify-evenly]="isLoggedIn">
   <!-- Logo Section - Only show when not logged in -->
-  <div *ngIf="!isLoggedIn" class="flex items-center gap-2 md:gap-3 text-slate-800">
-    <img src="/QHEALTH.png" alt="Quanby Health Logo" class="h-8 w-18 md:h-8 md:w-8">
+  <div *ngIf="!isLoggedIn" class="flex items-center gap-2 md:gap-3 text-slate-800 shrink-0">
+    <img src="/QHEALTH.png" alt="Quanby Health Logo" class="logo-img">
   </div>
 
   <!-- Mobile Sidebar Button - Only show when logged in on mobile -->
