@@ -49,12 +49,12 @@
       <div class="status-item">
         <strong>Room ID:</strong> {{ roomId }}
       </div>
-      <div class="status-item">
+      <!-- <div class="status-item">
         <strong>Your Role:</strong> {{ currentRole }}
       </div>
       <div class="status-item">
         <strong>Participants:</strong> {{ participants }}/2
-      </div>
+      </div> -->
     </div>
 
     <!-- Video Controls (top) - hidden in minimalist layout -->
@@ -118,9 +118,26 @@
               <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
             </div>
           </div>
-          <!-- Bottom-center Leave/End Call button -->
+          <!-- Bottom-center control group -->
           <div class="remote-overlay-leave" *ngIf="isJoined">
-            <button (click)="leave()" class="btn btn-danger end-call-btn" title="End call">End Call</button>
+            <div class="overlay-control-group">
+              <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
+                <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+              </button>
+              <button (click)="leave()" class="icon-btn icon-danger" aria-label="End call" title="End call">
+                <img class="icon-img" src="/end-call.png" alt="End call" />
+              </button>
+              <!-- Show Doctor Details toggle when sidebar is collapsed -->
+              <button 
+                *ngIf="!showDoctorSidebar"
+                class="icon-btn icon-neutral" 
+                (click)="showDoctorSidebar = true" 
+                aria-label="Show doctor details" 
+                title="Doctor Details"
+              >
+                👨‍⚕️
+              </button>
+            </div>
           </div>
           <div *ngIf="!remoteStream" class="waiting-message">
             <p>Waiting for doctor to join...</p>
@@ -134,6 +151,13 @@
       <div class="doctor-details-sidebar" *ngIf="isJoined && showDoctorSidebar">
         <div class="doctor-details-header">
           <h3>👨‍⚕️ Doctor Details</h3>
+          <div class="header-actions">
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="showDoctorSidebar = false" 
+              title="Collapse sidebar"
+            >⤢</button>
+          </div>
           <div class="mobile-dropdown">
             <button 
               class="mobile-dropdown-toggle" 
@@ -175,6 +199,7 @@
           </button>
         </div>
       </div>
+      
     </div>
 
     <!-- Meeting Footer Controls (minimalist) -->

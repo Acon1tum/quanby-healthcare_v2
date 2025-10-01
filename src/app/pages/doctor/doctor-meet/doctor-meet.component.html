@@ -103,31 +103,14 @@
         <div class="status-item">
           <strong>Room ID:</strong> {{ roomId }}
         </div>
-        <div class="status-item">
+        <!-- <div class="status-item">
           <strong>Your Role:</strong> {{ currentRole }}
         </div>
         <div class="status-item">
           <strong>Participants:</strong> {{ participants }}/2
-        </div>
+        </div> -->
       </div>
-      <div class="status-actions">
-        <button 
-          *ngIf="remoteStream" 
-          (click)="openLabRequestModal(); closeOverlayMenu()" 
-          class="btn btn-ghost btn-info"
-          title="Request lab tests for patient"
-        >
-          🧪 Lab Request
-        </button>
-        <button 
-          *ngIf="remoteStream" 
-          (click)="openScheduleModal()" 
-          class="btn btn-info btn-schedule"
-          title="Schedule patient to another doctor"
-        >
-          📅 Schedule to Another Doctor
-        </button>
-      </div>
+      <div class="status-actions"></div>
     </div>
 
     <!-- Video Controls (top) - hidden in minimalist layout -->
@@ -183,7 +166,7 @@
     </div>
 
     <!-- Video Container with Patient Details Sidebar -->
-    <div class="meeting-layout">
+    <div class="meeting-layout" [class.sidebar-collapsed]="isSidebarCollapsed">
       <!-- Main Video Area -->
       <div class="video-container">
         <!-- Remote Video (main) -->
@@ -258,9 +241,79 @@
                 </button>
               </div>
             </div>
-            <!-- Bottom-center Leave/End Call button -->
+            <!-- Bottom-center control group: Camera toggle, End Call, Actions dropdown -->
             <div class="remote-overlay-leave" *ngIf="isJoined">
-              <button (click)="leave()" class="btn btn-danger end-call-btn" title="End call">End Call</button>
+              <div class="overlay-control-group">
+                <!-- Camera toggle moved beside End Call -->
+                <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
+                  <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+                </button>
+
+                <button (click)="leave()" class="icon-btn icon-danger" aria-label="End call" title="End call">
+                  <img class="icon-img" src="/end-call.png" alt="End call" />
+                </button>
+
+                <!-- Actions dropdown: Face Scan, Prescription, Diagnosis -->
+                <div class="end-actions-dropdown">
+                  <button class="icon-btn icon-neutral" (click)="toggleEndActionsDropdown()" aria-label="More actions" title="More actions">
+                    <img class="icon-img" src="/action.png" alt="Actions" />
+                  </button>
+                  <div class="end-actions-menu" *ngIf="showEndActionsDropdown">
+                    <button 
+                      *ngIf="remoteStream" 
+                      (click)="startFaceScan(); closeEndActionsDropdown()" 
+                      class="btn btn-ghost btn-primary"
+                      [disabled]="isFaceScanning"
+                      title="Start face scan for patient health assessment"
+                    >
+                      <span *ngIf="!isFaceScanning">🔍 Face Scan</span>
+                      <span *ngIf="isFaceScanning">⏳ Scanning...</span>
+                    </button>
+                    <button 
+                      *ngIf="remoteStream" 
+                      (click)="openPrescriptionModal(); closeEndActionsDropdown()" 
+                      class="btn btn-ghost btn-success"
+                      title="Create prescription for patient"
+                    >
+                      💊 Prescription
+                    </button>
+                    <button 
+                      *ngIf="remoteStream" 
+                      (click)="openDiagnosisModal(); closeEndActionsDropdown()" 
+                      class="btn btn-ghost btn-warning"
+                      title="Create diagnosis for patient"
+                    >
+                      🔍 Diagnosis
+                    </button>
+                    <button 
+                      *ngIf="remoteStream" 
+                      (click)="openLabRequestModal(); closeEndActionsDropdown()" 
+                      class="btn btn-ghost btn-info"
+                      title="Request lab tests for patient"
+                    >
+                      🧪 Lab Request
+                    </button>
+                    <button 
+                      *ngIf="remoteStream" 
+                      (click)="openScheduleModal(); closeEndActionsDropdown()" 
+                      class="btn btn-ghost"
+                      title="Schedule patient to another doctor"
+                    >
+                      📅 Schedule to Another Doctor
+                    </button>
+                  </div>
+                </div>
+                <!-- Show Patient Details button when sidebar is collapsed -->
+                <button 
+                  *ngIf="isSidebarCollapsed" 
+                  class="icon-btn icon-neutral" 
+                  (click)="toggleSidebar()" 
+                  aria-label="Show patient details" 
+                  title="Patient Details"
+                >
+                  👤
+                </button>
+              </div>
             </div>
             <div *ngIf="!remoteStream" class="waiting-message">
               <p>Waiting for patient to join...</p>
@@ -280,10 +333,19 @@
       </div>
 
       <!-- Patient Details Sidebar -->
-      <div class="patient-details-sidebar" *ngIf="isJoined">
+      <div class="patient-details-sidebar" *ngIf="isJoined && !isSidebarCollapsed">
         
         <div class="patient-details-header">
           <h3>👤 Patient Details</h3>
+          <div class="header-actions">
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="toggleSidebar()"
+              title="Collapse sidebar"
+            >
+              ⤢
+            </button>
+          </div>
           <button 
             class="btn btn-sm btn-outline-secondary" 
             (click)="refreshPatientDetails()"
@@ -345,6 +407,7 @@
           </div>
         </div>
       </div>
+      
     </div>
   </div>
 

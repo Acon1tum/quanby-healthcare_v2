@@ -770,6 +770,13 @@
     }
   }
 
+  /* Expanded video area when sidebar collapsed */
+  .sidebar-collapsed {
+    .video-container {
+      width: 100%;
+    }
+  }
+
   .video-container {
     flex: 1;
     display: grid;
@@ -1176,6 +1183,102 @@
   padding: 10px 18px;
   border-radius: 999px;
   box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+}
+
+/* Group the camera toggle, end call and actions dropdown */
+.overlay-control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.22);
+  padding: 6px 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.end-actions-dropdown {
+  position: relative;
+}
+
+.end-actions-dropdown .btn {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #374151;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.end-actions-menu {
+  position: absolute;
+  bottom: 46px;
+  right: 0;
+  background: rgba(15, 23, 42, 0.98);
+  color: #f1f5f9;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  min-width: 200px;
+}
+
+.end-actions-menu .btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 4px 0;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+/* Compact sizing for overlay buttons */
+.overlay-control-group .btn {
+  padding: 6px 10px;
+  min-height: 34px;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.overlay-control-group .end-call-btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  min-height: 34px;
+}
+
+/* Icon-only buttons */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.icon-btn .icon-img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.icon-btn.icon-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.icon-btn.icon-neutral {
+  background: #ffffff;
+  color: #374151;
 }
 
 @media (max-width: 768px) {
@@ -2667,6 +2770,21 @@
   @media (max-width: 768px) {
     max-height: 40vh;
   }
+}
+
+/* Floating show button when sidebar is collapsed */
+.show-sidebar-btn {
+  position: fixed;
+  right: 16px;
+  top: 110px;
+  z-index: 1000;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
 }
 
 .patient-name-header {

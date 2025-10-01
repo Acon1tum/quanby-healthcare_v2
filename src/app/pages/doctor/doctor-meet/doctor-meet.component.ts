@@ -150,6 +150,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   showMobileDropdown: boolean = false;
   // In-video overlay menu
   showOverlayMenu: boolean = false;
+  // End-call area dropdown
+  showEndActionsDropdown: boolean = false;
+
+  // Patient details sidebar collapsed state
+  isSidebarCollapsed: boolean = false;
   
   // Enums for template
   DiagnosisSeverity = DiagnosisSeverity;
@@ -394,6 +399,20 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
 
   closeOverlayMenu(): void {
     this.showOverlayMenu = false;
+  }
+
+  // End-call area dropdown controls
+  toggleEndActionsDropdown(): void {
+    this.showEndActionsDropdown = !this.showEndActionsDropdown;
+  }
+
+  closeEndActionsDropdown(): void {
+    this.showEndActionsDropdown = false;
+  }
+
+  // Toggle patient details sidebar
+  toggleSidebar(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
   private bindLocalVideo() {

@@ -943,10 +943,43 @@
   z-index: 20;
 }
 
-.end-call-btn {
-  padding: 10px 18px;
+/* Compact overlay controls */
+.overlay-control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.22);
+  padding: 6px 8px;
   border-radius: 999px;
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.icon-btn .icon-img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.icon-btn.icon-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
 }
 
 @media (max-width: 768px) {
