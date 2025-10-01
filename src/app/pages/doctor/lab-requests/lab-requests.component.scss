@@ -167,11 +167,13 @@
 
 .table-responsive {
   overflow-x: auto;
+  overflow-y: visible;
 }
 
 .lab-requests-table {
   width: 100%;
   border-collapse: collapse;
+  position: relative;
   
   th, td {
     padding: 1rem;
@@ -191,6 +193,10 @@
   td {
     color: #4b5563;
     font-size: 0.875rem;
+  }
+  
+  tbody {
+    position: relative;
   }
   
   .table-row {
@@ -222,7 +228,12 @@
     color: #d97706;
   }
   
-  &.status-approved {
+  &.status-in-progress {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+  
+  &.status-completed {
     background: #d1fae5;
     color: #059669;
   }
@@ -232,15 +243,33 @@
     color: #dc2626;
   }
   
-  &.status-completed {
-    background: #dbeafe;
-    color: #2563eb;
-  }
-  
   &.status-cancelled {
     background: #f3f4f6;
     color: #6b7280;
   }
+  
+  &.status-on-hold {
+    background: #fed7aa;
+    color: #ea580c;
+  }
+  
+  // Legacy status (remove after update)
+  &.status-approved {
+    background: #d1fae5;
+    color: #059669;
+  }
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .actions-cell {
@@ -441,8 +470,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000;
   padding: 1rem;
+  backdrop-filter: blur(2px);
 }
 
 .modal-content {
@@ -453,6 +483,8 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
+  z-index: 10001;
   
   &.large {
     max-width: 800px;
@@ -564,6 +596,10 @@
     flex-direction: column;
   }
   
+  .action-buttons-compact {
+    flex-wrap: wrap;
+  }
+  
   .pagination {
     flex-direction: column;
     gap: 1rem;
@@ -577,5 +613,129 @@
   
   .details-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+// Compact Action Buttons
+.action-buttons-compact {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+  
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    
+    .material-icons {
+      font-size: 18px;
+    }
+    
+    .btn-text {
+      display: inline;
+      
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+  
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+    
+    .material-icons {
+      font-size: 16px;
+    }
+  }
+}
+
+// Dropdown Container
+.dropdown-container {
+  position: static;
+  display: inline-block;
+  
+  .dropdown-toggle {
+    padding: 0.25rem 0.5rem;
+    
+    .material-icons {
+      font-size: 18px;
+    }
+  }
+  
+  .dropdown-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    min-width: 180px;
+    padding: 0.5rem 0;
+    transform: translateY(0.25rem);
+    
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      text-align: left;
+      color: #495057;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      
+      .material-icons {
+        font-size: 18px;
+        color: #6c757d;
+      }
+      
+      &:hover {
+        background: #f8f9fa;
+        color: #212529;
+        
+        .material-icons {
+          color: #495057;
+        }
+      }
+      
+      &.warning {
+        color: #856404;
+        
+        .material-icons {
+          color: #ffc107;
+        }
+        
+        &:hover {
+          background: #fff3cd;
+        }
+      }
+      
+      &.danger {
+        color: #721c24;
+        
+        .material-icons {
+          color: #dc3545;
+        }
+        
+        &:hover {
+          background: #f8d7da;
+        }
+      }
+    }
+    
+    .dropdown-divider {
+      height: 0;
+      margin: 0.5rem 0;
+      overflow: hidden;
+      border-top: 1px solid #e9ecef;
+    }
   }
 }

@@ -43,10 +43,11 @@
         <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()" class="form-control">
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
+          <option value="IN_PROGRESS">In Progress</option>
           <option value="COMPLETED">Completed</option>
+          <option value="REJECTED">Rejected</option>
           <option value="CANCELLED">Cancelled</option>
+          <option value="ON_HOLD">On Hold</option>
         </select>
       </div>
       
@@ -69,7 +70,7 @@
   </div>
 
   <!-- Lab Requests Table -->
-  <div *ngIf="!loading" class="table-container">
+  <div *ngIf="!loading" class="table-container" (click)="closeDropdown()">
     <div class="table-header">
       <h3>Lab Requests ({{ totalItems }} total)</h3>
     </div>
@@ -78,7 +79,6 @@
       <table class="lab-requests-table">
         <thead>
           <tr>
-            <th>Request ID</th>
             <th>Patient</th>
             <th>Organization</th>
             <th>Status</th>
@@ -87,8 +87,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let request of paginatedRequests" class="table-row">
-            <td class="request-id">{{ request.id }}</td>
+          <tr *ngFor="let request of paginatedRequests" 
+              class="table-row">
             <td class="patient-name">{{ request.patientName || 'Unknown Patient' }}</td>
             <td class="organization-name">{{ request.organizationName || 'Unknown Organization' }}</td>
             <td class="status-cell">
@@ -96,30 +96,83 @@
                 {{ getStatusDisplayName(request.status) }}
               </span>
             </td>
-            <td class="requested-date">{{ formatDate(request.requestedDate) }}</td>
+            <td class="requested-date">{{ formatDate(request.createdAt!) }}</td>
             <td class="actions-cell">
-              <div class="action-buttons">
-                <button class="btn btn-sm btn-info" (click)="openDetailsModal(request)" title="View Details">
+              <div class="action-buttons-compact">
+                <!-- Primary Action Button (changes based on status) -->
+                <button *ngIf="request.status === 'PENDING' || request.status === 'ON_HOLD'" 
+                        class="btn btn-sm btn-primary" 
+                        (click)="startProcessing(request)" 
+                        title="Start Processing">
+                  <i class="material-icons">play_arrow</i>
+                  <span class="btn-text">Start</span>
+                </button>
+                
+                <button *ngIf="request.status === 'IN_PROGRESS'" 
+                        class="btn btn-sm btn-success" 
+                        (click)="markAsCompleted(request)" 
+                        title="Mark as Completed">
+                  <i class="material-icons">check_circle</i>
+                  <span class="btn-text">Complete</span>
+                </button>
+                
+                <!-- View Details Button -->
+                <button class="btn btn-sm btn-info" 
+                        (click)="openDetailsModal(request)" 
+                        title="View Details">
                   <i class="material-icons">visibility</i>
+                  <span class="btn-text">View</span>
                 </button>
-                <button class="btn btn-sm btn-success" (click)="exportAsPDF(request)" title="Export PDF">
-                  <i class="material-icons">picture_as_pdf</i>
-                </button>
-                <button *ngIf="request.status === 'PENDING'" class="btn btn-sm btn-warning" 
-                        (click)="updateLabRequestStatus(request, 'APPROVED')" title="Approve">
-                  <i class="material-icons">check</i>
-                </button>
-                <button *ngIf="request.status === 'APPROVED'" class="btn btn-sm btn-primary" 
-                        (click)="openResultsModal(request)" title="Add Results">
-                  <i class="material-icons">assignment</i>
-                </button>
-                <button *ngIf="request.status === 'PENDING'" class="btn btn-sm btn-danger" 
-                        (click)="updateLabRequestStatus(request, 'REJECTED')" title="Reject">
-                  <i class="material-icons">close</i>
-                </button>
-                <button class="btn btn-sm btn-danger" (click)="deleteLabRequest(request)" title="Delete">
-                  <i class="material-icons">delete</i>
-                </button>
+                
+                <!-- More Actions Dropdown -->
+                <div class="dropdown-container">
+                  <button class="btn btn-sm btn-secondary dropdown-toggle" 
+                          (click)="toggleDropdown(request.id!, $event); $event.stopPropagation()"
+                          title="More Actions">
+                    <i class="material-icons">more_vert</i>
+                  </button>
+                  
+                  <div class="dropdown-menu" 
+                       *ngIf="isDropdownOpen(request.id!)"
+                       [style.top]="dropdownPosition.top"
+                       [style.right]="dropdownPosition.right"
+                       (click)="$event.stopPropagation()">
+                    
+                    <button class="dropdown-item" (click)="exportAsPDF(request); closeDropdown()">
+                      <i class="material-icons">picture_as_pdf</i>
+                      <span>Export PDF</span>
+                    </button>
+                    
+                    <button *ngIf="request.status === 'PENDING' || request.status === 'IN_PROGRESS'" 
+                            class="dropdown-item warning" 
+                            (click)="putOnHold(request); closeDropdown()">
+                      <i class="material-icons">pause</i>
+                      <span>Put On Hold</span>
+                    </button>
+                    
+                    <button *ngIf="request.status === 'PENDING'" 
+                            class="dropdown-item danger" 
+                            (click)="rejectRequest(request); closeDropdown()">
+                      <i class="material-icons">close</i>
+                      <span>Reject Request</span>
+                    </button>
+                    
+                    <button *ngIf="request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && request.status !== 'REJECTED'" 
+                            class="dropdown-item" 
+                            (click)="cancelRequest(request); closeDropdown()">
+                      <i class="material-icons">cancel</i>
+                      <span>Cancel Request</span>
+                    </button>
+                    
+                    <div class="dropdown-divider"></div>
+                    
+                    <button class="dropdown-item danger" 
+                            (click)="deleteLabRequest(request); closeDropdown()">
+                      <i class="material-icons">delete</i>
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
@@ -184,9 +237,31 @@
       </div>
       
       <div class="form-group">
-        <label for="notes">Notes</label>
-        <textarea id="notes" [(ngModel)]="newLabRequest.notes" name="notes" class="form-control" rows="4" 
-                  placeholder="Describe the lab tests needed, symptoms, or any specific requirements..."></textarea>
+        <label for="priority">Priority</label>
+        <select id="priority" [(ngModel)]="newLabRequest.priority" name="priority" class="form-control">
+          <option value="LOW">Low</option>
+          <option value="NORMAL">Normal</option>
+          <option value="HIGH">High</option>
+          <option value="URGENT">Urgent</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="requestedTests">Requested Tests</label>
+        <textarea id="requestedTests" [(ngModel)]="newLabRequest.requestedTests" name="requestedTests" class="form-control" rows="3" 
+                  placeholder="List the specific lab tests requested (e.g., Complete Blood Count, Lipid Panel, etc.)"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="instructions">Instructions</label>
+        <textarea id="instructions" [(ngModel)]="newLabRequest.instructions" name="instructions" class="form-control" rows="2" 
+                  placeholder="Special instructions for the lab (e.g., fasting required, urgent processing, etc.)"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="note">Notes</label>
+        <textarea id="note" [(ngModel)]="newLabRequest.note" name="note" class="form-control" rows="3" 
+                  placeholder="Additional notes about the lab request..."></textarea>
       </div>
       
       <div class="modal-actions">
@@ -238,28 +313,33 @@
         </div>
         
         <div class="detail-item">
-          <label>Requested Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.requestedDate) }}</span>
+          <label>Priority:</label>
+          <span class="priority-badge">{{ selectedLabRequest.priority || 'NORMAL' }}</span>
         </div>
         
-        <div class="detail-item" *ngIf="selectedLabRequest.approvedDate">
-          <label>Approved Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.approvedDate) }}</span>
+        <div class="detail-item">
+          <label>Created Date:</label>
+          <span>{{ formatDateTime(selectedLabRequest.createdAt!) }}</span>
         </div>
         
-        <div class="detail-item" *ngIf="selectedLabRequest.completedDate">
-          <label>Completed Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.completedDate) }}</span>
+        <div class="detail-item" *ngIf="selectedLabRequest.updatedAt">
+          <label>Last Updated:</label>
+          <span>{{ formatDateTime(selectedLabRequest.updatedAt) }}</span>
         </div>
         
-        <div class="detail-item full-width">
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.requestedTests">
+          <label>Requested Tests:</label>
+          <div class="notes-content">{{ selectedLabRequest.requestedTests }}</div>
+        </div>
+        
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.instructions">
+          <label>Instructions:</label>
+          <div class="notes-content">{{ selectedLabRequest.instructions }}</div>
+        </div>
+        
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.note">
           <label>Notes:</label>
-          <div class="notes-content">{{ selectedLabRequest.notes || 'No notes provided' }}</div>
-        </div>
-        
-        <div class="detail-item full-width" *ngIf="selectedLabRequest.testResults">
-          <label>Test Results:</label>
-          <div class="test-results-content">{{ selectedLabRequest.testResults }}</div>
+          <div class="notes-content">{{ selectedLabRequest.note }}</div>
         </div>
       </div>
     </div>
@@ -274,28 +354,3 @@
   </div>
 </div>
 
-<!-- Add Test Results Modal -->
-<div *ngIf="showResultsModal && selectedLabRequest" class="modal-overlay" (click)="closeResultsModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Add Test Results</h3>
-      <button class="btn-close" (click)="closeResultsModal()">&times;</button>
-    </div>
-    
-    <form (ngSubmit)="addTestResults()" class="modal-form">
-      <div class="form-group">
-        <label for="testResults">Test Results *</label>
-        <textarea id="testResults" [(ngModel)]="testResults.results" name="testResults" class="form-control" rows="6" 
-                  placeholder="Enter detailed test results, findings, and recommendations..." required></textarea>
-      </div>
-      
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeResultsModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary" [disabled]="loading">
-          <i *ngIf="loading" class="material-icons spinner">refresh</i>
-          Add Results
-        </button>
-      </div>
-    </form>
-  </div>
-</div>

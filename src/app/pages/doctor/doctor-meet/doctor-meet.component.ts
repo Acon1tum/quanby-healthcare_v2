@@ -117,11 +117,32 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     doctorId: '',
     organizationId: '',
     consultationId: '',
-    notes: ''
+    note: '',
+    status: 'PENDING',
+    priority: 'NORMAL',
+    requestedTests: '',
+    instructions: ''
   };
   isSubmittingLabRequest: boolean = false;
   labRequestError: string = '';
   labRequestSuccess: string = '';
+  
+  // Lab Request Enums for template
+  LabRequestStatus = {
+    PENDING: 'PENDING' as const,
+    IN_PROGRESS: 'IN_PROGRESS' as const,
+    COMPLETED: 'COMPLETED' as const,
+    CANCELLED: 'CANCELLED' as const,
+    REJECTED: 'REJECTED' as const,
+    ON_HOLD: 'ON_HOLD' as const
+  };
+  
+  LabRequestPriority = {
+    LOW: 'LOW' as const,
+    NORMAL: 'NORMAL' as const,
+    HIGH: 'HIGH' as const,
+    URGENT: 'URGENT' as const
+  };
   
   // Schedule to Another Doctor properties
   showScheduleModal: boolean = false;
@@ -1925,7 +1946,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       doctorId: '',
       organizationId: '',
       consultationId: this.consultationId?.toString() || '',
-      notes: ''
+      note: '',
+      status: 'PENDING',
+      priority: 'NORMAL',
+      requestedTests: '',
+      instructions: ''
     };
   }
 
@@ -2003,7 +2028,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         doctorId: this.labRequestForm.doctorId,
         organizationId: this.labRequestForm.organizationId,
         consultationId: this.labRequestForm.consultationId,
-        notes: this.labRequestForm.notes
+        note: this.labRequestForm.note,
+        status: this.labRequestForm.status,
+        priority: this.labRequestForm.priority,
+        requestedTests: this.labRequestForm.requestedTests,
+        instructions: this.labRequestForm.instructions
       };
 
       console.log('🔍 Lab request data to send:', labRequestData);

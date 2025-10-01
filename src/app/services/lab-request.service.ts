@@ -8,14 +8,11 @@ export interface LabRequest {
   patientId: string;
   doctorId: string;
   organizationId: string;
-  consultationId?: string;
-  notes: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
-  requestedDate: Date;
-  approvedDate?: Date;
-  completedDate?: Date;
-  testResults?: string;
-  attachments?: string[];
+  note?: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'ON_HOLD';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  requestedTests?: string;
+  instructions?: string;
   createdAt?: Date;
   updatedAt?: Date;
   // Additional fields for display
@@ -29,7 +26,11 @@ export interface LabRequestForm {
   doctorId: string;
   organizationId: string;
   consultationId?: string;
-  notes: string;
+  note?: string;
+  status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'ON_HOLD';
+  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  requestedTests?: string; // JSON string containing requested lab tests
+  instructions?: string; // Special instructions for the lab
 }
 
 export interface LabRequestFilter {
@@ -121,14 +122,6 @@ export class LabRequestService {
     );
   }
 
-  // Add test results to lab request
-  addTestResults(id: string, results: string, attachments?: string[]): Observable<LabRequest> {
-    return this.http.patch<LabRequest>(`${this.apiUrl}/${id}/results`, 
-      { testResults: results, attachments }, 
-      { headers: this.getHeaders() }
-    );
-  }
-
   // Delete lab request
   deleteLabRequest(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
@@ -145,23 +138,28 @@ export class LabRequestService {
   }
 
   // Export lab request as PDF
-  exportLabRequestAsPDF(id: string): Observable<Blob> {
+  exportLabRequestAsPDF(id: string): Observable<string> {
     return this.http.get(`${this.apiUrl}/${id}/export/pdf`, { 
       headers: this.getHeaders(),
-      responseType: 'blob'
+      responseType: 'text'
     });
   }
 
-  // Download PDF
-  downloadPDF(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+  // Download/Print PDF from HTML
+  downloadPDF(html: string, filename: string): void {
+    // Open HTML in new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      // Wait for content to load, then trigger print dialog
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+    }
   }
 
   // Refresh lab requests data
@@ -180,10 +178,11 @@ export class LabRequestService {
   getStatusDisplayName(status: LabRequest['status']): string {
     switch (status) {
       case 'PENDING': return 'Pending';
-      case 'APPROVED': return 'Approved';
-      case 'REJECTED': return 'Rejected';
+      case 'IN_PROGRESS': return 'In Progress';
       case 'COMPLETED': return 'Completed';
       case 'CANCELLED': return 'Cancelled';
+      case 'REJECTED': return 'Rejected';
+      case 'ON_HOLD': return 'On Hold';
       default: return status;
     }
   }
@@ -192,10 +191,11 @@ export class LabRequestService {
   getStatusColorClass(status: LabRequest['status']): string {
     switch (status) {
       case 'PENDING': return 'status-pending';
-      case 'APPROVED': return 'status-approved';
-      case 'REJECTED': return 'status-rejected';
+      case 'IN_PROGRESS': return 'status-in-progress';
       case 'COMPLETED': return 'status-completed';
       case 'CANCELLED': return 'status-cancelled';
+      case 'REJECTED': return 'status-rejected';
+      case 'ON_HOLD': return 'status-on-hold';
       default: return 'status-default';
     }
   }

@@ -1046,48 +1046,86 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="organizationId">Organization *</label>
-          <select 
-            id="organizationId"
-            [(ngModel)]="labRequestForm.organizationId" 
-            name="organizationId"
-            class="form-control"
-            required
-            (change)="onLabRequestOrganizationChange()"
-          >
-            <option value="">Select Organization</option>
-            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="doctorId">Doctor *</label>
-          <select 
-            id="doctorId"
-            [(ngModel)]="labRequestForm.doctorId" 
-            name="doctorId"
-            class="form-control"
-            required
-            [disabled]="!labRequestForm.organizationId"
-          >
-            <option value="">Select Doctor</option>
-            <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
-              {{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}
-            </option>
-          </select>
-        </div>
+      <div class="form-group full-width">
+        <label for="organizationId">Organization *</label>
+        <select 
+          id="organizationId"
+          [(ngModel)]="labRequestForm.organizationId" 
+          name="organizationId"
+          class="form-control"
+          required
+          (change)="onLabRequestOrganizationChange()"
+        >
+          <option value="">Select Organization</option>
+          <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+        </select>
       </div>
 
       <div class="form-group full-width">
-        <label for="notes">Notes</label>
-        <textarea 
-          id="notes"
-          [(ngModel)]="labRequestForm.notes" 
-          name="notes"
+        <label for="doctorId">Doctor *</label>
+        <select 
+          id="doctorId"
+          [(ngModel)]="labRequestForm.doctorId" 
+          name="doctorId"
           class="form-control"
-          rows="4"
-          placeholder="Describe the lab tests needed, symptoms, or any specific requirements..."
+          required
+          [disabled]="!labRequestForm.organizationId"
+        >
+          <option value="">Select Doctor</option>
+          <option *ngFor="let doctor of availableDoctors" [value]="doctor.id">
+            {{ doctor.firstName }} {{ doctor.lastName }} - {{ doctor.specialization }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="priority">Priority</label>
+        <select 
+          id="priority"
+          [(ngModel)]="labRequestForm.priority" 
+          name="priority"
+          class="form-control"
+        >
+          <option [value]="LabRequestPriority.LOW">Low</option>
+          <option [value]="LabRequestPriority.NORMAL">Normal</option>
+          <option [value]="LabRequestPriority.HIGH">High</option>
+          <option [value]="LabRequestPriority.URGENT">Urgent</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="requestedTests">Requested Tests</label>
+        <textarea 
+          id="requestedTests"
+          [(ngModel)]="labRequestForm.requestedTests" 
+          name="requestedTests"
+          class="form-control"
+          rows="3"
+          placeholder="List the specific lab tests requested (e.g., Complete Blood Count, Lipid Panel, etc.)"
+        ></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="instructions">Instructions</label>
+        <textarea 
+          id="instructions"
+          [(ngModel)]="labRequestForm.instructions" 
+          name="instructions"
+          class="form-control"
+          rows="2"
+          placeholder="Special instructions for the lab (e.g., fasting required, urgent processing, etc.)"
+        ></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="note">Notes</label>
+        <textarea 
+          id="note"
+          [(ngModel)]="labRequestForm.note" 
+          name="note"
+          class="form-control"
+          rows="3"
+          placeholder="Additional notes about the lab request..."
         ></textarea>
       </div>
 

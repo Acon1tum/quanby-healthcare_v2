@@ -90,12 +90,12 @@ export class PatientLabRequestsComponent implements OnInit, OnDestroy {
 
     if (this.dateFrom) {
       const fromDate = new Date(this.dateFrom);
-      filtered = filtered.filter(request => new Date(request.requestedDate) >= fromDate);
+      filtered = filtered.filter(request => request.createdAt && new Date(request.createdAt) >= fromDate);
     }
 
     if (this.dateTo) {
       const toDate = new Date(this.dateTo);
-      filtered = filtered.filter(request => new Date(request.requestedDate) <= toDate);
+      filtered = filtered.filter(request => request.createdAt && new Date(request.createdAt) <= toDate);
     }
 
     this.filteredLabRequests = filtered;
@@ -149,10 +149,10 @@ export class PatientLabRequestsComponent implements OnInit, OnDestroy {
     this.labRequestService.exportLabRequestAsPDF(labRequest.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (blob) => {
+        next: (html) => {
           const filename = `lab-request-${labRequest.id}-${new Date().toISOString().split('T')[0]}.pdf`;
-          this.labRequestService.downloadPDF(blob, filename);
-          this.success = 'PDF exported successfully.';
+          this.labRequestService.downloadPDF(html, filename);
+          this.success = 'PDF export opened in new window. Use browser print to save as PDF.';
           this.loading = false;
         },
         error: (error) => {
@@ -185,24 +185,26 @@ export class PatientLabRequestsComponent implements OnInit, OnDestroy {
     this.success = '';
   }
 
-  // Check if lab request can be exported
+  // Check if lab request can be exported - Always available now
   canExport(labRequest: LabRequest): boolean {
-    return labRequest.status === 'COMPLETED' || labRequest.status === 'APPROVED';
+    return true; // Allow export for all statuses
   }
 
   // Get status description for patients
   getStatusDescription(status: LabRequest['status']): string {
     switch (status) {
       case 'PENDING':
-        return 'Your lab request is being reviewed by the doctor.';
-      case 'APPROVED':
-        return 'Your lab request has been approved. You can now visit the laboratory.';
+        return 'Your lab request is pending. Waiting for lab confirmation.';
+      case 'IN_PROGRESS':
+        return 'Your lab tests are currently in progress at the laboratory.';
+      case 'COMPLETED':
+        return 'Your lab tests have been completed. Results may be available.';
       case 'REJECTED':
         return 'Your lab request has been rejected. Please contact your doctor for more information.';
-      case 'COMPLETED':
-        return 'Your lab tests have been completed. Results are available for download.';
       case 'CANCELLED':
         return 'Your lab request has been cancelled.';
+      case 'ON_HOLD':
+        return 'Your lab request is temporarily on hold. Please contact the laboratory for details.';
       default:
         return 'Status unknown.';
     }

@@ -36,19 +36,20 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
   // Modal states
   showCreateModal = false;
   showDetailsModal = false;
-  showResultsModal = false;
   selectedLabRequest: LabRequest | null = null;
+  
+  // Dropdown state for action menus
+  openDropdownId: string | null = null;
+  dropdownPosition = { top: '0px', right: '0px' };
 
   // Form data
   newLabRequest = {
     patientId: '',
     organizationId: '',
-    notes: ''
-  };
-
-  testResults = {
-    results: '',
-    attachments: [] as string[]
+    note: '',
+    priority: 'NORMAL' as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT',
+    requestedTests: '',
+    instructions: ''
   };
 
   // Available options
@@ -127,12 +128,12 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
 
     if (this.dateFrom) {
       const fromDate = new Date(this.dateFrom);
-      filtered = filtered.filter(request => new Date(request.requestedDate) >= fromDate);
+      filtered = filtered.filter(request => request.createdAt && new Date(request.createdAt) >= fromDate);
     }
 
     if (this.dateTo) {
       const toDate = new Date(this.dateTo);
-      filtered = filtered.filter(request => new Date(request.requestedDate) <= toDate);
+      filtered = filtered.filter(request => request.createdAt && new Date(request.createdAt) <= toDate);
     }
 
     this.filteredLabRequests = filtered;
@@ -188,31 +189,15 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
     this.selectedLabRequest = null;
   }
 
-  openResultsModal(labRequest: LabRequest): void {
-    this.selectedLabRequest = labRequest;
-    this.testResults.results = labRequest.testResults || '';
-    this.showResultsModal = true;
-  }
-
-  closeResultsModal(): void {
-    this.showResultsModal = false;
-    this.selectedLabRequest = null;
-    this.resetTestResults();
-  }
-
   // Form methods
   resetNewLabRequest(): void {
     this.newLabRequest = {
       patientId: '',
       organizationId: '',
-      notes: ''
-    };
-  }
-
-  resetTestResults(): void {
-    this.testResults = {
-      results: '',
-      attachments: []
+      note: '',
+      priority: 'NORMAL',
+      requestedTests: '',
+      instructions: ''
     };
   }
 
@@ -227,9 +212,14 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
     this.error = '';
 
     const labRequestData = {
-      ...this.newLabRequest,
+      patientId: this.newLabRequest.patientId,
       doctorId: this.currentUser.id,
-      status: 'PENDING' as const
+      organizationId: this.newLabRequest.organizationId,
+      note: this.newLabRequest.note,
+      status: 'PENDING' as const,
+      priority: this.newLabRequest.priority,
+      requestedTests: this.newLabRequest.requestedTests,
+      instructions: this.newLabRequest.instructions
     };
 
     this.labRequestService.createLabRequest(labRequestData)
@@ -249,15 +239,16 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
       });
   }
 
-  updateLabRequestStatus(labRequest: LabRequest, status: LabRequest['status']): void {
+  // Update lab request status with automatic workflow
+  updateLabRequestStatus(labRequest: LabRequest, newStatus: LabRequest['status']): void {
     this.loading = true;
     this.error = '';
 
-    this.labRequestService.updateLabRequestStatus(labRequest.id!, status)
+    this.labRequestService.updateLabRequestStatus(labRequest.id!, newStatus)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedRequest) => {
-          this.success = `Lab request ${status.toLowerCase()} successfully.`;
+          this.success = `Lab request status updated to ${this.labRequestService.getStatusDisplayName(newStatus)}.`;
           this.loadLabRequests();
           this.loading = false;
         },
@@ -269,34 +260,33 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
       });
   }
 
-  addTestResults(): void {
-    if (!this.selectedLabRequest || !this.testResults.results.trim()) {
-      this.error = 'Please enter test results.';
-      return;
+  // Start processing lab request (move to IN_PROGRESS)
+  startProcessing(labRequest: LabRequest): void {
+    this.updateLabRequestStatus(labRequest, 'IN_PROGRESS');
+  }
+
+  // Mark lab request as completed
+  markAsCompleted(labRequest: LabRequest): void {
+    this.updateLabRequestStatus(labRequest, 'COMPLETED');
+  }
+
+  // Put lab request on hold
+  putOnHold(labRequest: LabRequest): void {
+    this.updateLabRequestStatus(labRequest, 'ON_HOLD');
+  }
+
+  // Cancel lab request
+  cancelRequest(labRequest: LabRequest): void {
+    if (confirm('Are you sure you want to cancel this lab request?')) {
+      this.updateLabRequestStatus(labRequest, 'CANCELLED');
     }
+  }
 
-    this.loading = true;
-    this.error = '';
-
-    this.labRequestService.addTestResults(
-      this.selectedLabRequest.id!,
-      this.testResults.results,
-      this.testResults.attachments
-    )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedRequest) => {
-          this.success = 'Test results added successfully.';
-          this.loadLabRequests();
-          this.closeResultsModal();
-          this.loading = false;
-        },
-        error: (error) => {
-          this.error = 'Failed to add test results. Please try again.';
-          this.loading = false;
-          console.error('Error adding test results:', error);
-        }
-      });
+  // Reject lab request
+  rejectRequest(labRequest: LabRequest): void {
+    if (confirm('Are you sure you want to reject this lab request?')) {
+      this.updateLabRequestStatus(labRequest, 'REJECTED');
+    }
   }
 
   deleteLabRequest(labRequest: LabRequest): void {
@@ -331,10 +321,10 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
     this.labRequestService.exportLabRequestAsPDF(labRequest.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (blob) => {
+        next: (html) => {
           const filename = `lab-request-${labRequest.id}-${new Date().toISOString().split('T')[0]}.pdf`;
-          this.labRequestService.downloadPDF(blob, filename);
-          this.success = 'PDF exported successfully.';
+          this.labRequestService.downloadPDF(html, filename);
+          this.success = 'PDF export opened in new window. Use browser print to save as PDF.';
           this.loading = false;
         },
         error: (error) => {
@@ -365,5 +355,32 @@ export class DoctorLabRequestsComponent implements OnInit, OnDestroy {
   clearMessages(): void {
     this.error = '';
     this.success = '';
+  }
+
+  // Toggle dropdown menu
+  toggleDropdown(requestId: string, event: MouseEvent): void {
+    if (this.openDropdownId === requestId) {
+      this.openDropdownId = null;
+    } else {
+      const button = event.currentTarget as HTMLElement;
+      const rect = button.getBoundingClientRect();
+      
+      this.dropdownPosition = {
+        top: `${rect.bottom}px`,
+        right: `${window.innerWidth - rect.right}px`
+      };
+      
+      this.openDropdownId = requestId;
+    }
+  }
+
+  // Close dropdown
+  closeDropdown(): void {
+    this.openDropdownId = null;
+  }
+
+  // Check if dropdown is open
+  isDropdownOpen(requestId: string): boolean {
+    return this.openDropdownId === requestId;
   }
 }

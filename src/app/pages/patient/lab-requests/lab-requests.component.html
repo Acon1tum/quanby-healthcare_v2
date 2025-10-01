@@ -39,10 +39,11 @@
         <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()" class="form-control">
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
+          <option value="IN_PROGRESS">In Progress</option>
           <option value="COMPLETED">Completed</option>
+          <option value="REJECTED">Rejected</option>
           <option value="CANCELLED">Cancelled</option>
+          <option value="ON_HOLD">On Hold</option>
         </select>
       </div>
       
@@ -74,7 +75,6 @@
       <table class="lab-requests-table">
         <thead>
           <tr>
-            <th>Request ID</th>
             <th>Doctor</th>
             <th>Laboratory</th>
             <th>Status</th>
@@ -84,7 +84,6 @@
         </thead>
         <tbody>
           <tr *ngFor="let request of paginatedRequests" class="table-row">
-            <td class="request-id">{{ request.id }}</td>
             <td class="doctor-name">{{ request.doctorName || 'Unknown Doctor' }}</td>
             <td class="organization-name">{{ request.organizationName || 'Unknown Laboratory' }}</td>
             <td class="status-cell">
@@ -92,13 +91,13 @@
                 {{ getStatusDisplayName(request.status) }}
               </span>
             </td>
-            <td class="requested-date">{{ formatDate(request.requestedDate) }}</td>
+            <td class="requested-date">{{ formatDate(request.createdAt!) }}</td>
             <td class="actions-cell">
               <div class="action-buttons">
                 <button class="btn btn-sm btn-info" (click)="openDetailsModal(request)" title="View Details">
                   <i class="material-icons">visibility</i>
                 </button>
-                <button *ngIf="canExport(request)" class="btn btn-sm btn-success" 
+                <button class="btn btn-sm btn-success" 
                         (click)="exportAsPDF(request)" title="Export PDF">
                   <i class="material-icons">picture_as_pdf</i>
                 </button>
@@ -181,34 +180,39 @@
         </div>
         
         <div class="detail-item">
-          <label>Requested Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.requestedDate) }}</span>
+          <label>Priority:</label>
+          <span class="priority-badge">{{ selectedLabRequest.priority || 'NORMAL' }}</span>
         </div>
         
-        <div class="detail-item" *ngIf="selectedLabRequest.approvedDate">
-          <label>Approved Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.approvedDate) }}</span>
+        <div class="detail-item">
+          <label>Created Date:</label>
+          <span>{{ formatDateTime(selectedLabRequest.createdAt!) }}</span>
         </div>
         
-        <div class="detail-item" *ngIf="selectedLabRequest.completedDate">
-          <label>Completed Date:</label>
-          <span>{{ formatDateTime(selectedLabRequest.completedDate) }}</span>
+        <div class="detail-item" *ngIf="selectedLabRequest.updatedAt">
+          <label>Last Updated:</label>
+          <span>{{ formatDateTime(selectedLabRequest.updatedAt) }}</span>
         </div>
         
-        <div class="detail-item full-width">
-          <label>Doctor's Notes:</label>
-          <div class="notes-content">{{ selectedLabRequest.notes || 'No notes provided' }}</div>
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.requestedTests">
+          <label>Requested Tests:</label>
+          <div class="notes-content">{{ selectedLabRequest.requestedTests }}</div>
         </div>
         
-        <div class="detail-item full-width" *ngIf="selectedLabRequest.testResults">
-          <label>Test Results:</label>
-          <div class="test-results-content">{{ selectedLabRequest.testResults }}</div>
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.instructions">
+          <label>Instructions:</label>
+          <div class="notes-content">{{ selectedLabRequest.instructions }}</div>
+        </div>
+        
+        <div class="detail-item full-width" *ngIf="selectedLabRequest.note">
+          <label>Notes:</label>
+          <div class="notes-content">{{ selectedLabRequest.note }}</div>
         </div>
       </div>
     </div>
     
     <div class="modal-actions">
-      <button *ngIf="canExport(selectedLabRequest)" class="btn btn-primary" (click)="exportAsPDF(selectedLabRequest)">
+      <button class="btn btn-primary" (click)="exportAsPDF(selectedLabRequest)">
         <i class="material-icons">picture_as_pdf</i>
         Export PDF
       </button>
