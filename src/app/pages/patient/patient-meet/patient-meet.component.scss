@@ -709,19 +709,7 @@
     }
   }
   
-  // Ensure both videos maintain aspect ratio
-  .video-container-relative {
-    aspect-ratio: 16/9;
-    min-height: 300px;
-    
-    @media (max-width: 768px) {
-      min-height: 250px;
-    }
-    
-    @media (max-width: 480px) {
-      min-height: 200px;
-    }
-  }
+  // Note: video-container-relative sizing is now handled by specific remote-main and local-preview classes
 
   .camera-off-overlay {
     position: absolute;
@@ -788,15 +776,21 @@
   }
 
   .waiting-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 300px;
     background: #f8f9fa;
     border: 2px dashed #bdc3c7;
-    border-radius: 8px;
+    border-radius: 12px;
     color: #7f8c8d;
     font-size: 16px;
+    padding: 20px;
     
     p {
       margin: 0;
@@ -941,6 +935,10 @@
   bottom: 12px;
   transform: translateX(-50%);
   z-index: 20;
+  
+  @media (max-width: 768px) {
+    display: none; // Hide on mobile - will be shown below video instead
+  }
 }
 
 /* Compact overlay controls */
@@ -2592,15 +2590,29 @@
     box-shadow: none;
   }
 
-  .video-wrapper.remote-main .video-container-relative,
-  .video-wrapper.remote-main .video-element {
+  .video-wrapper.remote-main .video-container-relative {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    min-height: unset;
+  }
+  
+  .video-wrapper.remote-main .video-element {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    min-height: 450px;
+    max-width: none;
     background: #000;
     border-radius: 12px;
     border: none;
+    object-fit: contain; /* Changed from cover to contain for better aspect ratio */
+    transform: scaleX(-1);
   }
 
   /* Local video as small overlay preview - positioned inside remote video */
@@ -2634,10 +2646,9 @@
 /* Responsive adjustments to mirror doctor-meet */
 @media (max-width: 768px) {
   .meeting-interface {
-    .video-wrapper.remote-main .video-container-relative,
-    .video-wrapper.remote-main .video-element {
-      height: 50vh;
-      min-height: 320px;
+    .video-wrapper.remote-main .video-container-relative {
+      padding-bottom: 56.25%; /* Maintain 16:9 aspect ratio */
+      max-height: 60vh; /* Limit max height on smaller screens */
     }
 
     .video-wrapper.local-preview {
@@ -2655,10 +2666,9 @@
 
 @media (max-width: 480px) {
   .meeting-interface {
-    .video-wrapper.remote-main .video-container-relative,
-    .video-wrapper.remote-main .video-element {
-      height: 44vh;
-      min-height: 280px;
+    .video-wrapper.remote-main .video-container-relative {
+      padding-bottom: 56.25%; /* Maintain 16:9 aspect ratio */
+      max-height: 50vh; /* Limit max height on mobile */
     }
 
     .video-wrapper.local-preview {
@@ -2671,6 +2681,32 @@
     .video-wrapper.local-preview .video-element {
       height: 78px;
     }
+  }
+}
+
+/* Doctor Details Backdrop for mobile */
+.doctor-details-backdrop {
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -2693,7 +2729,28 @@
   }
   
   @media (max-width: 768px) {
-    max-height: 40vh;
+    // Make it a modal on mobile
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 20px 20px 0 0;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -2754,17 +2811,84 @@
   background: #f8fafc;
   border-radius: 12px 12px 0 0;
   
+  @media (max-width: 768px) {
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 16px;
+    position: relative;
+    
+    // Add drag handle indicator
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: #d1d5db;
+      border-radius: 2px;
+    }
+  }
+  
   h3 {
     margin: 0;
     color: #2c3e50;
     font-size: 18px;
     font-weight: 600;
+    
+    @media (max-width: 768px) {
+      font-size: 16px;
+    }
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    
+    .btn {
+      @media (max-width: 768px) {
+        min-width: 36px;
+        height: 36px;
+        padding: 8px;
+        font-size: 16px;
+      }
+    }
+  }
+  
+  .mobile-dropdown {
+    display: flex;
+    align-items: center;
+    
+    .mobile-dropdown-toggle {
+      @media (max-width: 768px) {
+        min-width: 36px;
+        height: 36px;
+        padding: 8px;
+        font-size: 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #f3f4f6;
+        }
+      }
+    }
   }
 }
 
 .doctor-details-content {
   padding: 16px 20px 20px 20px;
   overflow: auto;
+  flex: 1;
+  
+  @media (max-width: 768px) {
+    padding: 16px 20px 80px 20px; // Extra padding for actions button
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .doctor-details-actions {
@@ -2772,6 +2896,21 @@
   right: 16px;
   bottom: 16px;
   z-index: 5;
+  
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    
+    .btn {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
 }
 
 .doctor-section {
@@ -2818,6 +2957,57 @@
 
 .meeting-interface .meeting-layout .video-container {
   flex: 1;
+}
+
+// Mobile controls below video
+.meeting-interface .mobile-video-controls {
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    margin-top: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 100%;
+    
+    .overlay-control-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      backdrop-filter: none;
+      
+      .end-actions-dropdown {
+        .end-actions-menu {
+          bottom: auto;
+          top: auto;
+          transform: translateY(-100%);
+          margin-bottom: 50px;
+        }
+      }
+    }
+    
+    .icon-btn {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      
+      .icon-img {
+        width: 22px;
+        height: 22px;
+      }
+    }
+  }
 }
 
 @media (max-width: 1024px) {

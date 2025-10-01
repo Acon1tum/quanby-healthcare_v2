@@ -37,7 +37,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isCameraOn: boolean = true;
   
   // Doctor details sidebar state
-  showDoctorSidebar: boolean = true;
+  showDoctorSidebar: boolean = !this.checkIfMobile();
   connectedDoctorName: string = '';
   doctorDetails: { name?: string; specialization?: string; bio?: string } | null = null;
   
@@ -106,6 +106,14 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit() {
+    // Set initial sidebar state based on screen size
+    this.updateSidebarStateOnResize();
+    
+    // Add window resize listener to automatically collapse/expand sidebar
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.updateSidebarStateOnResize.bind(this));
+    }
+    
     // Check for roomId in query parameters
     this.route.queryParams.subscribe(params => {
       if (params['roomId']) {
@@ -166,6 +174,11 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy() {
+    // Clean up resize listener
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.updateSidebarStateOnResize.bind(this));
+    }
+    
     if (this.remoteStreamSubscription) {
       this.remoteStreamSubscription.unsubscribe();
     }
@@ -180,6 +193,28 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       this.lottieAnimation.destroy();
     }
     this.leave();
+  }
+
+  // Check if device is mobile (for initial sidebar state)
+  private checkIfMobile(): boolean {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768; // Mobile/Tablet breakpoint
+    }
+    return false;
+  }
+
+  // Update sidebar state based on screen size
+  private updateSidebarStateOnResize(): void {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth <= 768;
+      // On mobile: hide sidebar, On desktop: show sidebar
+      if (isMobile && this.showDoctorSidebar) {
+        this.showDoctorSidebar = false;
+      } else if (!isMobile && !this.showDoctorSidebar) {
+        // Auto-show when switching to desktop
+        this.showDoctorSidebar = true;
+      }
+    }
   }
 
   private bindLocalVideo() {

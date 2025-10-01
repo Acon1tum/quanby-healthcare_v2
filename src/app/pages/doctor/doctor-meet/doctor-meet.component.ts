@@ -154,7 +154,7 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   showEndActionsDropdown: boolean = false;
 
   // Patient details sidebar collapsed state
-  isSidebarCollapsed: boolean = false;
+  isSidebarCollapsed: boolean = this.checkIfMobile();
   
   // Enums for template
   DiagnosisSeverity = DiagnosisSeverity;
@@ -183,6 +183,14 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit() {
+    // Set initial sidebar state based on screen size
+    this.updateSidebarStateOnResize();
+    
+    // Add window resize listener to automatically collapse/expand sidebar
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.updateSidebarStateOnResize.bind(this));
+    }
+    
     // Check for roomId in query parameters
     this.route.queryParams.subscribe(params => {
       if (params['roomId']) {
@@ -343,6 +351,11 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy() {
+    // Clean up resize listener
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.updateSidebarStateOnResize.bind(this));
+    }
+    
     if (this.remoteStreamSubscription) {
       this.remoteStreamSubscription.unsubscribe();
     }
@@ -413,6 +426,29 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   // Toggle patient details sidebar
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  // Check if device is mobile (for initial sidebar state)
+  private checkIfMobile(): boolean {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768; // Mobile/Tablet breakpoint
+    }
+    return false;
+  }
+
+  // Update sidebar state based on screen size
+  private updateSidebarStateOnResize(): void {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth <= 768;
+      // Only auto-collapse on mobile, don't auto-expand on desktop
+      // This allows user preference to persist on desktop
+      if (isMobile && !this.isSidebarCollapsed) {
+        this.isSidebarCollapsed = true;
+      } else if (!isMobile && this.isSidebarCollapsed) {
+        // Auto-expand when switching to desktop
+        this.isSidebarCollapsed = false;
+      }
+    }
   }
 
   private bindLocalVideo() {

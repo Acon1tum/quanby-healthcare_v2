@@ -332,8 +332,11 @@
         </div>
       </div>
 
+      <!-- Patient Details Backdrop for mobile -->
+      <div class="patient-details-backdrop" *ngIf="isJoined && !isSidebarCollapsed" (click)="toggleSidebar()"></div>
+      
       <!-- Patient Details Sidebar -->
-      <div class="patient-details-sidebar" *ngIf="isJoined && !isSidebarCollapsed">
+      <div class="patient-details-sidebar" *ngIf="isJoined && !isSidebarCollapsed" (click)="$event.stopPropagation()">
         
         <div class="patient-details-header">
           <h3>👤 Patient Details</h3>
@@ -405,6 +408,83 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- Mobile Video Controls (shown below video on mobile) -->
+      <div class="mobile-video-controls" *ngIf="isJoined">
+        <div class="overlay-control-group">
+          <!-- Camera toggle -->
+          <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
+            <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+          </button>
+
+          <!-- End Call -->
+          <button (click)="leave()" class="icon-btn icon-danger" aria-label="End call" title="End call">
+            <img class="icon-img" src="/end-call.png" alt="End call" />
+          </button>
+
+          <!-- Actions dropdown -->
+          <div class="end-actions-dropdown">
+            <button class="icon-btn icon-neutral" (click)="toggleEndActionsDropdown()" aria-label="More actions" title="More actions">
+              <img class="icon-img" src="/action.png" alt="Actions" />
+            </button>
+            <div class="end-actions-menu" *ngIf="showEndActionsDropdown">
+              <button 
+                *ngIf="remoteStream" 
+                (click)="startFaceScan(); closeEndActionsDropdown()" 
+                class="btn btn-ghost btn-primary"
+                [disabled]="isFaceScanning"
+                title="Start face scan for patient health assessment"
+              >
+                <span *ngIf="!isFaceScanning">🔍 Face Scan</span>
+                <span *ngIf="isFaceScanning">⏳ Scanning...</span>
+              </button>
+              <button 
+                *ngIf="remoteStream" 
+                (click)="openPrescriptionModal(); closeEndActionsDropdown()" 
+                class="btn btn-ghost btn-success"
+                title="Create prescription for patient"
+              >
+                💊 Prescription
+              </button>
+              <button 
+                *ngIf="remoteStream" 
+                (click)="openDiagnosisModal(); closeEndActionsDropdown()" 
+                class="btn btn-ghost btn-warning"
+                title="Create diagnosis for patient"
+              >
+                🔍 Diagnosis
+              </button>
+              <button 
+                *ngIf="remoteStream" 
+                (click)="openLabRequestModal(); closeEndActionsDropdown()" 
+                class="btn btn-ghost btn-info"
+                title="Request lab tests for patient"
+              >
+                🧪 Lab Request
+              </button>
+              <button 
+                *ngIf="remoteStream" 
+                (click)="openScheduleModal(); closeEndActionsDropdown()" 
+                class="btn btn-ghost"
+                title="Schedule patient to another doctor"
+              >
+                📅 Schedule to Another Doctor
+              </button>
+            </div>
+          </div>
+          
+          <!-- Show Patient Details button when sidebar is collapsed -->
+          <button 
+            *ngIf="isSidebarCollapsed" 
+            class="icon-btn icon-neutral" 
+            (click)="toggleSidebar()" 
+            aria-label="Show patient details" 
+            title="Patient Details"
+          >
+            👤
+          </button>
         </div>
       </div>
       
