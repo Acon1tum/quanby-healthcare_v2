@@ -49,12 +49,12 @@
       <div class="status-item">
         <strong>Room ID:</strong> {{ roomId }}
       </div>
-      <!-- <div class="status-item">
+      <div class="status-item">
         <strong>Your Role:</strong> {{ currentRole }}
       </div>
       <div class="status-item">
         <strong>Participants:</strong> {{ participants }}/2
-      </div> -->
+      </div>
     </div>
 
     <!-- Video Controls (top) - hidden in minimalist layout -->
@@ -64,8 +64,13 @@
         <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
         <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
       </button>
+      <button (click)="toggleMicrophone()" class="btn" [ngClass]="isMicrophoneOn ? 'btn-warning' : 'btn-success'">
+        <span *ngIf="isMicrophoneOn">🎤 Turn Off Microphone</span>
+        <span *ngIf="!isMicrophoneOn">🎤 Turn On Microphone</span>
+      </button>
       <button (click)="refreshLocalVideo()" class="btn btn-info">🔄 Refresh Local Video</button>
       <button (click)="refreshRemoteStream()" class="btn btn-secondary">Refresh Remote Stream</button>
+      <button (click)="reinitializeAudio()" class="btn btn-warning">🎤 Fix Audio Echo</button>
       <button (click)="debugRemoteStream()" class="btn btn-dark">🔍 Debug Remote</button>
     </div>
 
@@ -113,6 +118,10 @@
                 <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
                 <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
               </button>
+              <button (click)="toggleMicrophone(); closeOverlayMenu()" class="btn btn-ghost">
+                <span *ngIf="isMicrophoneOn">🎤 Turn Off Microphone</span>
+                <span *ngIf="!isMicrophoneOn">🎤 Turn On Microphone</span>
+              </button>
               <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
               <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
               <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
@@ -123,6 +132,9 @@
             <div class="overlay-control-group">
               <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
                 <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+              </button>
+              <button (click)="toggleMicrophone()" class="icon-btn icon-neutral" [attr.aria-label]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'" [title]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'">
+                <img class="icon-img" [src]="isMicrophoneOn ? '/mic.png' : '/mute.png'" [alt]="isMicrophoneOn ? 'Microphone on' : 'Microphone off'" />
               </button>
               <button (click)="leave()" class="icon-btn icon-danger" aria-label="End call" title="End call">
                 <img class="icon-img" src="/end-call.png" alt="End call" />
@@ -209,6 +221,11 @@
           <!-- Camera toggle -->
           <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
             <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+          </button>
+
+          <!-- Microphone toggle -->
+          <button (click)="toggleMicrophone()" class="icon-btn icon-neutral" [attr.aria-label]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'" [title]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'">
+            <img class="icon-img" [src]="isMicrophoneOn ? '/mic.png' : '/mute.png'" [alt]="isMicrophoneOn ? 'Microphone on' : 'Microphone off'" />
           </button>
 
           <!-- End Call -->

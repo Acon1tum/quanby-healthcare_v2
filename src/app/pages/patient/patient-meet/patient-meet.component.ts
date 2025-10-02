@@ -35,6 +35,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   isJoining: boolean = false;
   errorMessage: string = '';
   isCameraOn: boolean = true;
+  isMicrophoneOn: boolean = true;
   
   // Doctor details sidebar state
   showDoctorSidebar: boolean = !this.checkIfMobile();
@@ -358,9 +359,10 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
         console.warn('⚠️ Cleanup before join failed or not needed:', e);
       }
 
-      // Get user media and wait for the stream
-      console.log('📷 Getting user media...');
-      const mediaStream = await this.webrtc.getUserMedia();
+      // Get user media with enhanced audio constraints and wait for the stream
+      console.log('📷 Getting user media with enhanced audio constraints...');
+      const enhancedConstraints = this.webrtc.getEnhancedAudioConstraints();
+      const mediaStream = await this.webrtc.getUserMedia(enhancedConstraints);
       
       if (!mediaStream) {
         throw new Error('Failed to get camera access');
@@ -476,6 +478,7 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentRole = '';
     this.errorMessage = '';
     this.isCameraOn = true;
+    this.isMicrophoneOn = true;
     console.log('🚪 Patient left the room');
     try {
       if (this.remoteVideoRef?.nativeElement) {
@@ -601,6 +604,69 @@ export class PatientMeetComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('🔄 Manual refresh of local video');
     } else {
       console.warn('⚠️ No local stream available for refresh');
+    }
+  }
+
+  // Reinitialize audio with enhanced constraints to fix echo issues
+  async reinitializeAudio(): Promise<void> {
+    if (!this.localStream) {
+      console.warn('⚠️ No local stream available for audio reinitialization');
+      return;
+    }
+
+    try {
+      console.log('🔄 Reinitializing audio with enhanced constraints...');
+      
+      // Stop current audio track
+      const audioTrack = this.localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.stop();
+        console.log('🔇 Stopped current audio track');
+      }
+
+      // Get new audio track with enhanced constraints
+      const enhancedConstraints = this.webrtc.getEnhancedAudioConstraints();
+      const newStream = await navigator.mediaDevices.getUserMedia(enhancedConstraints);
+      
+      if (newStream && newStream.getAudioTracks().length > 0) {
+        // Replace audio track in existing stream
+        const newAudioTrack = newStream.getAudioTracks()[0];
+        const sender = this.webrtc.getPeerConnection()?.getSenders().find(s => 
+          s.track && s.track.kind === 'audio'
+        );
+        
+        if (sender) {
+          await sender.replaceTrack(newAudioTrack);
+          console.log('✅ Audio track replaced with enhanced constraints');
+        }
+
+        // Update local stream reference
+        this.localStream = newStream;
+        this.isMicrophoneOn = true;
+        
+        console.log('🎤 Audio reinitialized successfully with echo cancellation');
+      }
+    } catch (error) {
+      console.error('❌ Error reinitializing audio:', error);
+    }
+  }
+
+  toggleMicrophone() {
+    if (!this.localStream) return;
+    
+    const audioTrack = this.localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      if (this.isMicrophoneOn) {
+        // Turn off microphone
+        audioTrack.enabled = false;
+        this.isMicrophoneOn = false;
+        console.log('🎤 Microphone turned OFF');
+      } else {
+        // Turn on microphone
+        audioTrack.enabled = true;
+        this.isMicrophoneOn = true;
+        console.log('🎤 Microphone turned ON');
+      }
     }
   }
 

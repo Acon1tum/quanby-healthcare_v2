@@ -103,12 +103,12 @@
         <div class="status-item">
           <strong>Room ID:</strong> {{ roomId }}
         </div>
-        <!-- <div class="status-item">
+        <div class="status-item">
           <strong>Your Role:</strong> {{ currentRole }}
         </div>
         <div class="status-item">
           <strong>Participants:</strong> {{ participants }}/2
-        </div> -->
+        </div>
       </div>
       <div class="status-actions"></div>
     </div>
@@ -210,6 +210,11 @@
                   <span *ngIf="isCameraOn">📷 Turn Off Camera</span>
                   <span *ngIf="!isCameraOn">📷 Turn On Camera</span>
                 </button>
+                <button (click)="toggleMicrophone(); closeOverlayMenu()" class="btn btn-ghost">
+                  <span *ngIf="isMicrophoneOn">🎤 Turn Off Microphone</span>
+                  <span *ngIf="!isMicrophoneOn">🎤 Turn On Microphone</span>
+                </button>
+                <button (click)="reinitializeAudio(); closeOverlayMenu()" class="btn btn-ghost">🎤 Fix Audio Echo</button>
                 <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
                 <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
                 <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
@@ -241,12 +246,17 @@
                 </button>
               </div>
             </div>
-            <!-- Bottom-center control group: Camera toggle, End Call, Actions dropdown -->
+            <!-- Bottom-center control group: Camera toggle, Microphone toggle, End Call, Actions dropdown -->
             <div class="remote-overlay-leave" *ngIf="isJoined">
               <div class="overlay-control-group">
-                <!-- Camera toggle moved beside End Call -->
+                <!-- Camera toggle -->
                 <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
                   <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+                </button>
+
+                <!-- Microphone toggle -->
+                <button (click)="toggleMicrophone()" class="icon-btn icon-neutral" [attr.aria-label]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'" [title]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'">
+                  <img class="icon-img" [src]="isMicrophoneOn ? '/mic.png' : '/mute.png'" [alt]="isMicrophoneOn ? 'Microphone on' : 'Microphone off'" />
                 </button>
 
                 <button (click)="leave()" class="icon-btn icon-danger" aria-label="End call" title="End call">
@@ -417,6 +427,11 @@
           <!-- Camera toggle -->
           <button (click)="toggleCamera()" class="icon-btn icon-neutral" [attr.aria-label]="isCameraOn ? 'Turn off camera' : 'Turn on camera'" [title]="isCameraOn ? 'Turn off camera' : 'Turn on camera'">
             <img class="icon-img" [src]="isCameraOn ? '/camera-on.png' : '/camera-off.png'" [alt]="isCameraOn ? 'Camera on' : 'Camera off'" />
+          </button>
+
+          <!-- Microphone toggle -->
+          <button (click)="toggleMicrophone()" class="icon-btn icon-neutral" [attr.aria-label]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'" [title]="isMicrophoneOn ? 'Turn off microphone' : 'Turn on microphone'">
+            <img class="icon-img" [src]="isMicrophoneOn ? '/mic.png' : '/mute.png'" [alt]="isMicrophoneOn ? 'Microphone on' : 'Microphone off'" />
           </button>
 
           <!-- End Call -->

@@ -236,10 +236,37 @@ export class WebRTCService {
     };
   }
 
-  async getUserMedia(constraints: MediaStreamConstraints = { audio: true, video: true }): Promise<MediaStream> {
+  async getUserMedia(constraints: MediaStreamConstraints = { 
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      sampleRate: 44100,
+      channelCount: 1
+    }, 
+    video: true 
+  }): Promise<MediaStream> {
     this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
     this.localStream.getTracks().forEach((track) => this.peer?.addTrack(track, this.localStream!));
     return this.localStream;
+  }
+
+  // Get enhanced audio constraints for better call quality
+  getEnhancedAudioConstraints(): MediaStreamConstraints {
+    return {
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 44100,
+        channelCount: 1
+      },
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }
+      }
+    };
   }
 
   getLocalStream(): MediaStream | undefined { return this.localStream; }
@@ -250,6 +277,7 @@ export class WebRTCService {
   }
   getCurrentRoomId(): string | undefined { return this.currentRoomId; }
   getCurrentRole(): 'doctor' | 'patient' | undefined { return this.currentRole; }
+  getPeerConnection(): RTCPeerConnection | undefined { return this.peer; }
 
 
   // Send face scan results via data channel
