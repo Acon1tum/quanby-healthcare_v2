@@ -106,6 +106,11 @@ export class WebRTCService {
         // Fallback to simple STUN server if no environment config
         { urls: 'stun:stun.l.google.com:19302' },
       ],
+      // Enhanced configuration for better connection reliability
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
+      iceTransportPolicy: 'all'
     };
     
     console.log('🧊 Using ICE servers:', defaultConfig.iceServers);
@@ -157,11 +162,42 @@ export class WebRTCService {
     // Add connection state change handler
     this.peer.onconnectionstatechange = () => {
       console.log('🔗 Peer connection state changed:', this.peer?.connectionState);
+      
+      // Handle connection failures
+      if (this.peer?.connectionState === 'failed') {
+        console.warn('⚠️ Connection failed, attempting recovery...');
+        this.handleConnectionFailure();
+      } else if (this.peer?.connectionState === 'disconnected') {
+        console.warn('⚠️ Connection disconnected, monitoring for recovery...');
+        // Give it some time to recover before taking action
+        setTimeout(() => {
+          if (this.peer?.connectionState === 'disconnected') {
+            console.warn('⚠️ Still disconnected after timeout, attempting recovery...');
+            this.handleConnectionFailure();
+          }
+        }, 5000);
+      } else if (this.peer?.connectionState === 'connected') {
+        console.log('✅ Connection established successfully');
+      }
     };
 
     // Add ICE connection state change handler
     this.peer.oniceconnectionstatechange = () => {
       console.log('🧊 ICE connection state changed:', this.peer?.iceConnectionState);
+      
+      // Handle ICE connection failures
+      if (this.peer?.iceConnectionState === 'failed') {
+        console.warn('⚠️ ICE connection failed, attempting ICE restart...');
+        this.restartIce();
+      } else if (this.peer?.iceConnectionState === 'disconnected') {
+        console.warn('⚠️ ICE connection disconnected, monitoring...');
+        setTimeout(() => {
+          if (this.peer?.iceConnectionState === 'disconnected') {
+            console.warn('⚠️ ICE still disconnected, attempting restart...');
+            this.restartIce();
+          }
+        }, 3000);
+      }
     };
 
     // Add data channel handler
@@ -484,6 +520,27 @@ export class WebRTCService {
     }
   }
 
+  // Handle connection failures with recovery attempts
+  private async handleConnectionFailure(): Promise<void> {
+    try {
+      console.log('🔄 Attempting connection recovery...');
+      
+      // First try ICE restart
+      await this.restartIce();
+      
+      // If that doesn't work, try renegotiation
+      setTimeout(async () => {
+        if (this.peer?.connectionState === 'failed' || this.peer?.connectionState === 'disconnected') {
+          console.log('🔄 ICE restart didn\'t work, trying renegotiation...');
+          await this.triggerNegotiation();
+        }
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ Connection recovery failed:', error);
+    }
+  }
+
   // Manual ICE restart (simplified version)
   async restartIce(): Promise<void> {
     try {
@@ -498,6 +555,12 @@ export class WebRTCService {
     } catch (e) {
       console.error('❌ Manual ICE restart failed:', e);
     }
+  }
+
+  // Public method to manually trigger connection recovery
+  async recoverConnection(): Promise<void> {
+    console.log('🔄 Manual connection recovery triggered');
+    await this.handleConnectionFailure();
   }
 
 
@@ -591,10 +654,24 @@ export class WebRTCService {
 
   private async createAndSendOffer(): Promise<void> {
     if (!this.peer) return;
-    const offer = await this.peer.createOffer();
-    await this.peer.setLocalDescription(offer);
-    if (this.currentRoomId) {
-      this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+    
+    // Check if we're already in the middle of negotiation
+    if (this.peer.signalingState === 'have-local-offer' || 
+        this.peer.signalingState === 'have-remote-offer' ||
+        this.peer.signalingState === 'stable') {
+      console.log('🧩 Signaling state:', this.peer.signalingState, '- skipping offer creation');
+      return;
+    }
+    
+    try {
+      const offer = await this.peer.createOffer();
+      await this.peer.setLocalDescription(offer);
+      if (this.currentRoomId) {
+        this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
+        console.log('📤 Offer sent successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error creating/sending offer:', error);
     }
   }
 

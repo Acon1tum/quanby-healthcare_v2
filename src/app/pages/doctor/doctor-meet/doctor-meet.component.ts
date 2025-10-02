@@ -598,6 +598,16 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Recover WebRTC connection
+  async recoverConnection(): Promise<void> {
+    try {
+      console.log('🔄 Attempting to recover WebRTC connection...');
+      await this.webrtc.recoverConnection();
+    } catch (error) {
+      console.error('❌ Connection recovery failed:', error);
+    }
+  }
+
   // Reinitialize audio with enhanced constraints to fix echo issues
   async reinitializeAudio(): Promise<void> {
     if (!this.localStream) {

@@ -215,6 +215,7 @@
                   <span *ngIf="!isMicrophoneOn">🎤 Turn On Microphone</span>
                 </button>
                 <button (click)="reinitializeAudio(); closeOverlayMenu()" class="btn btn-ghost">🎤 Fix Audio Echo</button>
+                <button (click)="recoverConnection(); closeOverlayMenu()" class="btn btn-ghost">🔧 Recover Connection</button>
                 <button (click)="refreshRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Refresh Remote</button>
                 <button (click)="refreshLocalVideo(); closeOverlayMenu()" class="btn btn-ghost">Refresh Local</button>
                 <button (click)="debugRemoteStream(); closeOverlayMenu()" class="btn btn-ghost">Debug</button>
