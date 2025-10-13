@@ -231,4 +231,133 @@ body.modal-open header {
   background-color: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Notification Button Styles */
+.notification-button {
+  position: relative;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  img {
+    display: block;
+    transition: filter 0.2s ease;
+  }
+  
+  &:hover img {
+    filter: brightness(0.9);
+  }
+}
+
+/* Notification Badge Animation */
+.notification-button span {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+/* Focus state for accessibility */
+.notification-button:focus {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Mobile notification button adjustments */
+@media (max-width: 1024px) {
+  .notification-button {
+    padding: 0.5rem;
+  }
+}
+
+/* Notification Dropdown Styles */
+.notification-dropdown {
+  animation: slideDown 0.2s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  min-width: 280px;
+  max-width: 380px;
+  
+  /* Prevent overflow on small screens */
+  @media (max-width: 1024px) {
+    position: fixed !important;
+    right: 0.5rem !important;
+    left: auto !important;
+    width: calc(100vw - 1rem);
+    max-width: 380px;
+  }
+  
+  @media (max-width: 640px) {
+    width: calc(100vw - 1rem);
+    max-width: 360px;
+    right: 0.5rem !important;
+  }
+  
+  @media (max-width: 420px) {
+    width: calc(100vw - 1rem);
+    max-width: none;
+  }
+}
+
+/* Notification Item Styles */
+.notification-item {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(249, 250, 251, 1);
+  }
+  
+  &:active {
+    background-color: rgba(243, 244, 246, 1);
+  }
+  
+  /* Ensure text wraps properly */
+  p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+/* Unread notification indicator (blue dot) */
+.notification-item .w-2.h-2.bg-sky-500 {
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* Notification dropdown scrollbar */
+.notification-dropdown .max-h-96::-webkit-scrollbar,
+.notification-dropdown .max-h-80::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown .max-h-96::-webkit-scrollbar-track,
+.notification-dropdown .max-h-80::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.notification-dropdown .max-h-96::-webkit-scrollbar-thumb,
+.notification-dropdown .max-h-80::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.notification-dropdown .max-h-96::-webkit-scrollbar-thumb:hover,
+.notification-dropdown .max-h-80::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 } 

@@ -208,6 +208,9 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
     // Set initial sidebar state based on screen size
     this.updateSidebarStateOnResize();
     
+    // Start connection monitoring
+    this.startConnectionMonitoring();
+    
     // Add window resize listener to automatically collapse/expand sidebar
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', this.updateSidebarStateOnResize.bind(this));
@@ -602,10 +605,30 @@ export class DoctorMeetComponent implements OnInit, OnDestroy, AfterViewInit {
   async recoverConnection(): Promise<void> {
     try {
       console.log('🔄 Attempting to recover WebRTC connection...');
-      await this.webrtc.recoverConnection();
+      await this.webrtc.enhancedConnectionRecovery();
     } catch (error) {
       console.error('❌ Connection recovery failed:', error);
     }
+  }
+
+  // Start monitoring connection status
+  private startConnectionMonitoring(): void {
+    // Monitor connection state every 10 seconds
+    setInterval(() => {
+      if (this.remoteStream && this.webrtc.getConnectionState() === 'failed') {
+        console.warn('⚠️ Connection failed detected, attempting recovery...');
+        this.recoverConnection();
+      } else if (this.remoteStream && this.webrtc.getConnectionState() === 'disconnected') {
+        console.warn('⚠️ Connection disconnected detected, monitoring...');
+        // Give it some time to recover automatically
+        setTimeout(() => {
+          if (this.remoteStream && this.webrtc.getConnectionState() === 'disconnected') {
+            console.warn('⚠️ Still disconnected, attempting recovery...');
+            this.recoverConnection();
+          }
+        }, 5000);
+      }
+    }, 10000);
   }
 
   // Reinitialize audio with enhanced constraints to fix echo issues

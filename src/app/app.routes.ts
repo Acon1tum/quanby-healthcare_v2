@@ -4,6 +4,9 @@ import { RegisterComponent } from './auth/register/register.component';
 import { LandingPageComponent } from './landing-page/landing-page.component';
 import { FaceScanComponent } from './face-scan/face-scan.component';
 
+// Shared Components
+import { NotificationComponent } from './shared/notification/notification.component';
+
 // Super Admin Components
 import { DashboardSuperadminComponent } from './pages/super-admin/dashboard-superadmin/dashboard-superadmin.component';
 import { OrgManagementComponent } from './pages/super-admin/org-management/org-management.component';
@@ -71,6 +74,7 @@ export const appRoutes: Routes = [
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: DashboardSuperadminComponent },
+          { path: 'notifications', component: NotificationComponent },
           { path: 'org-management', component: OrgManagementComponent },
           { path: 'doctor-management', component: DoctorManagementSuperadminComponent },
           { path: 'patient-management', component: PatientManagementSuperadminComponent },
@@ -87,6 +91,7 @@ export const appRoutes: Routes = [
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: AdminDashboardComponent },
+          { path: 'notifications', component: NotificationComponent },
           { path: 'schedule-management', component: ScheduleManagementComponent },
           { path: 'my-profile', component: AdminMyProfileComponent },
           { 
@@ -112,6 +117,7 @@ export const appRoutes: Routes = [
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: DoctorDashboardComponent },
+          { path: 'notifications', component: NotificationComponent },
           { path: 'meet', component: DoctorMeetComponent },
           { path: 'my-profile', component: DoctorMyProfileComponent },
           { path: 'schedule', component: DoctorScheduleComponent },
@@ -128,6 +134,7 @@ export const appRoutes: Routes = [
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: PatientDashboardComponent },
+          { path: 'notifications', component: NotificationComponent },
           { path: 'meet', component: PatientMeetComponent },
           { path: 'my-profile', component: PatientMyProfileComponent },
           { path: 'schedule', component: PatientScheduleComponent },

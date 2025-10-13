@@ -59,7 +59,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     { label: 'View Schedule', icon: 'calendar_today', route: '/doctor/schedule' },
     { label: 'Start Consultation', icon: 'video_call', route: '/doctor/meet' },
     { label: 'Patient Records', icon: 'folder', route: '/doctor/patients' },
-    { label: 'My Profile', icon: 'person', route: '/doctor/profile' }
+    { label: 'My Profile', icon: 'person', route: '/doctor/my-profile' }
   ];
 
   recentPatients: any[] = [];

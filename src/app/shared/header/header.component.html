@@ -95,6 +95,89 @@
     
     <!-- Logged In User -->
     <div *ngIf="isLoggedIn" class="flex items-center gap-6">
+      <!-- Notification Icon -->
+      <div class="relative">
+        <button 
+          (click)="toggleNotificationDropdown()"
+          class="notification-button relative p-2 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+          aria-label="Notifications"
+        >
+          <img src="/notification.png" alt="Notifications" class="w-6 h-6">
+          <!-- Notification badge (optional - shows unread count) -->
+          <span *ngIf="notificationCount > 0" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+            {{ notificationCount }}
+          </span>
+        </button>
+
+        <!-- Notification Dropdown -->
+        <div 
+          #notificationDropdown
+          *ngIf="isNotificationDropdownOpen"
+          class="notification-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+        >
+          <!-- Dropdown Header -->
+          <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">Notifications</h3>
+            <span *ngIf="notificationCount > 0" class="text-xs bg-sky-100 text-sky-600 px-2 py-1 rounded-full font-medium">{{ notificationCount }} new</span>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoadingNotifications" class="px-4 py-8 text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
+            <p class="text-sm text-gray-500 mt-2">Loading notifications...</p>
+          </div>
+
+          <!-- Notification List -->
+          <div *ngIf="!isLoadingNotifications" class="max-h-96 overflow-y-auto">
+            <!-- Notification Items -->
+            <div 
+              *ngFor="let notification of notifications"
+              (click)="markNotificationAsRead(notification)"
+              class="notification-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
+              [class.bg-sky-50]="!notification.isRead"
+            >
+              <div class="flex gap-3">
+                <div 
+                  class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" 
+                  [ngClass]="notification.isRead ? 'bg-gray-300' : getPriorityColor(notification)"
+                ></div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-slate-800" [class.font-semibold]="!notification.isRead">
+                    {{ notification.title }}
+                  </p>
+                  <p class="text-xs text-gray-600 mt-1">{{ notification.message }}</p>
+                  <span class="text-xs text-gray-400 mt-1 inline-block">{{ getTimeAgo(notification.createdAt) }}</span>
+                </div>
+                <button 
+                  (click)="deleteNotification(notification.id, $event)"
+                  class="text-gray-400 hover:text-red-500 transition-colors"
+                  aria-label="Delete notification"
+                >
+                  <i class="material-icons text-sm">close</i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty State (show when no notifications) -->
+            <div *ngIf="notifications.length === 0" class="px-4 py-8 text-center">
+              <i class="material-icons text-4xl text-gray-300 mb-2">notifications_none</i>
+              <p class="text-sm text-gray-500">No new notifications</p>
+            </div>
+          </div>
+
+          <!-- Dropdown Footer -->
+          <div *ngIf="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <button 
+              (click)="markAllNotificationsAsRead()"
+              class="w-full text-center text-sm text-sky-600 hover:text-sky-700 font-medium transition-colors"
+            >
+              Mark All as Read
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Profile -->
       <button 
         (click)="navigateToProfile()"
         class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer group"
@@ -123,46 +206,131 @@
   </div>
 
   <!-- Mobile Profile Button for Logged In Users -->
-  <div *ngIf="isLoggedIn" class="lg:hidden relative">
-    <button 
-      (click)="toggleProfileDropdown()" 
-      class="mobile-profile-button flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-      aria-label="Toggle profile menu"
-    >
-      <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
-        <span class="text-white text-sm font-medium">{{ (getUserDisplayName() || 'U').charAt(0) }}</span>
-      </div>
-      <svg class="w-4 h-4 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-      </svg>
-    </button>
-
-    <!-- Profile Dropdown Menu -->
-    <div 
-      #profileDropdown
-      *ngIf="isProfileDropdownOpen"
-      class="mobile-profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 pb-1 z-50"
-    >
-      <div class="px-4 py-2 border-b border-gray-100">
-        <p class="text-sm font-medium text-slate-800">{{ getUserDisplayName() }}</p>
-        <p class="text-xs text-gray-500 capitalize">{{ currentUser?.role }}</p>
-      </div>
+  <div *ngIf="isLoggedIn" class="lg:hidden flex items-center gap-2">
+    <!-- Mobile Notification Icon -->
+    <div class="relative">
       <button 
-        (click)="navigateToProfile(); closeProfileDropdown()"
-        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+        (click)="toggleNotificationDropdown()"
+        class="notification-button relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        aria-label="Notifications"
       >
-        <i class="material-icons text-base mr-2">person</i>
-        My Profile
+        <img src="/notification.png" alt="Notifications" class="w-6 h-6">
+        <!-- Notification badge -->
+        <span *ngIf="notificationCount > 0" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+          {{ notificationCount }}
+        </span>
       </button>
-      <!-- Mobile Sidebar Footer -->
-      <div class="px-4 py-2 border-t border-gray-100">
+
+      <!-- Mobile Notification Dropdown -->
+      <div 
+        #notificationDropdown
+        *ngIf="isNotificationDropdownOpen"
+        class="notification-dropdown absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+      >
+        <!-- Dropdown Header -->
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-slate-800">Notifications</h3>
+          <span *ngIf="notificationCount > 0" class="text-xs bg-sky-100 text-sky-600 px-2 py-1 rounded-full font-medium">{{ notificationCount }} new</span>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isLoadingNotifications" class="px-4 py-8 text-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
+          <p class="text-sm text-gray-500 mt-2">Loading notifications...</p>
+        </div>
+
+        <!-- Notification List -->
+        <div *ngIf="!isLoadingNotifications" class="max-h-80 overflow-y-auto">
+          <!-- Notification Items -->
+          <div 
+            *ngFor="let notification of notifications"
+            (click)="markNotificationAsRead(notification)"
+            class="notification-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
+            [class.bg-sky-50]="!notification.isRead"
+          >
+            <div class="flex gap-3">
+              <div 
+                class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" 
+                [ngClass]="notification.isRead ? 'bg-gray-300' : getPriorityColor(notification)"
+              ></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-800" [class.font-semibold]="!notification.isRead">
+                  {{ notification.title }}
+                </p>
+                <p class="text-xs text-gray-600 mt-1">{{ notification.message }}</p>
+                <span class="text-xs text-gray-400 mt-1 inline-block">{{ getTimeAgo(notification.createdAt) }}</span>
+              </div>
+              <button 
+                (click)="deleteNotification(notification.id, $event)"
+                class="text-gray-400 hover:text-red-500 transition-colors"
+                aria-label="Delete notification"
+              >
+                <i class="material-icons text-sm">close</i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="notifications.length === 0" class="px-4 py-8 text-center">
+            <i class="material-icons text-4xl text-gray-300 mb-2">notifications_none</i>
+            <p class="text-sm text-gray-500">No new notifications</p>
+          </div>
+        </div>
+
+        <!-- Dropdown Footer -->
+        <div *ngIf="notifications.length > 0" class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+          <button 
+            (click)="markAllNotificationsAsRead()"
+            class="w-full text-center text-sm text-sky-600 hover:text-sky-700 font-medium transition-colors"
+          >
+            Mark All as Read
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Profile Dropdown Toggle -->
+    <div class="relative">
+      <button 
+        (click)="toggleProfileDropdown()" 
+        class="mobile-profile-button flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        aria-label="Toggle profile menu"
+      >
+        <div class="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
+          <span class="text-white text-sm font-medium">{{ (getUserDisplayName() || 'U').charAt(0) }}</span>
+        </div>
+        <svg class="w-4 h-4 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <!-- Profile Dropdown Menu -->
+      <div 
+        #profileDropdown
+        *ngIf="isProfileDropdownOpen"
+        class="mobile-profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 pb-1 z-50"
+      >
+        <div class="px-4 py-2 border-b border-gray-100">
+          <p class="text-sm font-medium text-slate-800">{{ getUserDisplayName() }}</p>
+          <p class="text-xs text-gray-500 capitalize">{{ currentUser?.role }}</p>
+        </div>
         <button 
-          (click)="logout(); closeSidebar()"
-          class="w-full flex items-center gap-2 px-0 py-0 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          (click)="navigateToProfile(); closeProfileDropdown()"
+          class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          <i class="material-icons text-base">logout</i>
-          <span>Logout</span>
+          <i class="material-icons text-base mr-2">person</i>
+          My Profile
         </button>
+        <!-- Mobile Sidebar Footer -->
+        <div class="px-4 py-2 border-t border-gray-100">
+          <button 
+            (click)="logout(); closeSidebar()"
+            class="w-full flex items-center gap-2 px-0 py-0 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <i class="material-icons text-base">logout</i>
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

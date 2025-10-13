@@ -46,6 +46,11 @@ export class SidebarComponent implements OnInit {
             route: '/super-admin/dashboard'
           },
           {
+            label: 'Notifications',
+            icon: 'notifications',
+            route: '/super-admin/notifications'
+          },
+          {
             label: 'Organization Management',
             icon: 'settings',
             route: '/super-admin/org-management'
@@ -90,6 +95,11 @@ export class SidebarComponent implements OnInit {
             route: '/admin/dashboard'
           },
           {
+            label: 'Notifications',
+            icon: 'notifications',
+            route: '/admin/notifications'
+          },
+          {
             label: 'My Profile',
             icon: 'person',
             route: '/admin/my-profile'
@@ -132,6 +142,11 @@ export class SidebarComponent implements OnInit {
             route: '/doctor/dashboard'
           },
           {
+            label: 'Notifications',
+            icon: 'notifications',
+            route: '/doctor/notifications'
+          },
+          {
             label: 'My Profile',
             icon: 'person',
             route: '/doctor/my-profile'
@@ -164,6 +179,11 @@ export class SidebarComponent implements OnInit {
             label: 'Dashboard',
             icon: 'dashboard',
             route: '/patient/dashboard'
+          },
+          {
+            label: 'Notifications',
+            icon: 'notifications',
+            route: '/patient/notifications'
           },
           {
             label: 'My Profile',

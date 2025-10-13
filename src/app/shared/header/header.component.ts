@@ -1,7 +1,9 @@
-import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService, User } from '../../auth/auth.service';
+import { NotificationService, Notification } from '../../services/notification.service';
+import { Subscription } from 'rxjs';
 
 interface NavigationItem {
   label: string;
@@ -18,35 +20,148 @@ interface NavigationItem {
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   @ViewChild('profileDropdown') profileDropdown!: ElementRef;
   @ViewChild('mobileMenu') mobileMenu!: ElementRef;
   @ViewChild('sidebarDropdown') sidebarDropdown!: ElementRef;
+  @ViewChild('notificationDropdown') notificationDropdown!: ElementRef;
 
   isMobileMenuOpen = false;
   isProfileDropdownOpen = false;
   isSidebarOpen = false;
+  isNotificationDropdownOpen = false;
   currentUser: User | null = null;
   isLoggedIn = false;
   hasSidebar = false; // Detect if sidebar is present
   navigationItems: NavigationItem[] = [];
+  notificationCount = 0;
+  notifications: Notification[] = [];
+  isLoadingNotifications = false;
+  
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    // Subscribe to current user
+    const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
       this.isLoggedIn = !!user;
       if (user) {
         this.navigationItems = this.getNavigationItems(user.role);
+        // Load notifications when user logs in
+        this.loadNotifications();
       }
     });
+    this.subscriptions.push(userSub);
+    
+    // Subscribe to notifications
+    const notificationsSub = this.notificationService.notifications$.subscribe(
+      notifications => {
+        this.notifications = notifications;
+      }
+    );
+    this.subscriptions.push(notificationsSub);
+
+    // Subscribe to unread count
+    const unreadCountSub = this.notificationService.unreadCount$.subscribe(
+      count => {
+        this.notificationCount = count;
+      }
+    );
+    this.subscriptions.push(unreadCountSub);
     
     // Check if we're on a page with sidebar (admin pages)
     this.checkForSidebar();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   * Load notifications from backend
+   */
+  loadNotifications(): void {
+    if (!this.isLoggedIn) return;
+    
+    this.isLoadingNotifications = true;
+    this.notificationService.getNotifications({ limit: 10, isArchived: false })
+      .subscribe({
+        next: () => {
+          this.isLoadingNotifications = false;
+        },
+        error: (error) => {
+          console.error('Error loading notifications:', error);
+          this.isLoadingNotifications = false;
+        }
+      });
+  }
+
+  /**
+   * Mark notification as read
+   */
+  markNotificationAsRead(notification: Notification, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        error: (error) => console.error('Error marking notification as read:', error)
+      });
+    }
+
+    // Navigate to action URL if available
+    if (notification.actionUrl) {
+      this.router.navigate([notification.actionUrl]);
+      this.closeNotificationDropdown();
+    }
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  markAllNotificationsAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe({
+      next: (response) => {
+        console.log(response.message);
+      },
+      error: (error) => console.error('Error marking all notifications as read:', error)
+    });
+  }
+
+  /**
+   * Delete notification
+   */
+  deleteNotification(notificationId: string, event: Event): void {
+    event.stopPropagation();
+    
+    this.notificationService.deleteNotification(notificationId).subscribe({
+      next: (response) => {
+        console.log(response.message);
+      },
+      error: (error) => console.error('Error deleting notification:', error)
+    });
+  }
+
+  /**
+   * Get time ago for notification
+   */
+  getTimeAgo(date: string): string {
+    return this.notificationService.getTimeAgo(date);
+  }
+
+  /**
+   * Get priority color for notification
+   */
+  getPriorityColor(notification: Notification): string {
+    return this.notificationService.getPriorityColor(notification.priority);
   }
 
   private checkForSidebar(): void {
@@ -131,6 +246,7 @@ export class HeaderComponent implements OnInit {
     this.isProfileDropdownOpen = !this.isProfileDropdownOpen;
     if (this.isProfileDropdownOpen) {
       this.isSidebarOpen = false;
+      this.isNotificationDropdownOpen = false;
     }
   }
 
@@ -142,11 +258,27 @@ export class HeaderComponent implements OnInit {
     this.isSidebarOpen = !this.isSidebarOpen;
     if (this.isSidebarOpen) {
       this.isProfileDropdownOpen = false;
+      this.isNotificationDropdownOpen = false;
     }
   }
 
   closeSidebar(): void {
     this.isSidebarOpen = false;
+  }
+
+  // Notification dropdown methods
+  toggleNotificationDropdown(): void {
+    this.isNotificationDropdownOpen = !this.isNotificationDropdownOpen;
+    if (this.isNotificationDropdownOpen) {
+      this.isProfileDropdownOpen = false;
+      this.isSidebarOpen = false;
+      // Refresh notifications when dropdown is opened
+      this.loadNotifications();
+    }
+  }
+
+  closeNotificationDropdown(): void {
+    this.isNotificationDropdownOpen = false;
   }
 
   toggleSection(item: NavigationItem): void {
@@ -193,6 +325,16 @@ export class HeaderComponent implements OnInit {
       
       if (!sidebarDropdownElement.contains(target) && !sidebarButton) {
         this.closeSidebar();
+      }
+    }
+    
+    // Close notification dropdown if clicking outside
+    if (this.isNotificationDropdownOpen && this.notificationDropdown) {
+      const notificationDropdownElement = this.notificationDropdown.nativeElement;
+      const notificationButton = target.closest('.notification-button');
+      
+      if (!notificationDropdownElement.contains(target) && !notificationButton) {
+        this.closeNotificationDropdown();
       }
     }
   }

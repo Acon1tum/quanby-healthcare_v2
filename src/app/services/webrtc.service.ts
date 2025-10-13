@@ -103,14 +103,17 @@ export class WebRTCService {
     const envIceServers = (environment as any).webrtcIceServers as RTCIceServer[] | undefined;
     const defaultConfig: RTCConfiguration = config ?? {
       iceServers: envIceServers?.length ? envIceServers : [
-        // Fallback to simple STUN server if no environment config
+        // Fallback to multiple STUN servers for better connectivity
         { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun.stunprotocol.org:3478' },
       ],
-      // Enhanced configuration for better connection reliability
-      iceCandidatePoolSize: 10,
-      bundlePolicy: 'max-bundle',
-      rtcpMuxPolicy: 'require',
-      iceTransportPolicy: 'all'
+        // Enhanced configuration for better connection reliability
+        iceCandidatePoolSize: 10,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+        iceTransportPolicy: 'all'
     };
     
     console.log('🧊 Using ICE servers:', defaultConfig.iceServers);
@@ -178,6 +181,10 @@ export class WebRTCService {
         }, 5000);
       } else if (this.peer?.connectionState === 'connected') {
         console.log('✅ Connection established successfully');
+      } else if (this.peer?.connectionState === 'connecting') {
+        console.log('🔄 Connection in progress...');
+      } else if (this.peer?.connectionState === 'closed') {
+        console.log('🔒 Connection closed');
       }
     };
 
@@ -230,13 +237,14 @@ export class WebRTCService {
       
       this.dataChannel.onmessage = (event) => {
         try {
-          const data: FaceScanData = JSON.parse(event.data);
+          const data = JSON.parse(event.data);
           console.log('📡 Data channel message received:', data);
           this.zone.run(() => {
             this.dataChannelSubject.next(data);
           });
         } catch (error) {
           console.error('📡 Error parsing data channel message:', error);
+          console.error('📡 Raw message data:', event.data);
         }
       };
       
@@ -261,13 +269,14 @@ export class WebRTCService {
     
     datachannel.onmessage = (event) => {
       try {
-        const data: FaceScanData = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
         console.log('📡 Remote data channel message received:', data);
         this.zone.run(() => {
           this.dataChannelSubject.next(data);
         });
       } catch (error) {
         console.error('📡 Error parsing remote data channel message:', error);
+        console.error('📡 Raw remote message data:', event.data);
       }
     };
   }
@@ -295,12 +304,15 @@ export class WebRTCService {
         noiseSuppression: true,
         autoGainControl: true,
         sampleRate: 44100,
-        channelCount: 1
+        channelCount: 1,
+              // Additional audio constraints for better quality
       },
       video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 30 }
+        width: { ideal: 1280, min: 640, max: 1920 },
+        height: { ideal: 720, min: 480, max: 1080 },
+        frameRate: { ideal: 30, min: 15, max: 60 },
+        // Additional video constraints for better compatibility
+        facingMode: 'user'
       }
     };
   }
@@ -314,6 +326,7 @@ export class WebRTCService {
   getCurrentRoomId(): string | undefined { return this.currentRoomId; }
   getCurrentRole(): 'doctor' | 'patient' | undefined { return this.currentRole; }
   getPeerConnection(): RTCPeerConnection | undefined { return this.peer; }
+  getConnectionState(): string { return this.peer?.connectionState || 'new'; }
 
 
   // Send face scan results via data channel
@@ -563,6 +576,43 @@ export class WebRTCService {
     await this.handleConnectionFailure();
   }
 
+  // Enhanced connection recovery with multiple strategies
+  async enhancedConnectionRecovery(): Promise<void> {
+    console.log('🔄 Enhanced connection recovery started');
+    
+    try {
+      // Strategy 1: ICE restart
+      await this.restartIce();
+      
+      // Strategy 2: Wait and check connection
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (this.peer?.connectionState === 'connected') {
+        console.log('✅ Connection recovered via ICE restart');
+        return;
+      }
+      
+      // Strategy 3: Reinitialize peer connection
+      console.log('🔄 Connection still not recovered, reinitializing peer...');
+      this.cleanupPeer(false);
+      await this.initPeer();
+      
+      // Strategy 4: Rejoin room if we have a current room
+      if (this.currentRoomId) {
+        console.log('🔄 Rejoining room:', this.currentRoomId);
+        const result = await this.join(this.currentRoomId);
+        if (result.ok) {
+          console.log('✅ Successfully rejoined room');
+        } else {
+          console.error('❌ Failed to rejoin room:', result.error);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Enhanced connection recovery failed:', error);
+    }
+  }
+
 
   join(roomId: string): Promise<JoinResponse> {
     this.currentRoomId = roomId;
@@ -602,11 +652,15 @@ export class WebRTCService {
       if (!this.peer) await this.initPeer();
 
       try {
+        console.log('🧩 Setting remote description, current signaling state:', this.peer!.signalingState);
         await this.peer!.setRemoteDescription(new RTCSessionDescription(sdp));
         console.log('✅ Remote description set successfully');
 
-        const answer = await this.peer!.createAnswer();
-        console.log('📝 Answer created:', answer);
+        const answer = await this.peer!.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        });
+        console.log('📝 Answer created:', answer.type);
 
         await this.peer!.setLocalDescription(answer);
         console.log('✅ Local description set successfully');
@@ -626,9 +680,11 @@ export class WebRTCService {
       if (!this.peer) return;
 
       try {
+        console.log('🧩 Setting remote description (answer), current signaling state:', this.peer.signalingState);
         await this.peer.setRemoteDescription(new RTCSessionDescription(sdp));
         console.log('✅ Remote description (answer) set successfully');
         console.log('🔗 Connection should now be established');
+        console.log('🧩 Final signaling state:', this.peer.signalingState);
       } catch (error) {
         console.error('❌ Error handling answer:', error);
       }
@@ -657,15 +713,23 @@ export class WebRTCService {
     
     // Check if we're already in the middle of negotiation
     if (this.peer.signalingState === 'have-local-offer' || 
-        this.peer.signalingState === 'have-remote-offer' ||
-        this.peer.signalingState === 'stable') {
+        this.peer.signalingState === 'have-remote-offer') {
       console.log('🧩 Signaling state:', this.peer.signalingState, '- skipping offer creation');
       return;
     }
     
     try {
-      const offer = await this.peer.createOffer();
+      console.log('🧩 Creating offer, current signaling state:', this.peer.signalingState);
+      const offer = await this.peer.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+        iceRestart: false
+      });
+      console.log('🧩 Offer created:', offer.type);
+      
       await this.peer.setLocalDescription(offer);
+      console.log('🧩 Local description set');
+      
       if (this.currentRoomId) {
         this.socket?.emit('webrtc:offer', { roomId: this.currentRoomId, sdp: offer });
         console.log('📤 Offer sent successfully');
