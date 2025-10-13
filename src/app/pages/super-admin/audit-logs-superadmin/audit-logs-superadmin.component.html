@@ -1,1 +1,776 @@
-<p>audit-logs-superadmin works!</p>
+<div class="audit-logs-container p-6 bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Audit Logs & Security Events</h1>
+    <p class="text-gray-600">Monitor system activities, security events, and user actions across the platform.</p>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="mb-6">
+    <div class="border-b border-gray-200">
+      <nav class="-mb-px flex space-x-8">
+        <button
+          (click)="setActiveTab('logs')"
+          [class]="'py-2 px-1 border-b-2 font-medium text-sm ' + (activeTab === 'logs' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')"
+        >
+          Audit Logs
+          <span *ngIf="statistics" class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
+            {{ statistics.totalLogs | number }}
+          </span>
+        </button>
+        <button
+          (click)="setActiveTab('events')"
+          [class]="'py-2 px-1 border-b-2 font-medium text-sm ' + (activeTab === 'events' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')"
+        >
+          Security Events
+          <span *ngIf="statistics" class="ml-2 bg-red-100 text-red-900 py-0.5 px-2.5 rounded-full text-xs">
+            {{ statistics.unresolvedSecurityEvents | number }}
+          </span>
+        </button>
+        <button
+          (click)="setActiveTab('statistics')"
+          [class]="'py-2 px-1 border-b-2 font-medium text-sm ' + (activeTab === 'statistics' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300')"
+        >
+          Statistics
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Audit Logs Tab -->
+  <div *ngIf="activeTab === 'logs'">
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Filter Audit Logs</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <input
+            type="text"
+            [(ngModel)]="logsFilters.search"
+            (ngModelChange)="onLogsFilterChange()"
+            placeholder="Search logs..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <select
+            [(ngModel)]="logsFilters.category"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let category of categories" [value]="category.value">{{ category.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Level</label>
+          <select
+            [(ngModel)]="logsFilters.level"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let level of levels" [value]="level.value">{{ level.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+          <input
+            type="text"
+            [(ngModel)]="logsFilters.userId"
+            (ngModelChange)="onLogsFilterChange()"
+            placeholder="User ID..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Resource Type</label>
+          <input
+            type="text"
+            [(ngModel)]="logsFilters.resourceType"
+            (ngModelChange)="onLogsFilterChange()"
+            placeholder="Resource type..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Module</label>
+          <select
+            [(ngModel)]="logsFilters.module"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let module of modules" [value]="module.value">{{ module.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Page</label>
+          <select
+            [(ngModel)]="logsFilters.pageName"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let page of pages" [value]="page.value">{{ page.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <input
+            type="date"
+            [(ngModel)]="logsFilters.startDate"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <input
+            type="date"
+            [(ngModel)]="logsFilters.endDate"
+            (ngModelChange)="onLogsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="onLogsFilterChange()"
+            class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Audit Logs</h3>
+        <p class="text-sm text-gray-500 mt-1">Showing {{ auditLogs.length }} of {{ logsPagination.totalItems }} logs</p>
+      </div>
+      
+      <div *ngIf="loadingLogs" class="p-6 text-center">
+        <div class="inline-flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading audit logs...
+        </div>
+      </div>
+      
+      <div *ngIf="!loadingLogs && auditLogs.length === 0" class="p-6 text-center text-gray-500">
+        No audit logs found matching your criteria.
+      </div>
+      
+      <div *ngIf="!loadingLogs && auditLogs.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resource</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Module/Page</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let log of auditLogs" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatDate(log.timestamp) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ log.user?.email || 'System' }}</div>
+                <div class="text-sm text-gray-500">ID: {{ log.userId }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ log.action }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getCategoryClass(log.category)">
+                  {{ log.category.replace('_', ' ') }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getLevelClass(log.level)">
+                  {{ log.level }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <div>{{ log.resourceType }}</div>
+                <div class="text-xs text-gray-500">{{ log.resourceId }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <div class="font-medium">{{ getModuleFromAction(log.action) }}</div>
+                <div class="text-xs text-gray-500">{{ getPageFromResource(log.resourceType) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ log.ipAddress }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  (click)="viewLogDetails(log)"
+                  class="text-blue-600 hover:text-blue-900"
+                >
+                  View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div *ngIf="!loadingLogs && logsPagination.totalPages > 1" class="px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-700">
+            Showing {{ (logsPagination.currentPage - 1) * logsPagination.itemsPerPage + 1 }} to 
+            {{ Math.min(logsPagination.currentPage * logsPagination.itemsPerPage, logsPagination.totalItems) }} 
+            of {{ logsPagination.totalItems }} results
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="onLogsPageChange(logsPagination.currentPage - 1)"
+              [disabled]="logsPagination.currentPage <= 1"
+              class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md">
+              {{ logsPagination.currentPage }} / {{ logsPagination.totalPages }}
+            </span>
+            <button
+              (click)="onLogsPageChange(logsPagination.currentPage + 1)"
+              [disabled]="logsPagination.currentPage >= logsPagination.totalPages"
+              class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Events Tab -->
+  <div *ngIf="activeTab === 'events'">
+    <!-- Security Events Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Filter Security Events</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+          <input
+            type="text"
+            [(ngModel)]="eventsFilters.search"
+            (ngModelChange)="onEventsFilterChange()"
+            placeholder="Search events..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+          <input
+            type="text"
+            [(ngModel)]="eventsFilters.eventType"
+            (ngModelChange)="onEventsFilterChange()"
+            placeholder="Event type..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+          <select
+            [(ngModel)]="eventsFilters.severity"
+            (ngModelChange)="onEventsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let severity of severities" [value]="severity.value">{{ severity.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select
+            [(ngModel)]="eventsFilters.resolved"
+            (ngModelChange)="onEventsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let option of resolvedOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+          <input
+            type="text"
+            [(ngModel)]="eventsFilters.userId"
+            (ngModelChange)="onEventsFilterChange()"
+            placeholder="User ID..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <input
+            type="date"
+            [(ngModel)]="eventsFilters.startDate"
+            (ngModelChange)="onEventsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+          <input
+            type="date"
+            [(ngModel)]="eventsFilters.endDate"
+            (ngModelChange)="onEventsFilterChange()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div class="flex items-end">
+          <button
+            (click)="onEventsFilterChange()"
+            class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Events Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Security Events</h3>
+        <p class="text-sm text-gray-500 mt-1">Showing {{ securityEvents.length }} of {{ eventsPagination.totalItems }} events</p>
+      </div>
+      
+      <div *ngIf="loadingEvents" class="p-6 text-center">
+        <div class="inline-flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading security events...
+        </div>
+      </div>
+      
+      <div *ngIf="!loadingEvents && securityEvents.length === 0" class="p-6 text-center text-gray-500">
+        No security events found matching your criteria.
+      </div>
+      
+      <div *ngIf="!loadingEvents && securityEvents.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Type</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let event of securityEvents" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ formatDate(event.timestamp) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ event.eventType }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getLevelClass(event.severity)">
+                  {{ event.severity }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{{ event.description }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ event.user?.email || 'Unknown' }}</div>
+                <div class="text-sm text-gray-500">{{ event.userId || 'N/A' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="event.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                  {{ event.resolved ? 'Resolved' : 'Unresolved' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <button
+                  (click)="viewEventDetails(event)"
+                  class="text-blue-600 hover:text-blue-900"
+                >
+                  View
+                </button>
+                <button
+                  *ngIf="!event.resolved"
+                  (click)="resolveEvent(event)"
+                  class="text-green-600 hover:text-green-900"
+                >
+                  Resolve
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div *ngIf="!loadingEvents && eventsPagination.totalPages > 1" class="px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-700">
+            Showing {{ (eventsPagination.currentPage - 1) * eventsPagination.itemsPerPage + 1 }} to 
+            {{ Math.min(eventsPagination.currentPage * eventsPagination.itemsPerPage, eventsPagination.totalItems) }} 
+            of {{ eventsPagination.totalItems }} results
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="onEventsPageChange(eventsPagination.currentPage - 1)"
+              [disabled]="eventsPagination.currentPage <= 1"
+              class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md">
+              {{ eventsPagination.currentPage }} / {{ eventsPagination.totalPages }}
+            </span>
+            <button
+              (click)="onEventsPageChange(eventsPagination.currentPage + 1)"
+              [disabled]="eventsPagination.currentPage >= eventsPagination.totalPages"
+              class="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Tab -->
+  <div *ngIf="activeTab === 'statistics'">
+    <div *ngIf="loadingStats" class="text-center p-6">
+      <div class="inline-flex items-center">
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading statistics...
+      </div>
+    </div>
+    
+    <div *ngIf="!loadingStats && statistics" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Total Logs -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Total Audit Logs</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ statistics.totalLogs | number }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security Events -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Security Events</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ statistics.totalSecurityEvents | number }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Unresolved Events -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Unresolved</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ statistics.unresolvedSecurityEvents | number }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Recent Activity</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ (statistics.recentActivity && statistics.recentActivity.length) || 0 | number }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div *ngIf="!loadingStats && statistics" class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Logs by Category -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Logs by Category</h3>
+        <div class="space-y-3">
+          <div *ngFor="let category of Object.keys(statistics.logsByCategory)" class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">{{ category.replace('_', ' ') }}</span>
+            <span class="text-sm text-gray-500">{{ statistics.logsByCategory[category] | number }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Logs by Level -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Logs by Level</h3>
+        <div class="space-y-3">
+          <div *ngFor="let level of Object.keys(statistics.logsByLevel)" class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">{{ level }}</span>
+            <span class="text-sm text-gray-500">{{ statistics.logsByLevel[level] | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Log Details Modal -->
+<div *ngIf="showLogDetails && selectedLog" class="modal-container">
+  <div class="modal-content w-11/12 md:w-3/4 lg:w-1/2 p-6">
+    <div class="mt-3">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Audit Log Details</h3>
+        <button
+          (click)="closeLogDetails()"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Timestamp</label>
+            <p class="text-sm text-gray-900">{{ formatDate(selectedLog.timestamp) }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">User</label>
+            <p class="text-sm text-gray-900">{{ selectedLog.user?.email || 'System' }}</p>
+            <p class="text-xs text-gray-500">{{ selectedLog.userId }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Action</label>
+            <p class="text-sm text-gray-900">{{ selectedLog.action }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Category</label>
+            <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getCategoryClass(selectedLog.category)">
+              {{ selectedLog.category.replace('_', ' ') }}
+            </span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Level</label>
+            <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getLevelClass(selectedLog.level)">
+              {{ selectedLog.level }}
+            </span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Resource Type</label>
+            <p class="text-sm text-gray-900">{{ selectedLog.resourceType }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Resource ID</label>
+            <p class="text-sm text-gray-900">{{ selectedLog.resourceId }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">IP Address</label>
+            <p class="text-sm text-gray-900">{{ selectedLog.ipAddress }}</p>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Details</label>
+          <pre class="bg-gray-100 p-4 rounded-md text-sm text-gray-900 overflow-auto max-h-64">{{ formatDetails(selectedLog.details) }}</pre>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end">
+        <button
+          (click)="closeLogDetails()"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Event Details Modal -->
+<div *ngIf="showEventDetails && selectedEvent" class="modal-container">
+  <div class="modal-content w-11/12 md:w-3/4 lg:w-1/2 p-6">
+    <div class="mt-3">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Security Event Details</h3>
+        <button
+          (click)="closeEventDetails()"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Timestamp</label>
+            <p class="text-sm text-gray-900">{{ formatDate(selectedEvent.timestamp) }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Event Type</label>
+            <p class="text-sm text-gray-900">{{ selectedEvent.eventType }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Severity</label>
+            <span [class]="'inline-flex px-2 py-1 text-xs font-semibold rounded-full ' + getLevelClass(selectedEvent.severity)">
+              {{ selectedEvent.severity }}
+            </span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Status</label>
+            <span [class]="selectedEvent.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+              {{ selectedEvent.resolved ? 'Resolved' : 'Unresolved' }}
+            </span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">User</label>
+            <p class="text-sm text-gray-900">{{ selectedEvent.user?.email || 'Unknown' }}</p>
+            <p class="text-xs text-gray-500">{{ selectedEvent.userId || 'N/A' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">IP Address</label>
+            <p class="text-sm text-gray-900">{{ selectedEvent.ipAddress }}</p>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Description</label>
+          <p class="text-sm text-gray-900">{{ selectedEvent.description }}</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Details</label>
+          <pre class="bg-gray-100 p-4 rounded-md text-sm text-gray-900 overflow-auto max-h-64">{{ formatDetails(selectedEvent.details) }}</pre>
+        </div>
+        
+        <div *ngIf="selectedEvent.resolved">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Resolved By</label>
+              <p class="text-sm text-gray-900">{{ selectedEvent.resolvedBy || 'Unknown' }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Resolved At</label>
+              <p class="text-sm text-gray-900">{{ selectedEvent.resolvedAt ? formatDate(selectedEvent.resolvedAt) : 'N/A' }}</p>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Resolution Notes</label>
+            <p class="text-sm text-gray-900">{{ selectedEvent.resolutionNotes || 'No notes provided' }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end">
+        <button
+          (click)="closeEventDetails()"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resolve Event Modal -->
+<div *ngIf="selectedEvent && !showEventDetails" class="modal-container">
+  <div class="modal-content w-11/12 md:w-1/2 p-6">
+    <div class="mt-3">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Resolve Security Event</h3>
+        <button
+          (click)="cancelResolve()"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Event Type</label>
+          <p class="text-sm text-gray-900">{{ selectedEvent.eventType }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Description</label>
+          <p class="text-sm text-gray-900">{{ selectedEvent.description }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Resolution Notes</label>
+          <textarea
+            [(ngModel)]="resolutionNotes"
+            rows="4"
+            placeholder="Enter resolution notes..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></textarea>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end space-x-3">
+        <button
+          (click)="cancelResolve()"
+          class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="confirmResolve()"
+          [disabled]="!resolutionNotes.trim() || resolving"
+          class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span *ngIf="resolving">Resolving...</span>
+          <span *ngIf="!resolving">Resolve Event</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

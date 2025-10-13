@@ -33,7 +33,7 @@ export class WebSocketService {
       return;
     }
 
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       console.error('❌ No authentication token found');
       return;
@@ -85,7 +85,7 @@ export class WebSocketService {
    */
   on<T = any>(eventName: string): Observable<T> {
     return new Observable(observer => {
-      if (!this.socket) {
+      if (!this.socket || !this.socket.connected) {
         console.error('❌ Socket not connected');
         observer.error('Socket not connected');
         return;
@@ -108,7 +108,7 @@ export class WebSocketService {
    * Emit Socket.IO event
    */
   emit(eventName: string, data?: any): void {
-    if (!this.socket) {
+    if (!this.socket || !this.socket.connected) {
       console.error('❌ Socket not connected');
       return;
     }

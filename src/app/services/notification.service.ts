@@ -251,62 +251,111 @@ export class NotificationService {
   private setupWebSocketListeners(): void {
     console.log('📡 Setting up WebSocket notification listeners...');
 
+    // Wait for WebSocket connection before setting up listeners
+    this.websocketService.isConnected$.subscribe(isConnected => {
+      if (isConnected) {
+        console.log('✅ WebSocket connected, setting up notification listeners...');
+        this.setupNotificationListeners();
+      } else {
+        console.log('❌ WebSocket disconnected, cleaning up listeners...');
+        this.cleanupWebSocketListeners();
+      }
+    });
+
+    // Initial fetch when WebSocket connects
+    this.refreshNotifications();
+  }
+
+  /**
+   * Setup individual notification listeners
+   */
+  private setupNotificationListeners(): void {
     // Listen for new notifications
     const newNotificationSub = this.websocketService.on<Notification>('notification:new')
-      .subscribe(notification => {
-        console.log('📬 New notification received via WebSocket:', notification);
-        
-        // Add to notifications array
-        const currentNotifications = this.notificationsSubject.value;
-        this.notificationsSubject.next([notification, ...currentNotifications].slice(0, 10));
-        
-        // Play notification sound/show browser notification if needed
-        this.showBrowserNotification(notification);
+      .subscribe({
+        next: (notification) => {
+          console.log('📬 New notification received via WebSocket:', notification);
+          
+          // Add to notifications array
+          const currentNotifications = this.notificationsSubject.value;
+          this.notificationsSubject.next([notification, ...currentNotifications].slice(0, 10));
+          
+          // Play notification sound/show browser notification if needed
+          this.showBrowserNotification(notification);
+        },
+        error: (error) => {
+          console.error('❌ Error in new notification listener:', error);
+        }
       });
     this.wsSubscriptions.push(newNotificationSub);
 
     // Listen for unread count updates
     const unreadCountSub = this.websocketService.on<{ count: number }>('notification:unread-count')
-      .subscribe(data => {
-        console.log('📊 Unread count updated via WebSocket:', data.count);
-        this.unreadCountSubject.next(data.count);
+      .subscribe({
+        next: (data) => {
+          console.log('📊 Unread count updated via WebSocket:', data.count);
+          this.unreadCountSubject.next(data.count);
+        },
+        error: (error) => {
+          console.error('❌ Error in unread count listener:', error);
+        }
       });
     this.wsSubscriptions.push(unreadCountSub);
 
     // Listen for notification refresh signal
     const refreshSub = this.websocketService.on('notification:refresh')
-      .subscribe(() => {
-        console.log('🔄 Refresh signal received via WebSocket');
-        this.refreshNotifications();
+      .subscribe({
+        next: () => {
+          console.log('🔄 Refresh signal received via WebSocket');
+          this.refreshNotifications();
+        },
+        error: (error) => {
+          console.error('❌ Error in refresh listener:', error);
+        }
       });
     this.wsSubscriptions.push(refreshSub);
 
     // Listen for notification updates (mark as read)
     const updateSub = this.websocketService.on<Notification>('notification:updated')
-      .subscribe(updatedNotification => {
-        console.log('📝 Notification updated via WebSocket:', updatedNotification);
-        
-        const currentNotifications = this.notificationsSubject.value;
-        const index = currentNotifications.findIndex(n => n.id === updatedNotification.id);
-        if (index !== -1) {
-          currentNotifications[index] = updatedNotification;
-          this.notificationsSubject.next([...currentNotifications]);
+      .subscribe({
+        next: (updatedNotification) => {
+          console.log('📝 Notification updated via WebSocket:', updatedNotification);
+          
+          const currentNotifications = this.notificationsSubject.value;
+          const index = currentNotifications.findIndex(n => n.id === updatedNotification.id);
+          if (index !== -1) {
+            currentNotifications[index] = updatedNotification;
+            this.notificationsSubject.next([...currentNotifications]);
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error in notification update listener:', error);
         }
       });
     this.wsSubscriptions.push(updateSub);
 
     // Listen for notification deletions
     const deleteSub = this.websocketService.on<{ id: string }>('notification:deleted')
-      .subscribe(data => {
-        console.log('🗑️ Notification deleted via WebSocket:', data.id);
-        
-        const currentNotifications = this.notificationsSubject.value;
-        this.notificationsSubject.next(currentNotifications.filter(n => n.id !== data.id));
+      .subscribe({
+        next: (data) => {
+          console.log('🗑️ Notification deleted via WebSocket:', data.id);
+          
+          const currentNotifications = this.notificationsSubject.value;
+          this.notificationsSubject.next(currentNotifications.filter(n => n.id !== data.id));
+        },
+        error: (error) => {
+          console.error('❌ Error in notification delete listener:', error);
+        }
       });
     this.wsSubscriptions.push(deleteSub);
+  }
 
-    // Initial fetch when WebSocket connects
-    this.refreshNotifications();
+  /**
+   * Cleanup WebSocket listeners
+   */
+  private cleanupWebSocketListeners(): void {
+    this.wsSubscriptions.forEach(sub => sub.unsubscribe());
+    this.wsSubscriptions = [];
   }
 
   /**
@@ -357,8 +406,7 @@ export class NotificationService {
    */
   private cleanup(): void {
     // Unsubscribe from WebSocket events
-    this.wsSubscriptions.forEach(sub => sub.unsubscribe());
-    this.wsSubscriptions = [];
+    this.cleanupWebSocketListeners();
 
     // Stop polling
     if (this.pollingSubscription) {

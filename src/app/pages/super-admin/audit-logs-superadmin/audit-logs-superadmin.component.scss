@@ -1,0 +1,228 @@
+.audit-logs-container {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+// Loading animation
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Modal animations
+.modal-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+// Table hover effects
+.table-row-hover {
+  transition: background-color 0.2s ease;
+}
+
+.table-row-hover:hover {
+  background-color: #f8fafc;
+}
+
+// Badge styles
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+// Category badges
+.badge-authentication {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.badge-security {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.badge-data-access {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.badge-data-modification {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-system {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.badge-user-activity {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+// Level badges
+.badge-info {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.badge-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+// Status badges
+.badge-resolved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-unresolved {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .audit-logs-container {
+    padding: 1rem;
+  }
+  
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+// Focus styles for accessibility
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .badge {
+    border: 1px solid currentColor;
+  }
+  
+  button {
+    border: 1px solid currentColor;
+  }
+}
+
+// Modal styling
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(75, 85, 99, 0.75);
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  position: relative;
+  z-index: 10000;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  margin: 5rem auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+// Ensure modal appears above all other elements
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 5rem;
+  background-color: rgba(75, 85, 99, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+  
+  .table-row-hover {
+    transition: none;
+  }
+  
+  .modal-enter-active {
+    transition: none;
+  }
+  
+  .modal-backdrop {
+    backdrop-filter: none;
+  }
+  
+  .modal-container {
+    backdrop-filter: none;
+  }
+}

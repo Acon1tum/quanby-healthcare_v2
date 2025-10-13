@@ -40,6 +40,73 @@ export interface MedicalRecordsSummary {
   };
 }
 
+// Audit Log Interfaces
+export interface AuditLog {
+  id: string;
+  userId: string;
+  userEmail: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  category: string;
+  level: string;
+  description: string;
+  ipAddress: string;
+  userAgent: string;
+  details: any;
+  timestamp: string;
+  severity: string;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organization?: {
+      id: string;
+      name: string;
+    };
+  };
+}
+
+export interface SecurityEvent {
+  id: string;
+  eventType: string;
+  severity: string;
+  description: string;
+  userId: string | null;
+  userEmail: string | null;
+  ipAddress: string;
+  userAgent: string;
+  details: any;
+  resolved: boolean;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  resolutionNotes: string | null;
+  timestamp: string;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organization?: {
+      id: string;
+      name: string;
+    };
+  };
+  resolvedByUser?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+}
+
+export interface AuditStatistics {
+  totalLogs: number;
+  totalSecurityEvents: number;
+  unresolvedSecurityEvents: number;
+  logsByCategory: { [key: string]: number };
+  logsByLevel: { [key: string]: number };
+  recentActivity: any[];
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -249,6 +316,51 @@ export class ApiService {
   getDoctorsWithSchedules(): Observable<{ success: boolean; data: any[] }> {
     return this.http.get<{ success: boolean; data: any[] }>(
       `${environment.backendApi}/doctors`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // ===== AUDIT LOGS API METHODS =====
+
+  // Get audit logs with filtering and pagination
+  getAuditLogs(params: any = {}): Observable<{ success: boolean; data: { items: AuditLog[]; total: number; page: number; limit: number; totalPages: number } }> {
+    const queryParams = new URLSearchParams(params).toString();
+    return this.http.get<{ success: boolean; data: { items: AuditLog[]; total: number; page: number; limit: number; totalPages: number } }>(
+      `${environment.backendApi}/audit/logs?${queryParams}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get audit log by ID
+  getAuditLogById(id: string): Observable<{ success: boolean; data: AuditLog }> {
+    return this.http.get<{ success: boolean; data: AuditLog }>(
+      `${environment.backendApi}/audit/logs/${id}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get security events with filtering and pagination
+  getSecurityEvents(params: any = {}): Observable<{ success: boolean; data: { items: SecurityEvent[]; total: number; page: number; limit: number; totalPages: number } }> {
+    const queryParams = new URLSearchParams(params).toString();
+    return this.http.get<{ success: boolean; data: { items: SecurityEvent[]; total: number; page: number; limit: number; totalPages: number } }>(
+      `${environment.backendApi}/audit/security-events?${queryParams}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Resolve security event
+  resolveSecurityEvent(id: string, resolutionNotes: string): Observable<{ success: boolean; data: SecurityEvent }> {
+    return this.http.put<{ success: boolean; data: SecurityEvent }>(
+      `${environment.backendApi}/audit/security-events/${id}/resolve`,
+      { resolutionNotes },
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get audit statistics
+  getAuditStatistics(): Observable<{ success: boolean; data: AuditStatistics }> {
+    return this.http.get<{ success: boolean; data: AuditStatistics }>(
+      `${environment.backendApi}/audit/statistics`,
       { headers: this.authService.getAuthHeaders() }
     );
   }
