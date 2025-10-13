@@ -1,1 +1,493 @@
-<p>dashboard-superadmin works!</p>
+<div class="super-admin-dashboard-container main-content">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">Super Admin Dashboard</h1>
+      <p class="page-description">System-wide overview and management controls for QHealth platform.</p>
+    </div>
+    <div class="header-actions">
+      <div class="time-range-selector">
+        <select [(ngModel)]="selectedTimeRange" (change)="onTimeRangeChange(selectedTimeRange)" class="form-select">
+          <option value="24h">Last 24 Hours</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+          <option value="90d">Last 90 Days</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" (click)="navigateTo('/super-admin/system-settings')">
+        <i class="material-icons">settings</i>
+        System Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading system data...</p>
+    <small>Please wait while we retrieve comprehensive system information</small>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <div class="error-icon">
+      <i class="material-icons">error</i>
+    </div>
+    <h3>Error Loading Dashboard</h3>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="loadDashboardData()">
+      <i class="material-icons">refresh</i>
+      Retry
+    </button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && !error" class="dashboard-content">
+    <!-- System Overview Statistics -->
+    <div class="stats-section">
+      <h2 class="section-title">System Overview</h2>
+      <div class="stats-grid">
+        <!-- Organizations -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+            <i class="material-icons">business</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats?.totalOrganizations?.toLocaleString() || '0' }}</h3>
+            <p class="stat-label">Organizations</p>
+            <small class="stat-change positive">+2 this month</small>
+          </div>
+        </div>
+
+        <!-- Total Users -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="material-icons">people</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatNumber(stats?.totalUsers || 0) }}</h3>
+            <p class="stat-label">Total Users</p>
+            <small class="stat-change positive">+{{ formatNumber(stats?.recentStats?.users || 0) }} this month</small>
+          </div>
+        </div>
+
+        <!-- Doctors -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="material-icons">medical_services</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats?.totalDoctors?.toLocaleString() || '0' }}</h3>
+            <p class="stat-label">Doctors</p>
+            <small class="stat-change positive">+{{ formatNumber((stats?.totalDoctors || 0) - 120) }} this month</small>
+          </div>
+        </div>
+
+        <!-- Patients -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <i class="material-icons">person</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatNumber(stats?.totalPatients || 0) }}</h3>
+            <p class="stat-label">Patients</p>
+            <small class="stat-change positive">+{{ formatNumber(stats?.recentStats?.users || 0) }} this month</small>
+          </div>
+        </div>
+
+        <!-- Consultations -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+            <i class="material-icons">video_call</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatNumber(stats?.totalConsultations || 0) }}</h3>
+            <p class="stat-label">Consultations</p>
+            <small class="stat-change positive">+{{ formatNumber(stats?.recentStats?.consultations || 0) }} this month</small>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+            <i class="material-icons">attach_money</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ formatCurrency(stats?.totalRevenue || 0) }}</h3>
+            <p class="stat-label">Total Revenue</p>
+            <small class="stat-change positive">+12.5% this month</small>
+          </div>
+        </div>
+
+        <!-- Security Events -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+            <i class="material-icons">security</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats?.activeSecurityEvents || 0 }}</h3>
+            <p class="stat-label">Active Security Events</p>
+            <small class="stat-change warning">Requires attention</small>
+          </div>
+        </div>
+
+        <!-- System Uptime -->
+        <div class="stat-card">
+          <div class="stat-icon" style="background: linear-gradient(135deg, #6b7280, #4b5563);">
+            <i class="material-icons">schedule</i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stats?.systemUptime || '0d 0h 0m' }}</h3>
+            <p class="stat-label">System Uptime</p>
+            <small class="stat-change positive">99.9% availability</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-main">
+      <!-- System Health Monitoring -->
+      <div class="system-health-section">
+        <h2 class="section-title">System Health</h2>
+        <div class="health-metrics">
+          <div class="health-metric">
+                <div class="metric-header">
+                  <span class="metric-label">Server Status</span>
+                  <span class="metric-value" [class]="getSystemStatusClass(systemHealth?.serverStatus || 'offline')">
+                    {{ (systemHealth?.serverStatus || 'offline') | titlecase }}
+                  </span>
+                </div>
+                <div class="metric-bar">
+                  <div class="metric-fill" [class]="getSystemStatusClass(systemHealth?.serverStatus || 'offline')" 
+                       [style.width.%]="systemHealth?.serverStatus === 'online' ? 100 : systemHealth?.serverStatus === 'degraded' ? 75 : 0"></div>
+                </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Database Status</span>
+              <span class="metric-value" [class]="getSystemStatusClass(systemHealth?.databaseStatus || 'error')">
+                {{ (systemHealth?.databaseStatus || 'error') | titlecase }}
+              </span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" [class]="getSystemStatusClass(systemHealth?.databaseStatus || 'error')"
+                   [style.width.%]="systemHealth?.databaseStatus === 'healthy' ? 100 : systemHealth?.databaseStatus === 'slow' ? 75 : 0"></div>
+            </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">API Response Time</span>
+              <span class="metric-value" [class]="(systemHealth?.apiResponseTime || 0) > 200 ? 'status-warning' : 'status-success'">
+                {{ systemHealth?.apiResponseTime || 0 }}ms
+              </span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" [class]="(systemHealth?.apiResponseTime || 0) > 200 ? 'status-warning' : 'status-success'"
+                   [style.width.%]="getApiResponseTimeWidth()"></div>
+            </div>
+          </div>
+          
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Memory Usage</span>
+              <span class="metric-value" [class]="(systemHealth?.memoryUsage || 0) > 80 ? 'status-warning' : (systemHealth?.memoryUsage || 0) > 90 ? 'status-error' : 'status-success'">
+                {{ systemHealth?.memoryUsage || 0 }}%
+              </span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" [class]="(systemHealth?.memoryUsage || 0) > 80 ? 'status-warning' : (systemHealth?.memoryUsage || 0) > 90 ? 'status-error' : 'status-success'"
+                   [style.width.%]="systemHealth?.memoryUsage || 0"></div>
+            </div>
+          </div>
+
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">CPU Usage</span>
+              <span class="metric-value" [class]="(systemHealth?.cpuUsage || 0) > 70 ? 'status-warning' : (systemHealth?.cpuUsage || 0) > 90 ? 'status-error' : 'status-success'">
+                {{ systemHealth?.cpuUsage || 0 }}%
+              </span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill" [class]="(systemHealth?.cpuUsage || 0) > 70 ? 'status-warning' : (systemHealth?.cpuUsage || 0) > 90 ? 'status-error' : 'status-success'"
+                   [style.width.%]="systemHealth?.cpuUsage || 0"></div>
+            </div>
+          </div>
+
+          <div class="health-metric">
+            <div class="metric-header">
+              <span class="metric-label">Active Connections</span>
+              <span class="metric-value status-success">{{ systemHealth?.activeConnections || 0 }}</span>
+            </div>
+            <div class="metric-bar">
+              <div class="metric-fill status-success" [style.width.%]="getActiveConnectionsWidth()"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Events -->
+      <div class="security-events-section">
+        <div class="section-header">
+          <h2 class="section-title">Security Events</h2>
+          <button class="btn btn-text" (click)="navigateTo('/super-admin/security-center')">
+            View All
+            <i class="material-icons">arrow_forward</i>
+          </button>
+        </div>
+        
+        <div class="security-events-list">
+          <div 
+            *ngFor="let event of securityEvents" 
+            class="security-event-item"
+            [class]="getSeverityClass(event.severity)"
+          >
+            <div class="event-icon" [style.color]="getSeverityColor(event.severity)">
+              <i class="material-icons">security</i>
+            </div>
+            <div class="event-content">
+                  <div class="event-header">
+                    <h4 class="event-type">{{ event.eventType.replace('_', ' ') | titlecase }}</h4>
+                    <span class="event-severity" [class]="getSeverityClass(event.severity)">
+                      {{ event.severity }}
+                    </span>
+                  </div>
+                  <p class="event-description">{{ event.description }}</p>
+                  <div class="event-meta">
+                    <span class="event-ip">{{ event.ipAddress }}</span>
+                    <span class="event-time">{{ formatTimeAgo(event.timestamp) }}</span>
+                  </div>
+            </div>
+            <div class="event-actions">
+              <button 
+                *ngIf="!event.resolved" 
+                class="btn btn-sm btn-outline"
+                (click)="resolveSecurityEvent(event.id)"
+              >
+                Resolve
+              </button>
+              <span *ngIf="event.resolved" class="resolved-badge">Resolved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="quick-actions-section">
+      <h2 class="section-title">Quick Actions</h2>
+      
+      <!-- System Management -->
+      <div class="quick-actions-category">
+        <h3 class="category-title">System Management</h3>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of getQuickActionsByCategory('system')" 
+            class="quick-action-card"
+            (click)="navigateTo(action.route)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon" [style.background-color]="action.color">
+              <i class="material-icons">{{ action.icon }}</i>
+            </div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Management -->
+      <div class="quick-actions-category">
+        <h3 class="category-title">User Management</h3>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of getQuickActionsByCategory('users')" 
+            class="quick-action-card"
+            (click)="navigateTo(action.route)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon" [style.background-color]="action.color">
+              <i class="material-icons">{{ action.icon }}</i>
+            </div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organization Management -->
+      <div class="quick-actions-category">
+        <h3 class="category-title">Organization Management</h3>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of getQuickActionsByCategory('organizations')" 
+            class="quick-action-card"
+            (click)="navigateTo(action.route)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon" [style.background-color]="action.color">
+              <i class="material-icons">{{ action.icon }}</i>
+            </div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Management -->
+      <div class="quick-actions-category">
+        <h3 class="category-title">Security Management</h3>
+        <div class="quick-actions-grid">
+          <div 
+            *ngFor="let action of getQuickActionsByCategory('security')" 
+            class="quick-action-card"
+            (click)="navigateTo(action.route)"
+            [style.--action-color]="action.color"
+          >
+            <div class="action-icon" [style.background-color]="action.color">
+              <i class="material-icons">{{ action.icon }}</i>
+            </div>
+            <div class="action-content">
+              <h3 class="action-title">{{ action.title }}</h3>
+              <p class="action-description">{{ action.description }}</p>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Organizations Overview -->
+    <div class="organizations-section">
+      <div class="section-header">
+        <h2 class="section-title">Organizations Overview</h2>
+        <button class="btn btn-text" (click)="navigateTo('/super-admin/organization-management')">
+          Manage All
+          <i class="material-icons">arrow_forward</i>
+        </button>
+      </div>
+      
+      <div class="organizations-grid">
+        <div 
+          *ngFor="let org of organizations" 
+          class="organization-card"
+          [class.inactive]="!org.isActive"
+        >
+          <div class="org-header">
+            <div class="org-info">
+              <h3 class="org-name">{{ org.name }}</h3>
+              <span class="org-status" [class]="org.isActive ? 'status-active' : 'status-inactive'">
+                {{ org.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="org-activity">
+              <small>Last activity: {{ formatTimeAgo(org.lastActivity) }}</small>
+            </div>
+          </div>
+          
+          <div class="org-stats">
+            <div class="org-stat">
+              <span class="stat-number">{{ org.userCount }}</span>
+              <span class="stat-label">Users</span>
+            </div>
+            <div class="org-stat">
+              <span class="stat-number">{{ org.doctorCount }}</span>
+              <span class="stat-label">Doctors</span>
+            </div>
+            <div class="org-stat">
+              <span class="stat-number">{{ org.patientCount }}</span>
+              <span class="stat-label">Patients</span>
+            </div>
+            <div class="org-stat">
+              <span class="stat-number">{{ org.consultationCount }}</span>
+              <span class="stat-label">Consultations</span>
+            </div>
+          </div>
+          
+          <div class="org-actions">
+            <button class="btn btn-sm btn-outline" (click)="navigateTo('/super-admin/organization-management/' + org.id)">
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="recent-activities-section">
+      <div class="section-header">
+        <h2 class="section-title">Recent System Activities</h2>
+        <button class="btn btn-text" (click)="navigateTo('/super-admin/audit-logs')">
+          View All Logs
+          <i class="material-icons">arrow_forward</i>
+        </button>
+      </div>
+      
+      <div class="activities-list">
+        <div 
+          *ngFor="let activity of recentActivities" 
+          class="activity-item"
+          [class]="getSeverityClass(activity.severity)"
+        >
+          <div class="activity-icon" [style.color]="getSeverityColor(activity.severity)">
+            <i class="material-icons">{{ getActivityIcon(activity.type) }}</i>
+          </div>
+          <div class="activity-content">
+            <p class="activity-description">{{ activity.description }}</p>
+                <div class="activity-meta">
+                  <span class="activity-time">{{ formatTimeAgo(activity.timestamp) }}</span>
+                  <span *ngIf="activity.userId" class="activity-user">User ID: {{ activity.userId }}</span>
+                  <span *ngIf="activity.resourceId" class="activity-org">Resource: {{ activity.resourceId }}</span>
+                </div>
+          </div>
+          <div class="activity-severity">
+            <span class="severity-badge" [class]="getSeverityClass(activity.severity)">
+              {{ activity.severity }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Information Footer -->
+    <div class="system-info-footer">
+      <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Database Size:</span>
+              <span class="info-value">{{ stats?.databaseSize || '0 MB' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">API Requests Today:</span>
+              <span class="info-value">{{ formatNumber(stats?.apiRequestsToday || 0) }}</span>
+            </div>
+        <div class="info-item">
+          <span class="info-label">System Version:</span>
+          <span class="info-value">v2.1.0</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Last Backup:</span>
+          <span class="info-value">{{ getLastBackupTime() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

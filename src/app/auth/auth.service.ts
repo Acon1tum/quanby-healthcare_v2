@@ -565,7 +565,7 @@ export class AuthService {
 
     switch (user.role) {
       case 'SUPER_ADMIN':
-        this.router.navigate(['/admin/dashboard']); // Super admin uses admin dashboard
+        this.router.navigate(['/super-admin/dashboard']);
         break;
       case 'ADMIN':
         this.router.navigate(['/admin/dashboard']);

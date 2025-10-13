@@ -1,24 +1,24 @@
 @use "sass:color";
 
-// Organization Management Color Palette
-$primary-color: #2c3e50;
-$secondary-color: #34495e;
-$accent-color: #3498db;
-$success-color: #27ae60;
-$warning-color: #f39c12;
-$danger-color: #e74c3c;
-$info-color: #5dade2;
+// Organization Management Color Palette - Simplified to match other pages
+$primary-color: #111827;
+$secondary-color: #374151;
+$accent-color: #3b82f6;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #3b82f6;
 
-$text-primary: #2c3e50;
-$text-secondary: #7f8c8d;
-$text-muted: #95a5a6;
+$text-primary: #111827;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
 
 $background-primary: #ffffff;
-$background-secondary: #f8f9fa;
-$background-tertiary: #ecf0f1;
+$background-secondary: #f8fafc;
+$background-tertiary: #f3f4f6;
 
-$border-color: #e9ecef;
-$border-light: #f1f3f4;
+$border-color: #e5e7eb;
+$border-light: #f3f4f6;
 $shadow-light: rgba(0, 0, 0, 0.05);
 $shadow-medium: rgba(0, 0, 0, 0.1);
 

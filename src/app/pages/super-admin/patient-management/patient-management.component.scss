@@ -12,22 +12,22 @@
   }
   .toast { 
     background: #fff; 
-    border: 1px solid #e9ecef; 
-    border-left: 4px solid #3498db; 
+    border: 1px solid #e5e7eb; 
+    border-left: 4px solid #3b82f6; 
     padding: .5rem .75rem; 
     border-radius: 6px; 
     box-shadow: 0 4px 16px rgba(0,0,0,.08); 
     min-width: 220px; 
   }
-  .toast.success { border-left-color: #27ae60; }
-  .toast.error { border-left-color: #e74c3c; }
+  .toast.success { border-left-color: #10b981; }
+  .toast.error { border-left-color: #ef4444; }
 
   .content-card { 
     background: #fff; 
-    border: 1px solid #e9ecef; 
+    border: 1px solid #e5e7eb; 
     border-radius: 12px; 
     padding: 24px; 
-    box-shadow: 0 2px 8px rgba(0,0,0,.05); 
+    box-shadow: 0 1px 3px rgba(0,0,0,.1); 
   }
   .card-header { 
     display: flex; 
@@ -35,12 +35,12 @@
     align-items: center; 
     margin-bottom: 16px; 
     padding-bottom: 12px; 
-    border-bottom: 1px solid #f1f3f4; 
+    border-bottom: 1px solid #e5e7eb; 
   }
   .text-button { 
     background: none; 
     border: none; 
-    color: #3498db; 
+    color: #3b82f6; 
     cursor: pointer; 
     padding: 6px 10px; 
     border-radius: 6px; 
@@ -75,7 +75,7 @@
   .search-input input { 
     width: 100%; 
     padding: 10px 12px 10px 40px; 
-    border: 1px solid #e9ecef; 
+    border: 1px solid #e5e7eb; 
     border-radius: 8px; 
     font-size: 14px;
     
@@ -91,7 +91,7 @@
     select {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #e5e7eb;
       border-radius: 8px;
       font-size: 14px;
       background: #fff;
@@ -134,10 +134,10 @@
 
   .patients-table-wrapper { 
     background: #fff; 
-    border: 1px solid #e9ecef; 
+    border: 1px solid #e5e7eb; 
     border-radius: 12px; 
     overflow: hidden; 
-    box-shadow: 0 2px 8px rgba(0,0,0,.05); 
+    box-shadow: 0 1px 3px rgba(0,0,0,.1); 
   }
   .patients-table { 
     width: 100%; 
@@ -145,7 +145,7 @@
   }
   .patients-table th, .patients-table td { 
     padding: 12px 16px; 
-    border-bottom: 1px solid #f1f3f4; 
+    border-bottom: 1px solid #e5e7eb; 
     text-align: left; 
   }
   .patients-table thead { 
@@ -183,7 +183,7 @@
     transition: background-color 0.2s;
     
     &.edit-btn {
-      color: #3498db;
+      color: #3b82f6;
       
       &:hover {
         background-color: #e3f2fd;
@@ -208,7 +208,7 @@
     
     button {
       padding: 8px 16px;
-      border: 1px solid #e9ecef;
+      border: 1px solid #e5e7eb;
       background: #fff;
       border-radius: 6px;
       cursor: pointer;
@@ -242,7 +242,7 @@
   }
   .secondary-button { 
     background: #fff; 
-    color: #3498db; 
+    color: #3b82f6; 
     border: 1px solid #3498db; 
     padding: .5rem .75rem; 
     border-radius: 6px; 
@@ -282,7 +282,7 @@
     justify-content: space-between; 
     align-items: center; 
     padding: 20px; 
-    border-bottom: 1px solid #f1f3f4; 
+    border-bottom: 1px solid #e5e7eb; 
     
     h2 {
       margin: 0;
@@ -321,7 +321,7 @@
   .form-section {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid #f1f3f4;
+    border-bottom: 1px solid #e5e7eb;
     
     &:last-child {
       border-bottom: none;
@@ -360,7 +360,7 @@
     
     input, textarea, select {
       padding: 0.75rem;
-      border: 1px solid #e9ecef;
+      border: 1px solid #e5e7eb;
       border-radius: 6px;
       font-size: 14px;
       transition: border-color 0.2s, box-shadow 0.2s;
