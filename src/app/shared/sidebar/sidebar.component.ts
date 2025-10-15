@@ -80,12 +80,6 @@ export class SidebarComponent implements OnInit {
             route: '/super-admin/reports'
           },
           
-          {
-            label: 'Settings',
-            icon: 'settings',
-            route: '/super-admin/settings'
-          },
-          
         ];
       case 'ADMIN':
         return [

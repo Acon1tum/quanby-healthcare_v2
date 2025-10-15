@@ -14,7 +14,6 @@ import { DoctorManagementComponent as DoctorManagementSuperadminComponent } from
 import { PatientManagementComponent as PatientManagementSuperadminComponent } from './pages/super-admin/patient-management/patient-management.component';
 import { AuditLogsSuperadminComponent } from './pages/super-admin/audit-logs-superadmin/audit-logs-superadmin.component';
 import { ReportsSuperadminComponent } from './pages/super-admin/reports-superadmin/reports-superadmin.component';
-import { SettingsComponent } from './pages/super-admin/settings/settings.component';
 
 
 // Admin Components
@@ -80,7 +79,6 @@ export const appRoutes: Routes = [
           { path: 'patient-management', component: PatientManagementSuperadminComponent },
           { path: 'audit-logs', component: AuditLogsSuperadminComponent },
           { path: 'reports', component: ReportsSuperadminComponent },
-          { path: 'settings', component: SettingsComponent }
         ]
       },
       // Admin Routes - Protected with admin role requirement

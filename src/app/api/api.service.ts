@@ -364,4 +364,67 @@ export class ApiService {
       { headers: this.authService.getAuthHeaders() }
     );
   }
+
+  // ===== SUPER ADMIN API METHODS =====
+
+  // Get system statistics
+  getSystemStatistics(timeRange: string = '30d'): Observable<{ success: boolean; data: any }> {
+    return this.http.get<{ success: boolean; data: any }>(
+      `${environment.backendApi}/super-admin/statistics?timeRange=${timeRange}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get system health
+  getSystemHealth(): Observable<{ success: boolean; data: any }> {
+    return this.http.get<{ success: boolean; data: any }>(
+      `${environment.backendApi}/super-admin/health`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get organizations with statistics
+  getOrganizationsWithStats(): Observable<{ success: boolean; data: any[] }> {
+    return this.http.get<{ success: boolean; data: any[] }>(
+      `${environment.backendApi}/super-admin/organizations`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get recent activities
+  getRecentActivities(limit: number = 20): Observable<{ success: boolean; data: any[] }> {
+    return this.http.get<{ success: boolean; data: any[] }>(
+      `${environment.backendApi}/super-admin/activities?limit=${limit}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get user statistics
+  getUserStatistics(timeRange: string = '30d'): Observable<{ success: boolean; data: any }> {
+    return this.http.get<{ success: boolean; data: any }>(
+      `${environment.backendApi}/super-admin/users/statistics?timeRange=${timeRange}`,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Get security events (super admin endpoint)
+  getSuperAdminSecurityEvents(limit: number = 10, resolved?: boolean): Observable<{ success: boolean; data: any[] }> {
+    let url = `${environment.backendApi}/super-admin/security/events?limit=${limit}`;
+    if (resolved !== undefined) {
+      url += `&resolved=${resolved}`;
+    }
+    return this.http.get<{ success: boolean; data: any[] }>(
+      url,
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
+
+  // Resolve security event (super admin endpoint)
+  resolveSuperAdminSecurityEvent(eventId: string, resolutionNotes: string): Observable<{ success: boolean; data: any; message: string }> {
+    return this.http.patch<{ success: boolean; data: any; message: string }>(
+      `${environment.backendApi}/super-admin/security/events/${eventId}/resolve`,
+      { resolutionNotes },
+      { headers: this.authService.getAuthHeaders() }
+    );
+  }
 }

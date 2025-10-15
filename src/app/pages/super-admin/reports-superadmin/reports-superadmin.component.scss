@@ -1,0 +1,315 @@
+.reports-container {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+// Loading animation
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Report card hover effects
+.report-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+// Category button styling
+.category-button {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.category-button:hover {
+  background-color: #f8fafc;
+  transform: translateX(4px);
+}
+
+.category-button.active {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.category-button.active::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #3b82f6;
+  border-radius: 0 2px 2px 0;
+}
+
+// Format selection buttons
+.format-button {
+  transition: all 0.2s ease;
+  border-width: 2px;
+}
+
+.format-button:hover {
+  border-color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
+.format-button.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+// Filter section animation
+.filter-section {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.filter-section.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.filter-section.expanded {
+  max-height: 500px;
+  opacity: 1;
+}
+
+// Preview section styling
+.preview-section {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Table styling
+.report-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.report-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.report-table td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.report-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+// Stats cards
+.stats-card {
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.stats-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+// Icon styling
+.icon-container {
+  transition: all 0.2s ease;
+}
+
+.stats-card:hover .icon-container {
+  transform: scale(1.1);
+}
+
+// Button styling
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  transition: all 0.2s ease;
+  border-color: #d1d5db;
+}
+
+.btn-secondary:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+}
+
+// Report history item
+.report-history-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.report-history-item:hover {
+  background-color: #f8fafc;
+  border-left-color: #3b82f6;
+  transform: translateX(4px);
+}
+
+// Empty state
+.empty-state {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .reports-container {
+    padding: 1rem;
+  }
+  
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .lg\:col-span-2 {
+    grid-column: span 1;
+  }
+  
+  .lg\:col-span-1 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+// Focus styles for accessibility
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .stats-card,
+  .report-card,
+  .category-button {
+    border: 2px solid currentColor;
+  }
+  
+  .btn-primary {
+    border: 2px solid #ffffff;
+  }
+  
+  .btn-secondary {
+    border: 2px solid currentColor;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+  
+  .report-card,
+  .category-button,
+  .format-button,
+  .stats-card,
+  .btn-primary,
+  .btn-secondary,
+  .report-history-item {
+    transition: none;
+  }
+  
+  .filter-section,
+  .preview-section,
+  .empty-state {
+    animation: none;
+  }
+  
+  .report-card:hover,
+  .stats-card:hover {
+    transform: none;
+  }
+  
+  .category-button:hover,
+  .report-history-item:hover {
+    transform: none;
+  }
+}
