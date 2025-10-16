@@ -333,4 +333,10 @@ export class PatientManagementComponent implements OnInit {
     }
     return age.toString();
   }
+
+  formatContactNumber(contactNumber: string | undefined): string {
+    if (!contactNumber) return '—';
+    // Remove all dashes from the contact number
+    return contactNumber.replace(/-/g, '');
+  }
 }

@@ -2,6 +2,7 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 // Header Section
@@ -12,6 +13,7 @@
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #e5e7eb;
+  transition: border-bottom-color 0.3s ease;
   
   .header-content {
     flex: 1;
@@ -21,6 +23,7 @@
       font-weight: 700;
       color: #1f2937;
       margin: 0 0 0.5rem 0;
+      transition: color 0.3s ease;
     }
     
     .page-description {
@@ -28,6 +31,7 @@
       margin: 0;
       font-size: 1rem;
       line-height: 1.5;
+      transition: color 0.3s ease;
     }
   }
   
@@ -46,6 +50,7 @@
     font-weight: 600;
     color: #1f2937;
     margin: 0 0 1.5rem 0;
+    transition: color 0.3s ease;
   }
   
   .report-types-grid {
@@ -59,7 +64,7 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       padding: 1.5rem;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
       border: 2px solid transparent;
       
       &:hover {
@@ -90,6 +95,7 @@
           font-weight: 600;
           color: #1f2937;
           margin: 0 0 0.5rem 0;
+          transition: color 0.3s ease;
         }
         
         .report-type-description {
@@ -97,6 +103,7 @@
           margin: 0 0 1rem 0;
           line-height: 1.5;
           font-size: 0.9rem;
+          transition: color 0.3s ease;
         }
         
         .report-type-stats {
@@ -107,6 +114,7 @@
             color: #3b82f6;
             font-size: 0.875rem;
             font-weight: 500;
+            transition: color 0.3s ease;
             
             i {
               font-size: 1rem;
@@ -147,6 +155,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     
     .stat-icon {
       width: 50px;
@@ -169,6 +178,7 @@
         font-weight: 700;
         color: #1f2937;
         margin: 0 0 0.25rem 0;
+        transition: color 0.3s ease;
       }
       
       .stat-label {
@@ -176,6 +186,7 @@
         margin: 0;
         font-size: 0.875rem;
         font-weight: 500;
+        transition: color 0.3s ease;
       }
     }
   }
@@ -188,12 +199,14 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   margin-bottom: 2rem;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
   
   .section-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: #1f2937;
     margin: 0 0 1.5rem 0;
+    transition: color 0.3s ease;
   }
   
   .filter-form {
@@ -215,6 +228,7 @@
         color: #374151;
         margin-bottom: 0.5rem;
         font-size: 0.875rem;
+        transition: color 0.3s ease;
       }
       
       .form-control {
@@ -223,7 +237,7 @@
         border: 2px solid #d1d5db;
         border-radius: 8px;
         font-size: 1rem;
-        transition: border-color 0.3s ease;
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         
         &:focus {
           outline: none;
@@ -245,6 +259,7 @@
             transform: translateY(-50%);
             color: #9ca3af;
             font-size: 1.2rem;
+            transition: color 0.3s ease;
           }
           
           .search-input {
@@ -274,12 +289,14 @@
       font-weight: 600;
       color: #1f2937;
       margin: 0;
+      transition: color 0.3s ease;
     }
     
     .reports-count {
       color: #6b7280;
       margin: 0;
       font-size: 0.875rem;
+      transition: color 0.3s ease;
     }
   }
   
@@ -305,6 +322,7 @@
       color: #6b7280;
       font-size: 1.1rem;
       margin: 0;
+      transition: color 0.3s ease;
     }
   }
   
@@ -313,6 +331,7 @@
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     
     .reports-table {
       width: 100%;
@@ -328,12 +347,14 @@
         font-size: 0.875rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        transition: background-color 0.3s ease, color 0.3s ease, border-bottom-color 0.3s ease;
       }
       
       td {
         padding: 1rem;
         border-bottom: 1px solid #f3f4f6;
         vertical-align: top;
+        transition: border-bottom-color 0.3s ease;
       }
       
       .report-row {
@@ -353,6 +374,7 @@
         
         strong {
           color: #1f2937;
+          transition: color 0.3s ease;
         }
       }
       
@@ -404,6 +426,7 @@
         color: #6b7280;
         font-size: 0.875rem;
         line-height: 1.4;
+        transition: color 0.3s ease;
       }
       
       .report-status {
@@ -460,17 +483,20 @@
         color: #6b7280;
         font-size: 0.875rem;
         font-weight: 500;
+        transition: color 0.3s ease;
       }
       
       .report-date {
         color: #6b7280;
         font-size: 0.875rem;
+        transition: color 0.3s ease;
       }
       
       .report-author {
         color: #374151;
         font-size: 0.875rem;
         font-weight: 500;
+        transition: color 0.3s ease;
       }
       
       .report-actions {
@@ -499,12 +525,14 @@
       color: #6b7280;
       margin: 0 0 0.5rem 0;
       font-size: 1.25rem;
+      transition: color 0.3s ease;
     }
     
     p {
       color: #9ca3af;
       margin: 0;
       font-size: 0.875rem;
+      transition: color 0.3s ease;
     }
   }
 }
@@ -531,6 +559,7 @@
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     
     .modal-header {
       display: flex;
@@ -538,12 +567,14 @@
       align-items: center;
       padding: 1.5rem;
       border-bottom: 2px solid #f3f4f6;
+      transition: border-bottom-color 0.3s ease;
       
       h2 {
         margin: 0;
         color: #1f2937;
         font-size: 1.5rem;
         font-weight: 600;
+        transition: color 0.3s ease;
       }
     }
     
@@ -564,6 +595,7 @@
           margin: 0 0 1rem 0;
           padding-bottom: 0.5rem;
           border-bottom: 1px solid #e5e7eb;
+          transition: color 0.3s ease, border-bottom-color 0.3s ease;
         }
         
         .detail-grid {
@@ -580,11 +612,13 @@
               font-size: 0.875rem;
               text-transform: uppercase;
               letter-spacing: 0.05em;
+              transition: color 0.3s ease;
             }
             
             span {
               color: #1f2937;
               font-size: 0.875rem;
+              transition: color 0.3s ease;
             }
           }
         }
@@ -593,6 +627,7 @@
           color: #6b7280;
           line-height: 1.6;
           margin: 0;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -603,6 +638,7 @@
       gap: 1rem;
       padding: 1.5rem;
       border-top: 2px solid #f3f4f6;
+      transition: border-top-color 0.3s ease;
     }
   }
 }
@@ -691,6 +727,323 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .reports-container {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* Header Section Dark Mode */
+  .header-section {
+    border-bottom-color: #334155;
+
+    .header-content {
+      .page-title {
+        color: #f1f5f9;
+      }
+
+      .page-description {
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  /* Report Types Section Dark Mode */
+  .report-types-section {
+    .section-title {
+      color: #f1f5f9;
+    }
+
+    .report-types-grid {
+      .report-type-card {
+        background: #1e293b;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        border-color: #334155;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          border-color: #60a5fa;
+        }
+
+        .report-type-icon {
+          background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .report-type-content {
+          .report-type-title {
+            color: #f1f5f9;
+          }
+
+          .report-type-description {
+            color: #cbd5e1;
+          }
+
+          .report-type-stats {
+            .stat-item {
+              color: #60a5fa;
+            }
+          }
+        }
+
+        .report-type-action {
+          i {
+            color: #64748b;
+
+            &:hover {
+              color: #60a5fa;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Summary Statistics Dark Mode */
+  .summary-stats {
+    .stat-card {
+      background: #1e293b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      .stat-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      .stat-content {
+        .stat-value {
+          color: #f1f5f9;
+        }
+
+        .stat-label {
+          color: #cbd5e1;
+        }
+      }
+    }
+  }
+
+  /* Filters Section Dark Mode */
+  .filters-section {
+    background: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .section-title {
+      color: #f1f5f9;
+    }
+
+    .filter-form {
+      .form-group {
+        label {
+          color: #cbd5e1;
+        }
+
+        .form-control {
+          background-color: #334155;
+          border-color: #475569;
+          color: #f1f5f9;
+
+          &:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+          }
+        }
+
+        &.search-group {
+          .search-input-wrapper {
+            .search-icon {
+              color: #94a3b8;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Reports Section Dark Mode */
+  .reports-section {
+    .reports-header {
+      .section-title {
+        color: #f1f5f9;
+      }
+
+      .reports-count {
+        color: #cbd5e1;
+      }
+    }
+
+    .loading-state {
+      .spinner {
+        border-color: #334155;
+        border-top-color: #60a5fa;
+      }
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+
+    .reports-table-container {
+      background: #1e293b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      .reports-table {
+        th {
+          background: #334155;
+          color: #cbd5e1;
+          border-bottom-color: #475569;
+        }
+
+        td {
+          border-bottom-color: #334155;
+        }
+
+        .report-row {
+          &:hover {
+            background-color: #334155;
+          }
+        }
+
+        .report-name {
+          strong {
+            color: #f1f5f9;
+          }
+        }
+
+        .report-type {
+          .type-badge {
+            &.type-patient {
+              background: #1e3a8a;
+              color: #93c5fd;
+            }
+
+            &.type-doctor {
+              background: #064e3b;
+              color: #6ee7b7;
+            }
+
+            &.type-consultation {
+              background: #78350f;
+              color: #fbbf24;
+            }
+
+            &.type-financial {
+              background: #831843;
+              color: #f9a8d4;
+            }
+
+            &.type-system {
+              background: #312e81;
+              color: #c7d2fe;
+            }
+          }
+        }
+
+        .report-description {
+          color: #cbd5e1;
+        }
+
+        .report-status {
+          .status-badge {
+            &.status-ready {
+              background: #064e3b;
+              color: #6ee7b7;
+            }
+
+            &.status-generating {
+              background: #78350f;
+              color: #fbbf24;
+            }
+
+            &.status-failed {
+              background: #7f1d1d;
+              color: #fca5a5;
+            }
+          }
+        }
+
+        .report-format {
+          .format-badge {
+            background: #334155;
+            color: #cbd5e1;
+          }
+        }
+
+        .report-size {
+          color: #cbd5e1;
+        }
+
+        .report-date {
+          color: #cbd5e1;
+        }
+
+        .report-author {
+          color: #f1f5f9;
+        }
+      }
+    }
+
+    .empty-state {
+      i {
+        color: #64748b;
+      }
+
+      h3 {
+        color: #f1f5f9;
+      }
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  /* Modal Dark Mode */
+  .modal-overlay {
+    .modal {
+      background: #1e293b;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+
+      .modal-header {
+        border-bottom-color: #334155;
+
+        h2 {
+          color: #f1f5f9;
+        }
+      }
+
+      .modal-content {
+        .detail-section {
+          h3 {
+            color: #f1f5f9;
+            border-bottom-color: #334155;
+          }
+
+          .detail-grid {
+            .detail-item {
+              label {
+                color: #cbd5e1;
+              }
+
+              span {
+                color: #f1f5f9;
+              }
+            }
+          }
+
+          p {
+            color: #cbd5e1;
+          }
+        }
+      }
+
+      .modal-actions {
+        border-top-color: #334155;
+      }
+    }
+  }
 }
 
 // Responsive Design

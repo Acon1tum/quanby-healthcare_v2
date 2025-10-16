@@ -165,4 +165,10 @@ export class DoctorManagementComponent implements OnInit {
     const { firstName, middleName, lastName } = doctor.doctorInfo;
     return `${firstName}${middleName ? ' ' + middleName : ''} ${lastName}`.trim();
   }
+
+  formatContactNumber(contactNumber: string | undefined): string {
+    if (!contactNumber) return '—';
+    // Remove all dashes from the contact number
+    return contactNumber.replace(/-/g, '');
+  }
 }

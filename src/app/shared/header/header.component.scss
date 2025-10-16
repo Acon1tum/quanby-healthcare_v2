@@ -6,7 +6,7 @@ header {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9999; /* Ensure highest z-index */
+  z-index: 1000; /* Lower z-index to stay below sidebar */
   width: 100%;
   box-sizing: border-box;
   /* Ensure header stays on top during scroll */
@@ -16,12 +16,13 @@ header {
 
 /* Header with sidebar - adjust width and position */
 header.with-sidebar {
-  left: 280px; /* Adjust for sidebar width */
-  width: calc(100% - 280px); /* Subtract sidebar width */
+  left: 265px; /* Adjust for sidebar width */
+  width: calc(100% - 265px); /* Subtract sidebar width */
   
   @media (max-width: 1024px) {
     left: 0;
     width: 100%;
+    z-index: 1001; /* Higher z-index on mobile when sidebar is hidden */
   }
 }
 
@@ -222,7 +223,7 @@ header.logged-in .hidden.lg\:flex {
 /* Ensure proper z-index stacking */
 .mobile-sidebar-dropdown,
 .mobile-profile-dropdown {
-  z-index: 60;
+  z-index: 1002; /* Higher than sidebar to show dropdowns */
 }
 
 /* Enhanced shadow when modal is open */
@@ -293,6 +294,7 @@ body.modal-open header {
   overflow: hidden;
   min-width: 280px;
   max-width: 380px;
+  z-index: 1002; /* Higher than sidebar to show dropdowns */
   
   /* Prevent overflow on small screens */
   @media (max-width: 1024px) {
@@ -360,4 +362,324 @@ body.modal-open header {
 .notification-dropdown .max-h-96::-webkit-scrollbar-thumb:hover,
 .notification-dropdown .max-h-80::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Dark Mode Styles for Header */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  /* Header background and border */
+  header {
+    background-color: rgba(30, 41, 59, 0.95) !important;
+    border-bottom-color: rgba(51, 65, 85, 0.6) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Logo section */
+  .logo-img {
+    filter: brightness(0) invert(1);
+  }
+
+  /* Mobile sidebar button */
+  .mobile-sidebar-button {
+    color: #f1f5f9 !important;
+    
+    &:hover {
+      background-color: rgba(51, 65, 85, 0.5) !important;
+    }
+  }
+
+  /* Mobile sidebar dropdown */
+  .mobile-sidebar-dropdown {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Mobile sidebar header */
+  .mobile-sidebar-dropdown .px-4.py-2 {
+    border-bottom-color: #334155 !important;
+  }
+
+  /* Navigation links in mobile sidebar */
+  .mobile-sidebar-dropdown a {
+    color: #cbd5e1 !important;
+    
+    &:hover {
+      background-color: #334155 !important;
+    }
+    
+    &.active {
+      background-color: #1e40af !important;
+      color: #f1f5f9 !important;
+    }
+  }
+
+  /* Mobile sidebar buttons */
+  .mobile-sidebar-dropdown button {
+    color: #cbd5e1 !important;
+    
+    &:hover {
+      background-color: #334155 !important;
+    }
+  }
+
+  /* Desktop navigation */
+  .hidden.lg\\:flex nav a {
+    color: #94a3b8 !important;
+    
+    &:hover {
+      color: #f1f5f9 !important;
+    }
+  }
+
+  /* User profile section */
+  .flex.items-center.gap-6 {
+    .text-right p {
+      color: #f1f5f9 !important;
+    }
+    
+    .text-right p:last-child {
+      color: #94a3b8 !important;
+    }
+  }
+
+  /* Profile button hover */
+  .flex.items-center.gap-3:hover {
+    background-color: rgba(51, 65, 85, 0.5) !important;
+  }
+
+  /* Buttons */
+  button {
+    &.bg-transparent {
+      border-color: #3b82f6 !important;
+      color: #f1f5f9 !important;
+      
+      &:hover {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+      }
+    }
+    
+    &.bg-sky-500 {
+      background-color: #3b82f6 !important;
+      
+      &:hover {
+        background-color: #2563eb !important;
+      }
+    }
+  }
+
+  /* Mobile profile button */
+  .mobile-profile-button {
+    color: #f1f5f9 !important;
+    
+    &:hover {
+      background-color: rgba(51, 65, 85, 0.5) !important;
+    }
+  }
+
+  /* Mobile profile dropdown */
+  .mobile-profile-dropdown {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Profile dropdown header */
+  .mobile-profile-dropdown .px-4.py-2 {
+    border-bottom-color: #334155 !important;
+    
+    p {
+      color: #f1f5f9 !important;
+    }
+    
+    p:last-child {
+      color: #94a3b8 !important;
+    }
+  }
+
+  /* Profile dropdown buttons */
+  .mobile-profile-dropdown button {
+    color: #cbd5e1 !important;
+    
+    &:hover {
+      background-color: #334155 !important;
+    }
+    
+    &.text-red-600 {
+      color: #f87171 !important;
+      
+      &:hover {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+      }
+    }
+  }
+
+  /* Mobile menu overlay */
+  .mobile-menu-overlay {
+    background-color: #1e293b !important;
+  }
+
+  /* Mobile menu content */
+  .mobile-menu-content {
+    background-color: #1e293b !important;
+  }
+
+  /* Mobile navigation links */
+  .mobile-nav-link {
+    color: #cbd5e1 !important;
+    
+    &:hover {
+      color: #f1f5f9 !important;
+      background-color: rgba(51, 65, 85, 0.5) !important;
+    }
+  }
+
+  /* Mobile buttons in menu */
+  .mobile-menu-content button {
+    &.bg-transparent {
+      border-color: #3b82f6 !important;
+      color: #f1f5f9 !important;
+      
+      &:hover {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+      }
+    }
+    
+    &.bg-sky-500 {
+      background-color: #3b82f6 !important;
+      
+      &:hover {
+        background-color: #2563eb !important;
+      }
+    }
+  }
+
+  /* Mobile profile section in menu */
+  .mobile-menu-content .bg-gray-50 {
+    background-color: #334155 !important;
+    
+    &:hover {
+      background-color: #475569 !important;
+    }
+    
+    p {
+      color: #f1f5f9 !important;
+    }
+    
+    p:last-child {
+      color: #94a3b8 !important;
+    }
+  }
+
+  /* Notification button */
+  .notification-button {
+    &:hover {
+      background-color: rgba(51, 65, 85, 0.5) !important;
+    }
+  }
+
+  /* Notification dropdown */
+  .notification-dropdown {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Notification dropdown header */
+  .notification-dropdown .px-4.py-3 {
+    border-bottom-color: #334155 !important;
+    
+    h3 {
+      color: #f1f5f9 !important;
+    }
+    
+    .bg-sky-100 {
+      background-color: rgba(59, 130, 246, 0.2) !important;
+      color: #60a5fa !important;
+    }
+  }
+
+  /* Notification items */
+  .notification-item {
+    border-bottom-color: #334155 !important;
+    
+    &:hover {
+      background-color: #334155 !important;
+    }
+    
+    &.bg-sky-50 {
+      background-color: rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    p {
+      color: #f1f5f9 !important;
+    }
+    
+    p:last-child {
+      color: #94a3b8 !important;
+    }
+    
+    span {
+      color: #64748b !important;
+    }
+  }
+
+  /* Notification dropdown footer */
+  .notification-dropdown .bg-gray-50 {
+    background-color: #334155 !important;
+    border-top-color: #475569 !important;
+    
+    button {
+      color: #60a5fa !important;
+      
+      &:hover {
+        color: #93c5fd !important;
+      }
+    }
+  }
+
+  /* Loading spinner */
+  .animate-spin {
+    border-color: #3b82f6 !important;
+  }
+
+  /* Empty state */
+  .material-icons.text-4xl {
+    color: #475569 !important;
+  }
+
+  /* Notification scrollbar */
+  .notification-dropdown .max-h-96::-webkit-scrollbar-track,
+  .notification-dropdown .max-h-80::-webkit-scrollbar-track {
+    background: #334155 !important;
+  }
+
+  .notification-dropdown .max-h-96::-webkit-scrollbar-thumb,
+  .notification-dropdown .max-h-80::-webkit-scrollbar-thumb {
+    background: #64748b !important;
+  }
+
+  .notification-dropdown .max-h-96::-webkit-scrollbar-thumb:hover,
+  .notification-dropdown .max-h-80::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+  }
+
+  /* Hamburger icon */
+  .hamburger-icon {
+    color: #f1f5f9 !important;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-button {
+    &:hover {
+      background-color: rgba(51, 65, 85, 0.5) !important;
+    }
+  }
+
+  /* Enhanced shadow when modal is open */
+  body.modal-open header {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    background-color: rgba(30, 41, 59, 0.98) !important;
+  }
 } 

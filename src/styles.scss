@@ -12,6 +12,117 @@ body {
   background-color: #f9fafb;
   color: #1f2937;
   line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Global Dark Mode Styles */
+body.dark-mode,
+html.dark-mode {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  
+  /* Override utility classes for dark mode */
+  .bg-white { background-color: #1e293b !important; }
+  .bg-gray-50 { background-color: #0f172a !important; }
+  .bg-gray-100 { background-color: #1e293b !important; }
+  
+  .text-gray-500 { color: #94a3b8 !important; }
+  .text-gray-700 { color: #cbd5e1 !important; }
+  .text-gray-900 { color: #f1f5f9 !important; }
+  
+  .border { border-color: #334155 !important; }
+  .border-gray-200 { border-color: #334155 !important; }
+  .border-t { border-top-color: #334155 !important; }
+  .border-b { border-bottom-color: #334155 !important; }
+  
+  /* Card styles */
+  .card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  
+  /* Button styles */
+  .btn {
+    &.btn-secondary {
+      background-color: #1e293b !important;
+      color: #cbd5e1 !important;
+      border-color: #334155 !important;
+      
+      &:hover {
+        background-color: #334155 !important;
+      }
+    }
+  }
+  
+  /* Form elements */
+  input, textarea, select {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+    
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+    
+    &::placeholder {
+      color: #64748b !important;
+    }
+  }
+  
+  /* Table styles */
+  table {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    
+    th {
+      background-color: #334155 !important;
+      color: #cbd5e1 !important;
+      border-color: #475569 !important;
+    }
+    
+    td {
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+    }
+    
+    tbody tr:hover {
+      background-color: #334155 !important;
+    }
+  }
+  
+  /* Modal styles */
+  .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+  }
+  
+  .modal-content {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  
+  /* Toast/Notification styles */
+  .toast {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+  }
+  
+  /* Loading states */
+  .loading-state, .error-state {
+    color: #cbd5e1 !important;
+  }
+  
+  /* Pagination */
+  .pager button {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #334155 !important;
+    }
+  }
 }
 
 // Common utility classes to reduce component SCSS duplication

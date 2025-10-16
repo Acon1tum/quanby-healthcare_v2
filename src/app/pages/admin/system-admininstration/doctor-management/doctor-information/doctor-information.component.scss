@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 // Header Section
@@ -23,7 +24,7 @@
       border: none;
       color: #6b7280;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       padding: 0;
       
       &:hover {
@@ -40,6 +41,7 @@
       font-size: 2rem;
       font-weight: 600;
       color: #111827;
+      transition: color 0.3s ease;
     }
   }
 }
@@ -63,16 +65,577 @@
     font-size: 1.125rem;
     color: #374151;
     margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
   }
   
   small {
     color: #6b7280;
+    transition: color 0.3s ease;
   }
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .patient-information-container {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* Header Section Dark Mode */
+  .header-section {
+    .header-content {
+      .back-button {
+        color: #cbd5e1;
+
+        &:hover {
+          color: #f1f5f9;
+        }
+      }
+
+      .page-title {
+        color: #f1f5f9;
+      }
+    }
+  }
+
+  /* Loading State Dark Mode */
+  .loading-state {
+    .spinner {
+      border-color: #334155;
+      border-top-color: #60a5fa;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+
+    small {
+      color: #94a3b8;
+    }
+  }
+
+  /* Error State Dark Mode */
+  .error-state {
+    i {
+      color: #fca5a5;
+    }
+
+    h3 {
+      color: #f1f5f9;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+  }
+
+  /* Patient Details Dark Mode */
+  .patient-details {
+    .detail-section {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      h3 {
+        color: #f1f5f9;
+        border-bottom-color: #334155;
+      }
+
+      .detail-grid {
+        .detail-item {
+          label {
+            color: #cbd5e1;
+          }
+
+          span {
+            color: #f1f5f9;
+          }
+
+          .blood-type-badge {
+            background: #1e3a8a;
+            color: #93c5fd;
+          }
+        }
+      }
+    }
+  }
+
+  /* Table Container Dark Mode */
+  .table-container {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Data Table Dark Mode */
+  .data-table {
+    background: #1e293b;
+
+    th {
+      background: #334155;
+      color: #cbd5e1;
+      border-bottom-color: #334155;
+    }
+
+    td {
+      color: #f1f5f9;
+      border-bottom-color: #334155;
+    }
+
+    tr:hover {
+      background: #334155;
+    }
+
+    .date-time {
+      .date {
+        color: #f1f5f9;
+      }
+
+      .time {
+        color: #cbd5e1;
+      }
+    }
+
+    .doctor-info {
+      .doctor-name {
+        color: #f1f5f9;
+      }
+
+      .doctor-qualifications {
+        color: #cbd5e1;
+      }
+    }
+
+    .vital-summary {
+      color: #cbd5e1;
+    }
+
+    .wellness-score {
+      .score {
+        color: #6ee7b7;
+      }
+    }
+
+    .risk-badge {
+      &.status-success {
+        background: #064e3b;
+        color: #6ee7b7;
+      }
+
+      &.status-warning {
+        background: #78350f;
+        color: #fbbf24;
+      }
+
+      &.status-danger {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+    }
+
+    .status-badge {
+      &.completed {
+        background: #064e3b;
+        color: #6ee7b7;
+      }
+    }
+
+    .actions {
+      .btn {
+        &.btn-primary {
+          background: #3b82f6;
+          color: white;
+
+          &:hover {
+            background: #2563eb;
+          }
+        }
+      }
+    }
+  }
+
+  /* Empty State Dark Mode */
+  .empty-state {
+    color: #cbd5e1;
+
+    .material-icons {
+      color: #64748b;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+  }
+
+  /* Modal Dark Mode */
+  .modal-overlay {
+    .modal-content {
+      background: #1e293b;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+
+      .modal-header {
+        border-bottom-color: #334155;
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .modal-close {
+          color: #cbd5e1;
+
+          &:hover {
+            background: #334155;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .modal-body {
+        .detail-grid {
+          .detail-item {
+            label {
+              color: #cbd5e1;
+            }
+
+            span {
+              color: #f1f5f9;
+            }
+
+            .meeting-link {
+              color: #60a5fa;
+
+              &:hover {
+                color: #93c5fd;
+              }
+            }
+          }
+        }
+
+        .doctor-details {
+          h4 {
+            color: #f1f5f9;
+            border-bottom-color: #334155;
+          }
+        }
+
+        .scan-sections {
+          .scan-section {
+            h4 {
+              color: #f1f5f9;
+              border-bottom-color: #334155;
+            }
+
+            .lifestyle-factors {
+              h5 {
+                color: #cbd5e1;
+              }
+
+              .factors-grid {
+                .factor-item {
+                  color: #cbd5e1;
+
+                  i {
+                    &.text-success {
+                      color: #6ee7b7;
+                    }
+
+                    &.text-warning {
+                      color: #fbbf24;
+                    }
+
+                    &.text-danger {
+                      color: #fca5a5;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        .risk-value {
+          &.status-success {
+            color: #6ee7b7;
+          }
+
+          &.status-warning {
+            color: #fbbf24;
+          }
+
+          &.status-danger {
+            color: #fca5a5;
+          }
+        }
+
+        .risk-level {
+          color: #cbd5e1;
+        }
+      }
+    }
+  }
+
+  /* Document Cards Dark Mode */
+  .documents-grid {
+    .document-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+    }
+  }
+
+  .document-header {
+    background: #334155;
+    border-bottom-color: #334155;
+
+    h4 {
+      color: #f1f5f9;
+    }
+  }
+
+  .document-status {
+    &.uploaded {
+      background: #064e3b;
+      color: #6ee7b7;
+      border-color: #059669;
+    }
+
+    &.not-uploaded {
+      background: #7f1d1d;
+      color: #fca5a5;
+      border-color: #dc2626;
+    }
+  }
+
+  .document-preview {
+    .document-image {
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .action-btn {
+    &.view-btn {
+      background: #3b82f6;
+      color: white;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  .document-placeholder {
+    color: #cbd5e1;
+
+    i {
+      color: #64748b;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+  }
+
+  /* Verification Status Dark Mode */
+  .verification-status {
+    background: #334155;
+    border-color: #334155;
+  }
+
+  .verification-header {
+    h4 {
+      color: #f1f5f9;
+    }
+  }
+
+  .verification-badge {
+    &.verified {
+      background: #064e3b;
+      color: #6ee7b7;
+      border-color: #059669;
+
+      i {
+        color: #6ee7b7;
+      }
+    }
+
+    &.pending {
+      background: #78350f;
+      color: #fbbf24;
+      border-color: #f59e0b;
+
+      i {
+        color: #fbbf24;
+      }
+    }
+  }
+
+  .verification-info {
+    .verification-item {
+      label {
+        color: #cbd5e1;
+      }
+
+      .info-value {
+        color: #f1f5f9;
+      }
+    }
+  }
+
+  .verification-note {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+
+    i {
+      color: #60a5fa;
+    }
+
+    p {
+      color: #93c5fd;
+    }
+  }
+
+  /* Document Modal Dark Mode */
+  .document-modal {
+    .modal-header {
+      background: #334155;
+      border-bottom-color: #334155;
+
+      h3 {
+        color: #f1f5f9;
+      }
+
+      .close-btn {
+        color: #cbd5e1;
+
+        &:hover {
+          background: #475569;
+          color: #f1f5f9;
+        }
+      }
+    }
+
+    .document-modal-body {
+      .document-viewer {
+        background: #1e293b;
+
+        .document-full-image {
+          border-color: #334155;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .pdf-viewer {
+          .pdf-info {
+            i {
+              color: #fca5a5;
+            }
+
+            h3 {
+              color: #f1f5f9;
+            }
+
+            p {
+              color: #cbd5e1;
+
+              &.pdf-details {
+                color: #94a3b8;
+              }
+            }
+          }
+        }
+
+        .image-error-message {
+          color: #fca5a5;
+
+          i {
+            color: #fca5a5;
+          }
+
+          p {
+            color: #fca5a5;
+
+            &.error-details {
+              color: #cbd5e1;
+            }
+          }
+
+          .error-actions {
+            .btn {
+              &.btn-secondary {
+                background: #6b7280;
+                color: white;
+
+                &:hover {
+                  background: #4b5563;
+                }
+              }
+
+              &.btn-primary {
+                background: #3b82f6;
+                color: white;
+
+                &:hover {
+                  background: #2563eb;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .document-info {
+      background: #1e293b;
+      border-top-color: #334155;
+
+      .info-item {
+        border-bottom-color: #334155;
+
+        label {
+          color: #cbd5e1;
+        }
+
+        span {
+          color: #f1f5f9;
+        }
+      }
+    }
+
+    .modal-footer {
+      background: #334155;
+      border-top-color: #334155;
+
+      .btn {
+        &.btn-secondary {
+          background: #6b7280;
+          color: white;
+
+          &:hover {
+            background: #4b5563;
+          }
+        }
+
+        &.btn-primary {
+          background: #3b82f6;
+          color: white;
+
+          &:hover {
+            background: #2563eb;
+          }
+        }
+      }
+    }
+  }
 }
 
 // Error State

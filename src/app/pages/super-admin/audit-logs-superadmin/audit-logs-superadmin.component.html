@@ -1,7 +1,7 @@
-<div class="audit-logs-container p-6 bg-gray-50 min-h-screen">
+<div class="audit-logs-container bg-gray-50 min-h-screen">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Audit Logs & Security Events</h1>
+    <h1 class="font-bold text-gray-900">Audit Logs & Security Events</h1>
     <p class="text-gray-600">Monitor system activities, security events, and user actions across the platform.</p>
   </div>
 
@@ -41,7 +41,7 @@
   <div *ngIf="activeTab === 'logs'">
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Filter Audit Logs</h3>
+      <h3 class="font-medium text-gray-900">Filter Audit Logs</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -145,7 +145,7 @@
     <!-- Audit Logs Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Audit Logs</h3>
+        <h3 class="font-medium text-gray-900">Audit Logs</h3>
         <p class="text-sm text-gray-500 mt-1">Showing {{ auditLogs.length }} of {{ logsPagination.totalItems }} logs</p>
       </div>
       
@@ -256,7 +256,7 @@
   <div *ngIf="activeTab === 'events'">
     <!-- Security Events Filters -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Filter Security Events</h3>
+      <h3 class="font-medium text-gray-900">Filter Security Events</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -340,7 +340,7 @@
     <!-- Security Events Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Security Events</h3>
+        <h3 class="font-medium text-gray-900">Security Events</h3>
         <p class="text-sm text-gray-500 mt-1">Showing {{ securityEvents.length }} of {{ eventsPagination.totalItems }} events</p>
       </div>
       
@@ -531,7 +531,7 @@
     <div *ngIf="!loadingStats && statistics" class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Logs by Category -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Logs by Category</h3>
+        <h3 class="font-medium text-gray-900">Logs by Category</h3>
         <div class="space-y-3">
           <div *ngFor="let category of Object.keys(statistics.logsByCategory)" class="flex items-center justify-between">
             <span class="text-sm font-medium text-gray-700">{{ category.replace('_', ' ') }}</span>
@@ -542,7 +542,7 @@
       
       <!-- Logs by Level -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Logs by Level</h3>
+        <h3 class="font-medium text-gray-900">Logs by Level</h3>
         <div class="space-y-3">
           <div *ngFor="let level of Object.keys(statistics.logsByLevel)" class="flex items-center justify-between">
             <span class="text-sm font-medium text-gray-700">{{ level }}</span>
@@ -559,7 +559,7 @@
   <div class="modal-content w-11/12 md:w-3/4 lg:w-1/2 p-6">
     <div class="mt-3">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Audit Log Details</h3>
+        <h3 class="font-medium text-gray-900">Audit Log Details</h3>
         <button
           (click)="closeLogDetails()"
           class="text-gray-400 hover:text-gray-600"
@@ -634,7 +634,7 @@
   <div class="modal-content w-11/12 md:w-3/4 lg:w-1/2 p-6">
     <div class="mt-3">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Security Event Details</h3>
+        <h3 class="font-medium text-gray-900">Security Event Details</h3>
         <button
           (click)="closeEventDetails()"
           class="text-gray-400 hover:text-gray-600"
@@ -724,7 +724,7 @@
   <div class="modal-content w-11/12 md:w-1/2 p-6">
     <div class="mt-3">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Resolve Security Event</h3>
+        <h3 class="font-medium text-gray-900">Resolve Security Event</h3>
         <button
           (click)="cancelResolve()"
           class="text-gray-400 hover:text-gray-600"

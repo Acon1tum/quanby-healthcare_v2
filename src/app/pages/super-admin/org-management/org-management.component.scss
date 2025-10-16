@@ -43,17 +43,373 @@ $border-radius-xl: 16px;
 .org-management-dashboard {
   background-color: $background-secondary;
   min-height: 100vh;
-  padding: $spacing-lg;
+  padding: 0.25rem; /* Further reduced to prevent horizontal scroll */
   font-family: $font-family-primary;
   color: $text-primary;
-  line-height: 1.6;
+  line-height: 1.4; /* Reduced from 1.6 for more compact text */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Styles for Organization Management */
+:host-context(.dark-mode) {
+  .org-management-dashboard {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+  }
+  
+  // Override all color variables for dark mode
+  $primary-color: #f1f5f9;
+  $secondary-color: #94a3b8;
+  $text-primary: #f1f5f9;
+  $text-secondary: #94a3b8;
+  $text-muted: #64748b;
+  $background-primary: #1e293b;
+  $background-secondary: #0f172a;
+  $background-tertiary: #334155;
+  $border-color: #334155;
+  $border-light: #475569;
+  
+  .dashboard-header {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    
+    .welcome-section h1 {
+      color: #f1f5f9 !important;
+    }
+    
+    .subtitle {
+      color: #94a3b8 !important;
+    }
+    
+    .current-time {
+      color: #60a5fa !important;
+    }
+  }
+  
+  .stats-overview .stat-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    
+    .stat-content {
+      .stat-value {
+        color: #f1f5f9 !important;
+      }
+      
+      .stat-label {
+        color: #94a3b8 !important;
+      }
+    }
+  }
+  
+  .quick-actions {
+    .section-title {
+      color: #f1f5f9 !important;
+      border-bottom-color: #334155 !important;
+    }
+    
+    .action-button {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f1f5f9 !important;
+      
+      &:hover {
+        border-color: #3b82f6 !important;
+        background: #334155 !important;
+      }
+    }
+  }
+  
+  .content-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    
+    .card-header {
+      border-bottom-color: #334155 !important;
+      
+      h3 {
+        color: #f1f5f9 !important;
+      }
+      
+      .text-button {
+        color: #60a5fa !important;
+        
+        &:hover {
+          background: #334155 !important;
+        }
+      }
+    }
+  }
+  
+  .search-controls {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    
+    .search-input input {
+      background: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-color: #475569 !important;
+      
+      &:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+      }
+      
+      &::placeholder {
+        color: #64748b !important;
+      }
+    }
+    
+    .filter-select {
+      background: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-color: #475569 !important;
+      
+      &:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+      }
+    }
+  }
+  
+  .organization-item {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    
+    &:hover {
+      background: #475569 !important;
+      border-color: #64748b !important;
+    }
+    
+    &.selected {
+      border-color: #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    .organization-name {
+      color: #f1f5f9 !important;
+    }
+    
+    .organization-description {
+      color: #94a3b8 !important;
+    }
+    
+    .detail-item {
+      color: #94a3b8 !important;
+    }
+    
+    .stat-item {
+      color: #94a3b8 !important;
+    }
+  }
+  
+  .organization-details-panel {
+    .detail-section h4 {
+      color: #f1f5f9 !important;
+      border-bottom-color: #334155 !important;
+    }
+    
+    .detail-item {
+      color: #94a3b8 !important;
+    }
+    
+    .stat-label {
+      color: #94a3b8 !important;
+    }
+    
+    .stat-value {
+      color: #f1f5f9 !important;
+    }
+    
+    .doctor-item {
+      background: #334155 !important;
+      border-color: #475569 !important;
+      
+      .doctor-name {
+        color: #f1f5f9 !important;
+      }
+      
+      .doctor-specialization {
+        color: #94a3b8 !important;
+      }
+    }
+  }
+  
+  .notifications-list .notification-item {
+    &:hover {
+      background: #334155 !important;
+    }
+    
+    .notification-message {
+      color: #f1f5f9 !important;
+    }
+    
+    .notification-time {
+      color: #94a3b8 !important;
+    }
+  }
+  
+  .status-badge {
+    &.status-success {
+      background: rgba(16, 185, 129, 0.2) !important;
+      color: #6ee7b7 !important;
+    }
+    
+    &.status-warning {
+      background: rgba(245, 158, 11, 0.2) !important;
+      color: #fbbf24 !important;
+    }
+    
+    &.status-danger {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #f87171 !important;
+    }
+    
+    &.status-info {
+      background: rgba(59, 130, 246, 0.2) !important;
+      color: #60a5fa !important;
+    }
+  }
+  
+  .primary-button {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      background: #2563eb !important;
+    }
+  }
+  
+  .secondary-button {
+    background: #1e293b !important;
+    color: #60a5fa !important;
+    border-color: #3b82f6 !important;
+    
+    &:hover {
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+  }
+  
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+  
+  .modal-content {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  
+  .modal-header {
+    border-bottom-color: #334155 !important;
+    
+    h2 {
+      color: #f1f5f9 !important;
+    }
+    
+    .close-button {
+      color: #94a3b8 !important;
+      
+      &:hover {
+        background: #334155 !important;
+        color: #f1f5f9 !important;
+      }
+    }
+  }
+  
+  .modal-body {
+    background: #1e293b !important;
+  }
+  
+  .modal-footer {
+    background: #334155 !important;
+    border-top-color: #475569 !important;
+  }
+  
+  .form-group {
+    label {
+      color: #cbd5e1 !important;
+    }
+    
+    .form-input,
+    .form-textarea {
+      background: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-color: #475569 !important;
+      
+      &:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+      }
+      
+      &::placeholder {
+        color: #64748b !important;
+      }
+    }
+  }
+  
+  .checkbox-label {
+    color: #f1f5f9 !important;
+    
+    .checkmark {
+      border-color: #475569 !important;
+    }
+  }
+  
+  .error-message {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+  }
+  
+  .organizations-table-wrapper {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  
+  .organizations-table {
+    thead {
+      background: #334155 !important;
+      
+      th {
+        color: #cbd5e1 !important;
+        border-bottom-color: #475569 !important;
+      }
+    }
+    
+    tbody tr {
+      border-bottom-color: #334155 !important;
+      
+      &:hover {
+        background: #334155 !important;
+      }
+      
+      &.selected {
+        background: rgba(59, 130, 246, 0.1) !important;
+      }
+      
+      td {
+        .org-name {
+          color: #f1f5f9 !important;
+        }
+        
+        .org-desc {
+          color: #94a3b8 !important;
+        }
+        
+        .muted {
+          color: #94a3b8 !important;
+        }
+      }
+    }
+  }
+}
 
   // Header Section
   .dashboard-header {
     background: $background-primary;
-    border-radius: $border-radius-xl;
-    padding: $spacing-xl;
-    margin-bottom: $spacing-xl;
+    border-radius: $border-radius-lg; /* Reduced from xl */
+    padding: 1rem; /* Further reduced for compact layout */
+    margin-bottom: 1rem; /* Further reduced */
     box-shadow: 0 2px 8px $shadow-light;
     border: 1px solid $border-color;
 
@@ -65,15 +421,15 @@ $border-radius-xl: 16px;
 
       .welcome-section {
         h1 {
-          font-size: 2.25rem;
+          font-size: 1.75rem; /* Reduced from 2.25rem */
           font-weight: 600;
-          margin: 0 0 $spacing-sm 0;
+          margin: 0 0 $spacing-xs 0; /* Reduced margin */
           color: $primary-color;
           letter-spacing: -0.025em;
         }
 
         .subtitle {
-          font-size: 1.1rem;
+          font-size: 0.9rem; /* Reduced from 1.1rem */
           color: $text-secondary;
           margin: 0;
           font-weight: 400;
@@ -82,7 +438,7 @@ $border-radius-xl: 16px;
 
       .time-display {
         .current-time {
-          font-size: 2.5rem;
+          font-size: 1.8rem; /* Reduced from 2.5rem */
           font-weight: 300;
           font-family: $font-family-mono;
           color: $accent-color;
@@ -95,20 +451,20 @@ $border-radius-xl: 16px;
 
   // Statistics Overview
   .stats-overview {
-    margin-bottom: $spacing-xl;
+    margin-bottom: 1rem; /* Further reduced */
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: $spacing-lg;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Reduced minmax from 280px */
+      gap: 0.75rem; /* Further reduced gap */
 
       .stat-card {
         background: $background-primary;
-        border-radius: $border-radius-lg;
-        padding: $spacing-xl;
+        border-radius: $border-radius-md; /* Reduced from lg */
+        padding: 0.875rem; /* Further reduced padding */
         display: flex;
         align-items: center;
-        gap: $spacing-lg;
+        gap: $spacing-md; /* Reduced gap */
         box-shadow: 0 2px 8px $shadow-light;
         border: 1px solid $border-color;
         transition: all 0.2s ease;
@@ -119,9 +475,9 @@ $border-radius-xl: 16px;
         }
 
         .stat-icon {
-          width: 64px;
-          height: 64px;
-          border-radius: $border-radius-lg;
+          width: 48px; /* Reduced from 64px */
+          height: 48px; /* Reduced from 64px */
+          border-radius: $border-radius-md; /* Reduced from lg */
           background: linear-gradient(135deg, $accent-color, color.adjust($accent-color, $lightness: -10%));
           display: flex;
           align-items: center;
@@ -130,13 +486,13 @@ $border-radius-xl: 16px;
           flex-shrink: 0;
 
           i {
-            font-size: 1.75rem;
+            font-size: 1.25rem; /* Reduced from 1.75rem */
           }
         }
 
         .stat-content {
           .stat-value {
-            font-size: 2rem;
+            font-size: 1.5rem; /* Reduced from 2rem */
             font-weight: 700;
             color: $text-primary;
             margin-bottom: $spacing-xs;
@@ -144,7 +500,7 @@ $border-radius-xl: 16px;
           }
 
           .stat-label {
-            font-size: 0.875rem;
+            font-size: 0.75rem; /* Reduced from 0.875rem */
             color: $text-secondary;
             font-weight: 500;
             text-transform: uppercase;
@@ -212,7 +568,7 @@ $border-radius-xl: 16px;
   .dashboard-content {
     display: grid;
     grid-template-columns: 1fr; // default full width
-    gap: $spacing-xl;
+    gap: 1rem; /* Further reduced gap */
 
     &.has-sidebar {
       grid-template-columns: 2fr 1fr; // split when sidebar is shown
@@ -221,21 +577,21 @@ $border-radius-xl: 16px;
     .content-main {
       display: flex;
       flex-direction: column;
-      gap: $spacing-xl;
+      gap: 1rem; /* Further reduced gap */
     }
 
     .content-sidebar {
       display: flex;
       flex-direction: column;
-      gap: $spacing-xl;
+      gap: 1rem; /* Further reduced gap */
     }
   }
 
   // Content Cards
   .content-card {
     background: $background-primary;
-    border-radius: $border-radius-lg;
-    padding: $spacing-xl;
+    border-radius: $border-radius-md; /* Reduced from lg */
+    padding: 0.875rem; /* Further reduced padding */
     box-shadow: 0 2px 8px $shadow-light;
     border: 1px solid $border-color;
 
@@ -243,12 +599,12 @@ $border-radius-xl: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: $spacing-lg;
-      padding-bottom: $spacing-md;
+      margin-bottom: 0.875rem; /* Further reduced */
+      padding-bottom: $spacing-sm; /* Reduced from md */
       border-bottom: 1px solid $border-light;
 
       h3 {
-        font-size: 1.25rem;
+        font-size: 1.1rem; /* Reduced from 1.25rem */
         font-weight: 600;
         color: $text-primary;
         margin: 0;
@@ -260,10 +616,10 @@ $border-radius-xl: 16px;
         color: $accent-color;
         font-weight: 500;
         cursor: pointer;
-        padding: $spacing-sm $spacing-md;
+        padding: $spacing-xs $spacing-sm; /* Reduced padding */
         border-radius: $border-radius-sm;
         transition: all 0.2s ease;
-        font-size: 0.875rem;
+        font-size: 0.8rem; /* Reduced from 0.875rem */
 
         &:hover {
           background: rgba($accent-color, 0.1);
@@ -275,11 +631,11 @@ $border-radius-xl: 16px;
   // Search Controls
   .search-controls {
     display: flex;
-    gap: $spacing-md;
-    margin-bottom: $spacing-lg;
-    padding: $spacing-md;
+    gap: $spacing-sm; /* Reduced gap */
+    margin-bottom: 0.875rem; /* Further reduced */
+    padding: $spacing-sm; /* Reduced padding */
     background: $background-secondary;
-    border-radius: $border-radius-md;
+    border-radius: $border-radius-sm; /* Reduced from md */
     border: 1px solid $border-light;
 
     .search-input {
@@ -288,19 +644,19 @@ $border-radius-xl: 16px;
 
       i {
         position: absolute;
-        left: $spacing-md;
+        left: $spacing-sm; /* Reduced from md */
         top: 50%;
         transform: translateY(-50%);
         color: $text-secondary;
-        font-size: 1.1rem;
+        font-size: 1rem; /* Reduced from 1.1rem */
       }
 
       input {
         width: 100%;
-        padding: $spacing-md $spacing-md $spacing-md 2.5rem;
+        padding: $spacing-sm $spacing-sm $spacing-sm 2rem; /* Reduced padding and icon space */
         border: 1px solid $border-color;
-        border-radius: $border-radius-md;
-        font-size: 0.9rem;
+        border-radius: $border-radius-sm; /* Reduced from md */
+        font-size: 0.85rem; /* Reduced from 0.9rem */
         transition: all 0.2s ease;
 
         &:focus {
@@ -316,14 +672,14 @@ $border-radius-xl: 16px;
     }
 
     .filter-select {
-      padding: $spacing-md;
+      padding: $spacing-sm; /* Reduced padding */
       border: 1px solid $border-color;
-      border-radius: $border-radius-md;
-      font-size: 0.9rem;
+      border-radius: $border-radius-sm; /* Reduced from md */
+      font-size: 0.85rem; /* Reduced from 0.9rem */
       background: $background-primary;
       color: $text-primary;
       cursor: pointer;
-      min-width: 150px;
+      min-width: 120px; /* Reduced from 150px */
 
       &:focus {
         outline: none;
@@ -745,7 +1101,7 @@ $border-radius-xl: 16px;
       color: white;
     }
   }
-}
+
 
 /* Header Actions */
 .header-actions {
@@ -873,7 +1229,7 @@ $border-radius-xl: 16px;
 
 @media (max-width: 768px) {
   .org-management-dashboard {
-    padding: $spacing-md;
+    padding: 0.25rem; /* Further reduced for mobile */
 
     .dashboard-header {
       .header-content {
@@ -882,17 +1238,18 @@ $border-radius-xl: 16px;
         gap: $spacing-md;
 
         .welcome-section h1 {
-          font-size: 1.875rem;
+          font-size: 1.5rem; /* Further reduced for mobile */
         }
 
         .time-display .current-time {
-          font-size: 2rem;
+          font-size: 1.5rem; /* Further reduced for mobile */
         }
       }
     }
 
     .stats-grid {
       grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem; /* Further reduced gap for mobile */
     }
 
     .actions-grid {
@@ -919,12 +1276,28 @@ $border-radius-xl: 16px;
 
 @media (max-width: 480px) {
   .org-management-dashboard {
+    padding: 0.125rem; /* Even smaller padding for very small screens */
+    
     .stats-grid {
       grid-template-columns: 1fr;
+      gap: 0.375rem; /* Further reduced gap */
     }
 
     .actions-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .organizations-table {
+      font-size: 0.8rem; /* Smaller font for very small screens */
+      
+      thead th {
+        padding: $spacing-xs $spacing-sm; /* Smaller padding */
+        font-size: 0.65rem; /* Smaller header font */
+      }
+      
+      tbody td {
+        padding: $spacing-xs $spacing-sm; /* Smaller padding */
+      }
     }
   }
 }
@@ -942,7 +1315,7 @@ $border-radius-xl: 16px;
   align-items: center;
   justify-content: center;
   z-index: 10000; /* Higher than header's z-index: 9999 */
-  padding: $spacing-lg;
+  padding: 1rem; /* Reduced from $spacing-lg (1.5rem) */
 }
 
 .modal-content {
@@ -973,11 +1346,11 @@ $border-radius-xl: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: $spacing-xl;
+  padding: 1rem; /* Further reduced */
   border-bottom: 1px solid $border-light;
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem; /* Reduced from 1.5rem */
     font-weight: 600;
     color: $text-primary;
     margin: 0;
@@ -1007,38 +1380,38 @@ $border-radius-xl: 16px;
 }
 
 .modal-body {
-  padding: $spacing-xl;
+  padding: 1rem; /* Further reduced */
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: $spacing-md;
-  padding: $spacing-xl;
+  gap: $spacing-sm; /* Reduced gap */
+  padding: 1rem; /* Further reduced */
   border-top: 1px solid $border-light;
   background: $background-secondary;
-  border-radius: 0 0 $border-radius-lg $border-radius-lg;
+  border-radius: 0 0 $border-radius-md $border-radius-md; /* Reduced from lg */
 }
 
 // Form Styles
 .form-group {
-  margin-bottom: $spacing-lg;
+  margin-bottom: 1rem; /* Further reduced */
 
   label {
     display: block;
     font-weight: 500;
     color: $text-primary;
-    margin-bottom: $spacing-sm;
-    font-size: 0.9rem;
+    margin-bottom: $spacing-xs; /* Reduced margin */
+    font-size: 0.85rem; /* Reduced from 0.9rem */
   }
 
   .form-input,
   .form-textarea {
     width: 100%;
-    padding: $spacing-md;
+    padding: $spacing-sm; /* Reduced padding */
     border: 1px solid $border-color;
-    border-radius: $border-radius-md;
-    font-size: 0.9rem;
+    border-radius: $border-radius-sm; /* Reduced from md */
+    font-size: 0.85rem; /* Reduced from 0.9rem */
     transition: all 0.2s ease;
     font-family: inherit;
 
@@ -1055,22 +1428,22 @@ $border-radius-xl: 16px;
 
   .form-textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 60px; /* Reduced from 80px */
   }
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $spacing-md;
+  gap: $spacing-sm; /* Reduced gap */
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $spacing-xs; /* Reduced gap */
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* Reduced from 0.9rem */
   color: $text-primary;
 
   input[type="checkbox"] {
@@ -1078,8 +1451,8 @@ $border-radius-xl: 16px;
   }
 
   .checkmark {
-    width: 20px;
-    height: 20px;
+    width: 18px; /* Reduced from 20px */
+    height: 18px; /* Reduced from 20px */
     border: 2px solid $border-color;
     border-radius: $border-radius-sm;
     position: relative;
@@ -1088,10 +1461,10 @@ $border-radius-xl: 16px;
     &::after {
       content: '';
       position: absolute;
-      left: 6px;
+      left: 5px; /* Adjusted for smaller checkbox */
       top: 2px;
-      width: 6px;
-      height: 10px;
+      width: 5px; /* Reduced from 6px */
+      height: 8px; /* Reduced from 10px */
       border: solid white;
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
@@ -1140,7 +1513,7 @@ $border-radius-xl: 16px;
   .modal-header,
   .modal-body,
   .modal-footer {
-    padding: $spacing-lg;
+    padding: 0.875rem; /* Further reduced for mobile */
   }
 
   .form-row {
@@ -1310,17 +1683,17 @@ $border-radius-xl: 16px;
   .organizations-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.85rem; /* Reduced from 0.95rem */
 
     thead {
       background: $background-tertiary;
       text-transform: uppercase;
-      font-size: 0.8rem;
+      font-size: 0.7rem; /* Reduced from 0.8rem */
       letter-spacing: 0.04em;
 
       th {
         text-align: left;
-        padding: $spacing-md $spacing-lg;
+        padding: $spacing-sm $spacing-md; /* Reduced padding */
         color: $text-secondary;
         border-bottom: 1px solid $border-color;
       }
@@ -1341,12 +1714,12 @@ $border-radius-xl: 16px;
       }
 
       td {
-        padding: $spacing-md $spacing-lg;
+        padding: $spacing-sm $spacing-md; /* Reduced padding */
         vertical-align: middle;
 
-        .org-name { font-weight: 600; color: $text-primary; }
-        .org-desc { color: $text-secondary; font-size: 0.85rem; margin-top: 2px; }
-        .muted { color: $text-secondary; }
+        .org-name { font-weight: 600; color: $text-primary; font-size: 0.9rem; } /* Added font-size */
+        .org-desc { color: $text-secondary; font-size: 0.75rem; margin-top: 2px; } /* Reduced from 0.85rem */
+        .muted { color: $text-secondary; font-size: 0.8rem; } /* Added font-size */
       }
 
       td.row-actions {
@@ -1357,19 +1730,21 @@ $border-radius-xl: 16px;
         background: transparent;
         border: 1px solid $border-color;
         border-radius: $border-radius-sm;
-        padding: 6px;
+        padding: 4px; /* Reduced from 6px */
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.15s ease;
-        margin-right: $spacing-sm;
+        margin-right: $spacing-xs; /* Reduced from sm */
+        width: 28px; /* Fixed width for consistency */
+        height: 28px; /* Fixed height for consistency */
 
         &:hover { border-color: $accent-color; box-shadow: 0 2px 8px $shadow-light; }
 
-        &.edit-btn i { color: $accent-color; }
-        &.toggle-btn i { color: $warning-color; }
-        &.delete-btn i { color: $danger-color; }
+        &.edit-btn i { color: $accent-color; font-size: 0.9rem; } /* Added font-size */
+        &.toggle-btn i { color: $warning-color; font-size: 0.9rem; } /* Added font-size */
+        &.delete-btn i { color: $danger-color; font-size: 0.9rem; } /* Added font-size */
       }
     }
   }

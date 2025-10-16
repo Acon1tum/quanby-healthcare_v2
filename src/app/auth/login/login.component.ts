@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService, LoginCredentials } from '../auth.service';
+import { AnimatedBubbleParticlesComponent } from '../../shared/components/animated-bubble-particles/animated-bubble-particles.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AnimatedBubbleParticlesComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

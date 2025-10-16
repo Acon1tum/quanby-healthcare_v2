@@ -46,6 +46,13 @@
     </ul>
   </nav>
 
+  <!-- Dark Mode Toggle -->
+  <div class="dark-mode-section">
+    <button class="dark-mode-toggle" (click)="toggleDarkMode()" [class.active]="isDarkMode" title="{{ isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode' }}">
+      <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
+    </button>
+  </div>
+
   <!-- Logout Section -->
   <div class="logout-section">
     <button class="logout-btn" (click)="logout()">

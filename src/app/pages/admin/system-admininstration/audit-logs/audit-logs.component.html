@@ -127,9 +127,18 @@
 
   <!-- Filters Section -->
   <div class="filters-section">
-    <h2 class="section-title">Filter {{ selectedView === 'audit' ? 'Audit Logs' : 'Security Events' }}</h2>
+    <div class="filters-header">
+      <h2 class="section-title">Filter {{ selectedView === 'audit' ? 'Audit Logs' : 'Security Events' }}</h2>
+      <div class="filter-actions">
+        <button type="button" class="btn btn-secondary" (click)="clearFilters()">
+          <i class="material-icons">clear</i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+    
     <form [formGroup]="filterForm" class="filter-form">
-      <div class="filter-row">
+      <div class="filter-grid">
         <div class="form-group">
           <label for="categoryFilter">Category</label>
           <select id="categoryFilter" formControlName="category" class="form-control">
@@ -165,9 +174,7 @@
             </option>
           </select>
         </div>
-      </div>
-      
-      <div class="filter-row">
+        
         <div class="form-group">
           <label for="userIdFilter">User ID</label>
           <input 
@@ -189,13 +196,6 @@
             placeholder="Enter IP address..."
           >
         </div>
-        
-        <div class="filter-actions">
-          <button type="button" class="btn btn-secondary" (click)="clearFilters()">
-            <i class="material-icons">clear</i>
-            Clear Filters
-          </button>
-        </div>
       </div>
     </form>
   </div>
@@ -211,90 +211,108 @@
     <!-- Audit Logs View -->
     <div *ngIf="!isLoading && selectedView === 'audit'" class="audit-logs-view">
       <div class="view-header">
-        <h2 class="section-title">Audit Logs</h2>
-        <p class="view-count">Showing {{ filteredAuditLogs.length }} of {{ auditLogs.length }} logs</p>
+        <div class="view-title-section">
+          <h2 class="section-title">Audit Logs</h2>
+          <p class="view-count">Showing {{ filteredAuditLogs.length }} of {{ auditLogs.length }} logs</p>
+        </div>
+        <div class="view-actions">
+          <button class="btn btn-outline" (click)="refreshData()">
+            <i class="material-icons">refresh</i>
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div class="logs-table-container">
-        <table class="logs-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Action</th>
-              <th>Category</th>
-              <th>Level</th>
-              <th>Description</th>
-              <th>User</th>
-              <th>IP Address</th>
-              <th>Resource</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of filteredAuditLogs" class="log-row">
-              <td class="log-timestamp">
-                <div class="timestamp-content">
-                  <span class="time">{{ log.timestamp | date:'HH:mm' }}</span>
-                  <span class="date">{{ log.timestamp | date:'MMM dd' }}</span>
-                  <span class="ago">{{ getTimeAgo(log.timestamp) }}</span>
-                </div>
-              </td>
-              <td class="log-action">
-                <span class="action-badge">
-                  <i class="material-icons">{{ getActionIcon(log.action) }}</i>
-                  {{ log.action }}
-                </span>
-              </td>
-              <td class="log-category">
-                <span class="category-badge">
-                  <i class="material-icons">{{ getCategoryIcon(log.category) }}</i>
-                  {{ log.category.replace('_', ' ') }}
-                </span>
-              </td>
-              <td class="log-level">
-                <span class="level-badge" [class]="getLevelClass(log.level)">
-                  <i class="material-icons">{{ getLevelIcon(log.level) }}</i>
-                  {{ log.level }}
-                </span>
-              </td>
-              <td class="log-description">
-                <span class="description-text">{{ log.description }}</span>
-              </td>
-              <td class="log-user">
-                <div *ngIf="log.user" class="user-info">
-                  <span class="user-email">{{ log.user.email }}</span>
-                  <span class="user-role">{{ log.user.role }}</span>
-                </div>
-                <span *ngIf="!log.user" class="system-event">System</span>
-              </td>
-              <td class="log-ip">
-                <span class="ip-address">{{ log.ipAddress }}</span>
-              </td>
-              <td class="log-resource">
-                <div *ngIf="log.resourceType" class="resource-info">
-                  <span class="resource-type">{{ getResourceTypeLabel(log.resourceType) }}</span>
-                  <span *ngIf="log.resourceId" class="resource-id">#{{ log.resourceId }}</span>
-                </div>
-                <span *ngIf="!log.resourceType" class="no-resource">-</span>
-              </td>
-              <td class="log-actions">
-                <button 
-                  class="btn btn-icon btn-info" 
-                  (click)="viewLogDetails(log)"
-                  title="View Details"
-                >
-                  <i class="material-icons">visibility</i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th class="timestamp-col">Timestamp</th>
+                <th class="action-col">Action</th>
+                <th class="category-col">Category</th>
+                <th class="level-col">Level</th>
+                <th class="description-col">Description</th>
+                <th class="user-col">User</th>
+                <th class="ip-col">IP Address</th>
+                <th class="resource-col">Resource</th>
+                <th class="actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of filteredAuditLogs; trackBy: trackByLogId" class="log-row">
+                <td class="log-timestamp">
+                  <div class="timestamp-content">
+                    <div class="timestamp-main">
+                      <span class="time">{{ log.timestamp | date:'HH:mm' }}</span>
+                      <span class="date">{{ log.timestamp | date:'MMM dd' }}</span>
+                    </div>
+                    <span class="ago">{{ getTimeAgo(log.timestamp) }}</span>
+                  </div>
+                </td>
+                <td class="log-action">
+                  <span class="action-badge">
+                    <i class="material-icons">{{ getActionIcon(log.action) }}</i>
+                    {{ log.action }}
+                  </span>
+                </td>
+                <td class="log-category">
+                  <span class="category-badge">
+                    <i class="material-icons">{{ getCategoryIcon(log.category) }}</i>
+                    {{ log.category.replace('_', ' ') }}
+                  </span>
+                </td>
+                <td class="log-level">
+                  <span class="level-badge" [class]="getLevelClass(log.level)">
+                    <i class="material-icons">{{ getLevelIcon(log.level) }}</i>
+                    {{ log.level }}
+                  </span>
+                </td>
+                <td class="log-description">
+                  <span class="description-text" [title]="log.description">{{ log.description }}</span>
+                </td>
+                <td class="log-user">
+                  <div *ngIf="log.user" class="user-info">
+                    <span class="user-email">{{ log.user.email }}</span>
+                    <span class="user-role">{{ log.user.role }}</span>
+                  </div>
+                  <span *ngIf="!log.user" class="system-event">System</span>
+                </td>
+                <td class="log-ip">
+                  <span class="ip-address">{{ log.ipAddress }}</span>
+                </td>
+                <td class="log-resource">
+                  <div *ngIf="log.resourceType" class="resource-info">
+                    <span class="resource-type">{{ getResourceTypeLabel(log.resourceType) }}</span>
+                    <span *ngIf="log.resourceId" class="resource-id">#{{ log.resourceId }}</span>
+                  </div>
+                  <span *ngIf="!log.resourceType" class="no-resource">-</span>
+                </td>
+                <td class="log-actions">
+                  <button 
+                    class="btn btn-icon btn-info" 
+                    (click)="viewLogDetails(log)"
+                    title="View Details"
+                  >
+                    <i class="material-icons">visibility</i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Empty State -->
         <div *ngIf="filteredAuditLogs.length === 0" class="empty-state">
-          <i class="material-icons">history</i>
+          <div class="empty-icon">
+            <i class="material-icons">history</i>
+          </div>
           <h3>No audit logs found</h3>
           <p>Try adjusting your filters to see more results.</p>
+          <button class="btn btn-primary" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
         </div>
       </div>
     </div>
@@ -302,90 +320,108 @@
     <!-- Security Events View -->
     <div *ngIf="!isLoading && selectedView === 'security'" class="security-events-view">
       <div class="view-header">
-        <h2 class="section-title">Security Events</h2>
-        <p class="view-count">Showing {{ filteredSecurityEvents.length }} of {{ securityEvents.length }} events</p>
+        <div class="view-title-section">
+          <h2 class="section-title">Security Events</h2>
+          <p class="view-count">Showing {{ filteredSecurityEvents.length }} of {{ securityEvents.length }} events</p>
+        </div>
+        <div class="view-actions">
+          <button class="btn btn-outline" (click)="refreshData()">
+            <i class="material-icons">refresh</i>
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div class="events-table-container">
-        <table class="events-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Event Type</th>
-              <th>Severity</th>
-              <th>Description</th>
-              <th>User</th>
-              <th>IP Address</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let event of filteredSecurityEvents" class="event-row">
-              <td class="event-timestamp">
-                <div class="timestamp-content">
-                  <span class="time">{{ event.timestamp | date:'HH:mm' }}</span>
-                  <span class="date">{{ event.timestamp | date:'MMM dd' }}</span>
-                  <span class="ago">{{ getTimeAgo(event.timestamp) }}</span>
-                </div>
-              </td>
-              <td class="event-type">
-                <span class="event-type-badge">
-                  {{ getEventTypeLabel(event.eventType) }}
-                </span>
-              </td>
-              <td class="event-severity">
-                <span class="severity-badge" [class]="getSeverityClass(event.severity.toLowerCase())">
-                  <i class="material-icons">{{ getLevelIcon(event.severity) }}</i>
-                  {{ event.severity }}
-                </span>
-              </td>
-              <td class="event-description">
-                <span class="description-text">{{ event.description }}</span>
-              </td>
-              <td class="event-user">
-                <div *ngIf="event.user" class="user-info">
-                  <span class="user-email">{{ event.user.email }}</span>
-                  <span class="user-role">{{ event.user.role }}</span>
-                </div>
-                <span *ngIf="!event.user" class="anonymous-event">Anonymous</span>
-              </td>
-              <td class="event-ip">
-                <span class="ip-address">{{ event.ipAddress }}</span>
-              </td>
-              <td class="event-status">
-                <span class="status-badge" [class]="event.resolved ? 'status-resolved' : 'status-unresolved'">
-                  <i class="material-icons">{{ event.resolved ? 'check_circle' : 'pending' }}</i>
-                  {{ event.resolved ? 'Resolved' : 'Unresolved' }}
-                </span>
-              </td>
-              <td class="event-actions">
-                <button 
-                  class="btn btn-icon btn-info" 
-                  (click)="viewEventDetails(event)"
-                  title="View Details"
-                >
-                  <i class="material-icons">visibility</i>
-                </button>
-                
-                <button 
-                  *ngIf="!event.resolved"
-                  class="btn btn-icon btn-success" 
-                  (click)="resolveSecurityEvent(event)"
-                  title="Mark as Resolved"
-                >
-                  <i class="material-icons">check</i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="events-table">
+            <thead>
+              <tr>
+                <th class="timestamp-col">Timestamp</th>
+                <th class="event-type-col">Event Type</th>
+                <th class="severity-col">Severity</th>
+                <th class="description-col">Description</th>
+                <th class="user-col">User</th>
+                <th class="ip-col">IP Address</th>
+                <th class="status-col">Status</th>
+                <th class="actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let event of filteredSecurityEvents; trackBy: trackByEventId" class="event-row">
+                <td class="event-timestamp">
+                  <div class="timestamp-content">
+                    <div class="timestamp-main">
+                      <span class="time">{{ event.timestamp | date:'HH:mm' }}</span>
+                      <span class="date">{{ event.timestamp | date:'MMM dd' }}</span>
+                    </div>
+                    <span class="ago">{{ getTimeAgo(event.timestamp) }}</span>
+                  </div>
+                </td>
+                <td class="event-type">
+                  <span class="event-type-badge">
+                    {{ getEventTypeLabel(event.eventType) }}
+                  </span>
+                </td>
+                <td class="event-severity">
+                  <span class="severity-badge" [class]="getSeverityClass(event.severity.toLowerCase())">
+                    <i class="material-icons">{{ getLevelIcon(event.severity) }}</i>
+                    {{ event.severity }}
+                  </span>
+                </td>
+                <td class="event-description">
+                  <span class="description-text" [title]="event.description">{{ event.description }}</span>
+                </td>
+                <td class="event-user">
+                  <div *ngIf="event.user" class="user-info">
+                    <span class="user-email">{{ event.user.email }}</span>
+                    <span class="user-role">{{ event.user.role }}</span>
+                  </div>
+                  <span *ngIf="!event.user" class="anonymous-event">Anonymous</span>
+                </td>
+                <td class="event-ip">
+                  <span class="ip-address">{{ event.ipAddress }}</span>
+                </td>
+                <td class="event-status">
+                  <span class="status-badge" [class]="event.resolved ? 'status-resolved' : 'status-unresolved'">
+                    <i class="material-icons">{{ event.resolved ? 'check_circle' : 'pending' }}</i>
+                    {{ event.resolved ? 'Resolved' : 'Unresolved' }}
+                  </span>
+                </td>
+                <td class="event-actions">
+                  <button 
+                    class="btn btn-icon btn-info" 
+                    (click)="viewEventDetails(event)"
+                    title="View Details"
+                  >
+                    <i class="material-icons">visibility</i>
+                  </button>
+                  
+                  <button 
+                    *ngIf="!event.resolved"
+                    class="btn btn-icon btn-success" 
+                    (click)="resolveSecurityEvent(event)"
+                    title="Mark as Resolved"
+                  >
+                    <i class="material-icons">check</i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Empty State -->
         <div *ngIf="filteredSecurityEvents.length === 0" class="empty-state">
-          <i class="material-icons">security</i>
+          <div class="empty-icon">
+            <i class="material-icons">security</i>
+          </div>
           <h3>No security events found</h3>
           <p>Try adjusting your filters to see more results.</p>
+          <button class="btn btn-primary" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
         </div>
       </div>
     </div>
@@ -396,19 +432,33 @@
 <div *ngIf="showLogModal" class="modal-overlay" (click)="closeLogModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Audit Log Details</h2>
-      <button class="btn btn-icon" (click)="closeLogModal()">
+      <div class="modal-title-section">
+        <div class="modal-icon">
+          <i class="material-icons">history</i>
+        </div>
+        <div class="modal-title-content">
+          <h2>Audit Log Details</h2>
+          <p class="modal-subtitle">Detailed information about this audit log entry</p>
+        </div>
+      </div>
+      <button class="btn btn-icon btn-close" (click)="closeLogModal()" title="Close">
         <i class="material-icons">close</i>
       </button>
     </div>
     
     <div class="modal-content" *ngIf="selectedLog">
+      <!-- Basic Information Section -->
       <div class="detail-section">
-        <h3>Basic Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">info</i>
+          </div>
+          <h3>Basic Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>Log ID</label>
-            <span>{{ selectedLog.id }}</span>
+            <span class="detail-value">{{ selectedLog.id }}</span>
           </div>
           <div class="detail-item">
             <label>Action</label>
@@ -427,41 +477,62 @@
           <div class="detail-item">
             <label>Level</label>
             <span class="level-badge" [class]="getLevelClass(selectedLog.level)">
+              <i class="material-icons">{{ getLevelIcon(selectedLog.level) }}</i>
               {{ selectedLog.level }}
             </span>
           </div>
         </div>
       </div>
       
+      <!-- Description Section -->
       <div class="detail-section">
-        <h3>Description</h3>
-        <p>{{ selectedLog.description }}</p>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">description</i>
+          </div>
+          <h3>Description</h3>
+        </div>
+        <div class="description-content">
+          <p>{{ selectedLog.description }}</p>
+        </div>
       </div>
       
+      <!-- User Information Section -->
       <div class="detail-section">
-        <h3>User Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">person</i>
+          </div>
+          <h3>User Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>User ID</label>
-            <span>{{ selectedLog.userId || 'System Event' }}</span>
+            <span class="detail-value">{{ selectedLog.userId || 'System Event' }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedLog.user">
             <label>Email</label>
-            <span>{{ selectedLog.user.email }}</span>
+            <span class="detail-value">{{ selectedLog.user.email }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedLog.user">
             <label>Role</label>
-            <span>{{ selectedLog.user.role }}</span>
+            <span class="role-badge">{{ selectedLog.user.role }}</span>
           </div>
         </div>
       </div>
       
+      <!-- Technical Details Section -->
       <div class="detail-section">
-        <h3>Technical Details</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">settings</i>
+          </div>
+          <h3>Technical Details</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>IP Address</label>
-            <span>{{ selectedLog.ipAddress }}</span>
+            <span class="ip-address">{{ selectedLog.ipAddress }}</span>
           </div>
           <div class="detail-item">
             <label>User Agent</label>
@@ -469,27 +540,34 @@
           </div>
           <div class="detail-item">
             <label>Timestamp</label>
-            <span>{{ selectedLog.timestamp | date:'full' }}</span>
+            <span class="timestamp-value">{{ selectedLog.timestamp | date:'full' }}</span>
           </div>
           <div class="detail-item">
             <label>Severity</label>
             <span class="severity-badge" [class]="getSeverityClass(selectedLog.severity)">
+              <i class="material-icons">{{ getLevelIcon(selectedLog.severity.toUpperCase()) }}</i>
               {{ selectedLog.severity }}
             </span>
           </div>
         </div>
       </div>
       
+      <!-- Resource Information Section -->
       <div class="detail-section" *ngIf="selectedLog.resourceType">
-        <h3>Resource Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">folder</i>
+          </div>
+          <h3>Resource Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>Resource Type</label>
-            <span>{{ getResourceTypeLabel(selectedLog.resourceType) }}</span>
+            <span class="detail-value">{{ getResourceTypeLabel(selectedLog.resourceType) }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedLog.resourceId">
             <label>Resource ID</label>
-            <span>{{ selectedLog.resourceId }}</span>
+            <span class="resource-id">{{ selectedLog.resourceId }}</span>
           </div>
         </div>
       </div>
@@ -497,6 +575,7 @@
     
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" (click)="closeLogModal()">
+        <i class="material-icons">close</i>
         Close
       </button>
     </div>
@@ -507,68 +586,107 @@
 <div *ngIf="showEventModal" class="modal-overlay" (click)="closeEventModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Security Event Details</h2>
-      <button class="btn btn-icon" (click)="closeEventModal()">
+      <div class="modal-title-section">
+        <div class="modal-icon">
+          <i class="material-icons">security</i>
+        </div>
+        <div class="modal-title-content">
+          <h2>Security Event Details</h2>
+          <p class="modal-subtitle">Detailed information about this security event</p>
+        </div>
+      </div>
+      <button class="btn btn-icon btn-close" (click)="closeEventModal()" title="Close">
         <i class="material-icons">close</i>
       </button>
     </div>
     
     <div class="modal-content" *ngIf="selectedEvent">
+      <!-- Basic Information Section -->
       <div class="detail-section">
-        <h3>Basic Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">info</i>
+          </div>
+          <h3>Basic Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>Event ID</label>
-            <span>{{ selectedEvent.id }}</span>
+            <span class="detail-value">{{ selectedEvent.id }}</span>
           </div>
           <div class="detail-item">
             <label>Event Type</label>
-            <span>{{ getEventTypeLabel(selectedEvent.eventType) }}</span>
+            <span class="event-type-badge">
+              <i class="material-icons">{{ getEventTypeIcon(selectedEvent.eventType) }}</i>
+              {{ getEventTypeLabel(selectedEvent.eventType) }}
+            </span>
           </div>
           <div class="detail-item">
             <label>Severity</label>
             <span class="severity-badge" [class]="getSeverityClass(selectedEvent.severity.toLowerCase())">
+              <i class="material-icons">{{ getLevelIcon(selectedEvent.severity.toUpperCase()) }}</i>
               {{ selectedEvent.severity }}
             </span>
           </div>
           <div class="detail-item">
             <label>Status</label>
             <span class="status-badge" [class]="selectedEvent.resolved ? 'status-resolved' : 'status-unresolved'">
+              <i class="material-icons">{{ selectedEvent.resolved ? 'check_circle' : 'error' }}</i>
               {{ selectedEvent.resolved ? 'Resolved' : 'Unresolved' }}
             </span>
           </div>
         </div>
       </div>
       
+      <!-- Description Section -->
       <div class="detail-section">
-        <h3>Description</h3>
-        <p>{{ selectedEvent.description }}</p>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">description</i>
+          </div>
+          <h3>Description</h3>
+        </div>
+        <div class="description-content">
+          <p>{{ selectedEvent.description }}</p>
+        </div>
       </div>
       
+      <!-- User Information Section -->
       <div class="detail-section">
-        <h3>User Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">person</i>
+          </div>
+          <h3>User Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>User ID</label>
-            <span>{{ selectedEvent.userId || 'Anonymous Event' }}</span>
+            <span class="detail-value">{{ selectedEvent.userId || 'Anonymous Event' }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedEvent.user">
             <label>Email</label>
-            <span>{{ selectedEvent.user.email }}</span>
+            <span class="detail-value">{{ selectedEvent.user.email }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedEvent.user">
             <label>Role</label>
-            <span>{{ selectedEvent.user.role }}</span>
+            <span class="role-badge">{{ selectedEvent.user.role }}</span>
           </div>
         </div>
       </div>
       
+      <!-- Technical Details Section -->
       <div class="detail-section">
-        <h3>Technical Details</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">settings</i>
+          </div>
+          <h3>Technical Details</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>IP Address</label>
-            <span>{{ selectedEvent.ipAddress }}</span>
+            <span class="ip-address">{{ selectedEvent.ipAddress }}</span>
           </div>
           <div class="detail-item">
             <label>User Agent</label>
@@ -576,21 +694,27 @@
           </div>
           <div class="detail-item">
             <label>Timestamp</label>
-            <span>{{ selectedEvent.timestamp | date:'full' }}</span>
+            <span class="timestamp-value">{{ selectedEvent.timestamp | date:'full' }}</span>
           </div>
         </div>
       </div>
       
+      <!-- Resolution Information Section -->
       <div class="detail-section" *ngIf="selectedEvent.resolved">
-        <h3>Resolution Information</h3>
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="material-icons">check_circle</i>
+          </div>
+          <h3>Resolution Information</h3>
+        </div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>Resolved At</label>
-            <span>{{ selectedEvent.resolvedAt | date:'full' }}</span>
+            <span class="timestamp-value">{{ selectedEvent.resolvedAt | date:'full' }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedEvent.resolvedByUser">
             <label>Resolved By</label>
-            <span>{{ selectedEvent.resolvedByUser.email }} ({{ selectedEvent.resolvedByUser.role }})</span>
+            <span class="detail-value">{{ selectedEvent.resolvedByUser.email }} ({{ selectedEvent.resolvedByUser.role }})</span>
           </div>
         </div>
       </div>
@@ -598,6 +722,7 @@
     
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" (click)="closeEventModal()">
+        <i class="material-icons">close</i>
         Close
       </button>
       <button 

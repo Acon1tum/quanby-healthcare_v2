@@ -10,6 +10,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: #f8fafc;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
   
   // Mobile-first responsive design
   @media (max-width: 768px) {
@@ -97,6 +100,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
   
   @media (max-width: 768px) {
     padding: 25px 30px;
@@ -117,6 +121,7 @@
   color: #2c3e50;
   margin-bottom: 10px;
   font-size: 24px;
+  transition: color 0.3s ease;
   
   @media (max-width: 768px) {
     font-size: 22px;
@@ -130,6 +135,7 @@
 .join-card p {
   color: #7f8c8d;
   font-size: 14px;
+  transition: color 0.3s ease;
   
   @media (max-width: 768px) {
     font-size: 15px;
@@ -152,7 +158,9 @@
   border: 2px solid #e1e8ed;
   border-radius: 8px;
   font-size: 16px;
-  transition: border-color 0.3s ease;
+  background: white;
+  color: #2c3e50;
+  transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
   
   &:focus {
     outline: none;
@@ -207,6 +215,7 @@
   border-radius: 8px;
   padding: 10px;
   flex-shrink: 0; // Don't shrink the room code container
+  transition: background-color 0.3s ease, border-color 0.3s ease;
   
   @media (max-width: 768px) {
     gap: 8px;
@@ -247,6 +256,7 @@
   border-radius: 4px;
   border: 1px solid #e1e8ed;
   flex-shrink: 1; // Allow text to shrink if needed
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   
   @media (max-width: 768px) {
     font-size: 18px;
@@ -266,6 +276,7 @@
 .room-instructions {
   color: #7f8c8d;
   font-size: 14px;
+  transition: color 0.3s ease;
   
   @media (max-width: 480px) {
     font-size: 13px;
@@ -389,6 +400,7 @@
     gap: 20px;
     width: 100%;
     max-width: 100%;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     
     .status-info {
       display: flex;
@@ -470,9 +482,11 @@
   .status-item {
     color: #2c3e50;
     font-size: 14px;
+    transition: color 0.3s ease;
     
     strong {
       color: #34495e;
+      transition: color 0.3s ease;
     }
   }
 
@@ -895,6 +909,7 @@
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     
     @media (max-width: 768px) {
       padding: 16px;
@@ -908,6 +923,7 @@
       color: #2c3e50;
       margin-bottom: 15px;
       font-size: 18px;
+      transition: color 0.3s ease;
       
       @media (max-width: 768px) {
         font-size: 16px;
@@ -3977,6 +3993,689 @@
             width: 100%;
           }
         }
+      }
+    }
+  }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .meet-container {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
+
+  // Join Interface Dark Mode
+  .join-card {
+    background: #1e293b;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    h2 {
+      color: #f1f5f9;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+  }
+
+  .room-input {
+    background: #1e293b;
+    border-color: #475569;
+    color: #f1f5f9;
+
+    &:focus {
+      border-color: #3b82f6;
+    }
+
+    &:disabled {
+      background-color: #334155;
+    }
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+
+  .room-code {
+    background: #1e293b;
+    border-color: #475569;
+  }
+
+  .room-code-text {
+    background: #334155;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+
+  .room-instructions {
+    color: #94a3b8;
+  }
+
+  .success-message {
+    background: #064e3b;
+    color: #6ee7b7;
+    border-color: #065f46;
+  }
+
+  .error-message {
+    background: #7f1d1d;
+    color: #fca5a5;
+    border-color: #991b1b;
+  }
+
+  // Meeting Interface Dark Mode
+  .meeting-interface {
+    .room-status {
+      background: #1e293b;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+      .status-item {
+        color: #f1f5f9;
+
+        strong {
+          color: #e2e8f0;
+        }
+      }
+    }
+
+    .video-wrapper {
+      background: #1e293b;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+      h3 {
+        color: #f1f5f9;
+      }
+    }
+
+    .video-element {
+      background: #0f172a;
+      border-color: #475569;
+    }
+
+    .waiting-message {
+      background: #1e293b;
+      border-color: #475569;
+      color: #cbd5e1;
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+
+    .video-loading {
+      background: #1e293b;
+      border-color: #475569;
+      color: #cbd5e1;
+
+      .loading-spinner {
+        border-color: #475569;
+        border-top-color: #3b82f6;
+      }
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+
+    .camera-off-overlay {
+      background: rgba(0, 0, 0, 0.9);
+      color: #f1f5f9;
+    }
+  }
+
+  // Patient Details Sidebar Dark Mode
+  .patient-details-sidebar {
+    background: #1e293b;
+    border-color: #475569;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .patient-details-header {
+    background: #334155;
+    border-color: #475569;
+
+    h3 {
+      color: #f1f5f9;
+    }
+
+    .btn {
+      background: #1e293b;
+      border-color: #475569;
+      color: #cbd5e1;
+
+      &:hover {
+        background: #475569;
+        border-color: #64748b;
+        color: #f1f5f9;
+      }
+    }
+  }
+
+  .patient-section {
+    border-color: #475569;
+
+    h4 {
+      color: #e2e8f0;
+    }
+  }
+
+  .info-item {
+    .info-label {
+      color: #94a3b8;
+    }
+
+    .info-value {
+      color: #f1f5f9;
+    }
+  }
+
+  .activity-item {
+    .activity-icon {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    .activity-content {
+      .activity-title {
+        color: #f1f5f9;
+      }
+
+      .activity-time {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .patient-loading {
+    color: #94a3b8;
+
+    .loading-spinner {
+      border-color: #475569;
+      border-top-color: #3b82f6;
+    }
+
+    p {
+      color: #94a3b8;
+    }
+  }
+
+  .patient-error {
+    color: #fca5a5;
+
+    p {
+      color: #fca5a5;
+    }
+
+    .btn {
+      background: #1e293b;
+      border-color: #3b82f6;
+      color: #3b82f6;
+
+      &:hover {
+        background: #3b82f6;
+        color: #f1f5f9;
+      }
+    }
+  }
+
+  // Mobile Video Controls Dark Mode
+  .mobile-video-controls {
+    background: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  // Connection Status Debug Dark Mode
+  .connection-status-debug {
+    background: #1e293b;
+    border-color: #475569;
+
+    details {
+      summary {
+        color: #f1f5f9;
+
+        &:hover {
+          background: #334155;
+        }
+      }
+    }
+
+    .debug-info {
+      background: #0f172a;
+      border-color: #475569;
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  // Modal Dark Mode Styles
+  .face-scan-modal {
+    .face-scan-modal-content {
+      background: #1e293b;
+      border-color: #475569;
+
+      .face-scan-header {
+        border-color: #475569;
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .btn-close {
+          color: #cbd5e1;
+
+          &:hover {
+            background: #334155;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .face-scan-status {
+        background: #1e3a8a;
+        border-color: #3b82f6;
+
+        p {
+          color: #93c5fd;
+        }
+      }
+
+      .face-scan-iframe-container {
+        border-color: #475569;
+      }
+
+      .scan-results {
+        background: #334155;
+        border-color: #475569;
+
+        .results-header {
+          h4 {
+            color: #f1f5f9;
+          }
+        }
+
+        .results-content {
+          background: #1e293b;
+          border-color: #475569;
+
+          h5 {
+            color: #e2e8f0;
+          }
+
+          pre {
+            background: #0f172a;
+            border-color: #475569;
+            color: #cbd5e1;
+          }
+        }
+      }
+    }
+  }
+
+  .prescription-modal {
+    .prescription-modal-content {
+      background: #1e293b;
+      border-color: #475569;
+
+      .prescription-header {
+        background: #334155;
+        border-color: #475569;
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .btn-close {
+          color: #cbd5e1;
+
+          &:hover {
+            background: #475569;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .prescription-form {
+        .consultation-info {
+          background: #334155;
+          border-color: #475569;
+
+          .info-item {
+            strong {
+              color: #e2e8f0;
+            }
+
+            span {
+              color: #f1f5f9;
+
+              &.no-patient {
+                color: #fca5a5;
+              }
+            }
+          }
+        }
+
+        .form-group {
+          label {
+            color: #e2e8f0;
+          }
+
+          .form-control {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+
+            &:focus {
+              border-color: #10b981;
+              box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+
+        .prescription-form-item {
+          background: #334155;
+          border-color: #475569;
+
+          .prescription-form-header {
+            border-color: #475569;
+
+            h4 {
+              color: #f1f5f9;
+            }
+          }
+        }
+
+        .add-prescription-section {
+          background: #334155;
+          border-color: #475569;
+        }
+      }
+    }
+  }
+
+  .diagnosis-modal {
+    .diagnosis-modal-content {
+      background: #1e293b;
+      border-color: #475569;
+
+      .diagnosis-header {
+        background: linear-gradient(135deg, #92400e, #b45309);
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .btn-close {
+          color: #fbbf24;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .diagnosis-form {
+        .consultation-info {
+          background: #334155;
+          border-color: #475569;
+
+          .info-item {
+            strong {
+              color: #e2e8f0;
+            }
+
+            span {
+              color: #f1f5f9;
+
+              &.no-patient {
+                color: #fca5a5;
+              }
+            }
+          }
+        }
+
+        .form-group {
+          label {
+            color: #e2e8f0;
+          }
+
+          .form-control {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+
+            &:focus {
+              border-color: #f59e0b;
+              box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+
+        .checkbox-label {
+          color: #e2e8f0;
+        }
+      }
+    }
+  }
+
+  .lab-request-modal {
+    .lab-request-modal-content {
+      background: #1e293b;
+      border-color: #475569;
+
+      .lab-request-header {
+        background: linear-gradient(135deg, #0e7490, #155e75);
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .btn-close {
+          color: #67e8f9;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .lab-request-form {
+        .consultation-info {
+          background: #334155;
+          border-color: #475569;
+
+          .info-item {
+            strong {
+              color: #e2e8f0;
+            }
+
+            span {
+              color: #f1f5f9;
+
+              &.no-patient {
+                color: #fca5a5;
+              }
+            }
+          }
+        }
+
+        .form-group {
+          label {
+            color: #e2e8f0;
+          }
+
+          .form-control {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+
+            &:focus {
+              border-color: #17a2b8;
+              box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+            }
+
+            &:disabled {
+              background: #475569;
+              color: #94a3b8;
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .schedule-modal {
+    .schedule-modal-content {
+      background: #1e293b;
+      border-color: #475569;
+
+      .schedule-header {
+        background: linear-gradient(135deg, #4c1d95, #5b21b6);
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .btn-close {
+          color: #c4b5fd;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .schedule-form {
+        .patient-info {
+          background: #334155;
+          border-color: #475569;
+
+          .info-item {
+            strong {
+              color: #e2e8f0;
+            }
+
+            span {
+              color: #f1f5f9;
+
+              &.no-patient {
+                color: #fca5a5;
+              }
+            }
+          }
+        }
+
+        .form-group {
+          label {
+            color: #e2e8f0;
+          }
+
+          .form-control {
+            background: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+
+            &:focus {
+              border-color: #667eea;
+              box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+            &:disabled {
+              background: #475569;
+              color: #94a3b8;
+            }
+
+            &::placeholder {
+              color: #94a3b8;
+            }
+          }
+        }
+
+        .alert {
+          &.alert-error {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border-color: #991b1b;
+          }
+
+          &.alert-success {
+            background: #064e3b;
+            color: #6ee7b7;
+            border-color: #065f46;
+          }
+        }
+      }
+    }
+  }
+
+  // Notification Toast Dark Mode
+  .notification-toast {
+    &.notification-success {
+      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    }
+
+    &.notification-error {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    &.notification-info {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+  }
+
+  // Alert Dark Mode
+  .alert {
+    &.alert-error {
+      background: #7f1d1d;
+      color: #fca5a5;
+      border-color: #991b1b;
+    }
+
+    &.alert-success {
+      background: #064e3b;
+      color: #6ee7b7;
+      border-color: #065f46;
+    }
+  }
+
+  // Button Dark Mode Adjustments
+  .btn {
+    &.btn-outline-primary {
+      color: #3b82f6;
+      border-color: #3b82f6;
+
+      &:hover:not(:disabled) {
+        background: #3b82f6;
+        color: #f1f5f9;
+      }
+    }
+
+    &.btn-outline-secondary {
+      color: #94a3b8;
+      border-color: #94a3b8;
+
+      &:hover:not(:disabled) {
+        background: #94a3b8;
+        color: #1e293b;
       }
     }
   }

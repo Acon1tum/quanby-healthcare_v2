@@ -54,7 +54,7 @@
               <td>{{ getPatientAge(p) }}</td>
               <td>{{ p.patientInfo?.gender || '—' }}</td>
               <td>{{ p.patientInfo?.bloodType || '—' }}</td>
-              <td>{{ p.patientInfo?.contactNumber || '—' }}</td>
+              <td>{{ formatContactNumber(p.patientInfo?.contactNumber) }}</td>
               <td class="row-actions">
                 <button class="action-btn edit-btn" (click)="openEdit(p)"><i class="material-icons">edit</i></button>
                 <button class="action-btn delete-btn" (click)="delete(p)"><i class="material-icons">delete</i></button>
@@ -74,7 +74,7 @@
 
   <!-- Modal for Create/Edit Patient -->
   <div class="modal-overlay" *ngIf="showModal" (click)="showModal=false">
-    <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content compact-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>{{ modalMode === 'create' ? 'Add Patient' : 'Edit Patient' }}</h2>
         <button class="close-button" (click)="showModal=false"><i class="material-icons">close</i></button>

@@ -222,6 +222,7 @@
         <div class="day" *ngFor="let c of week" 
              [class.out]="!c.inMonth" 
              [class.appt]="c.hasAppt"
+             [class.today]="isToday(c.date)"
              [class.clickable]="c.hasAppt && c.inMonth"
              (click)="onCalendarDayClick(c.date, c.hasAppt)">
           <span class="num">{{ c.date.getDate() }}</span>

@@ -2,6 +2,7 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 // Header Section
@@ -12,6 +13,7 @@
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #e5e7eb;
+  transition: border-bottom-color 0.3s ease;
   
   .header-content {
     flex: 1;
@@ -21,6 +23,7 @@
       font-weight: 700;
       color: #1f2937;
       margin: 0 0 0.5rem 0;
+      transition: color 0.3s ease;
     }
     
     .page-description {
@@ -28,6 +31,7 @@
       margin: 0;
       font-size: 1rem;
       line-height: 1.5;
+      transition: color 0.3s ease;
     }
   }
   
@@ -48,6 +52,7 @@
     border-radius: 8px;
     padding: 0.5rem;
     gap: 0.5rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
     
     .toggle-btn {
       flex: 1;
@@ -63,7 +68,7 @@
       font-weight: 500;
       color: #6b7280;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       
       &:hover {
         color: #374151;
@@ -90,6 +95,7 @@
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
   
   .search-form {
     .search-row {
@@ -115,6 +121,7 @@
     color: #374151;
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
+    transition: color 0.3s ease;
   }
   
   .form-control {
@@ -122,7 +129,7 @@
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 0.875rem;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
     
     &:focus {
       outline: none;
@@ -139,6 +146,7 @@
     color: #ef4444;
     font-size: 0.75rem;
     margin-top: 0.25rem;
+    transition: color 0.3s ease;
   }
 }
 
@@ -153,7 +161,7 @@
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-decoration: none;
   
   &.btn-primary {
@@ -234,6 +242,7 @@
   margin-bottom: 1rem;
   color: #6b7280;
   font-size: 0.875rem;
+  transition: color 0.3s ease;
 }
 
 // Loading State
@@ -244,6 +253,7 @@
   justify-content: center;
   padding: 3rem;
   color: #6b7280;
+  transition: color 0.3s ease;
   
   .spinner {
     width: 40px;
@@ -268,6 +278,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 2rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 // Schedules Table
@@ -279,6 +290,7 @@
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
   }
   
   th {
@@ -288,10 +300,11 @@
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   .schedule-row {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease;
     
     &:hover {
       background: #f9fafb;
@@ -316,6 +329,7 @@
       small {
         color: #6b7280;
         font-size: 0.75rem;
+        transition: color 0.3s ease;
       }
     }
   }
@@ -361,10 +375,11 @@
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   .consultation-row {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease;
     
     &:hover {
       background: #f9fafb;
@@ -384,6 +399,7 @@
       small {
         color: #6b7280;
         font-size: 0.75rem;
+        transition: color 0.3s ease;
       }
     }
   }
@@ -393,6 +409,7 @@
       font-weight: 500;
       color: #111827;
       margin-bottom: 0.25rem;
+      transition: color 0.3s ease;
     }
     
     small {
@@ -448,7 +465,7 @@
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 500;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease;
     
     &:hover {
       background: #2563eb;
@@ -498,7 +515,7 @@
           font-size: 0.875rem;
           color: #374151;
           cursor: pointer;
-          transition: background-color 0.2s ease;
+          transition: background-color 0.3s ease;
           
           &:hover {
             background: #f3f4f6;
@@ -523,6 +540,7 @@
   text-align: center;
   padding: 3rem;
   color: #6b7280;
+  transition: color 0.3s ease;
   
   .material-icons {
     font-size: 3rem;
@@ -533,6 +551,7 @@
   h3 {
     margin: 0 0 0.5rem 0;
     color: #374151;
+    transition: color 0.3s ease;
   }
   
   p {
@@ -564,6 +583,7 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
   
   .dialog-header {
     display: flex;
@@ -571,10 +591,12 @@
     align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid #e5e7eb;
+    transition: border-bottom-color 0.3s ease;
     
     h2 {
       margin: 0;
       color: #1f2937;
+      transition: color 0.3s ease;
     }
   }
   
@@ -599,6 +621,7 @@
       margin-top: 2rem;
       padding-top: 1.5rem;
       border-top: 1px solid #e5e7eb;
+      transition: border-top-color 0.3s ease;
     }
   }
 }
@@ -678,5 +701,304 @@
   
   .dialog-form .form-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .schedule-management-container {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* Header Section Dark Mode */
+  .header-section {
+    border-bottom-color: #334155;
+
+    .header-content {
+      .page-title {
+        color: #f1f5f9;
+      }
+
+      .page-description {
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  /* View Toggle Dark Mode */
+  .view-toggle-section {
+    .toggle-buttons {
+      background: #334155;
+      border-color: #475569;
+
+      .toggle-btn {
+        color: #cbd5e1;
+
+        &:hover {
+          color: #f1f5f9;
+          background: #475569;
+        }
+
+        &.active {
+          background: #3b82f6;
+          color: white;
+        }
+      }
+    }
+  }
+
+  /* Search Section Dark Mode */
+  .search-section {
+    background: #334155;
+    border-color: #475569;
+  }
+
+  /* Form Controls Dark Mode */
+  .form-group {
+    label {
+      color: #cbd5e1;
+    }
+
+    .form-control {
+      background-color: #1e293b;
+      border-color: #475569;
+      color: #f1f5f9;
+
+      &:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+      }
+
+      &.ng-invalid.ng-touched {
+        border-color: #f87171;
+      }
+    }
+
+    .error-message {
+      color: #f87171;
+    }
+  }
+
+  /* Results Summary Dark Mode */
+  .results-summary {
+    color: #cbd5e1;
+  }
+
+  /* Loading State Dark Mode */
+  .loading-state {
+    color: #cbd5e1;
+  }
+
+  /* Table Container Dark Mode */
+  .table-container {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  /* Schedules Table Dark Mode */
+  .schedules-table {
+    th, td {
+      color: #f1f5f9;
+      border-bottom-color: #334155;
+    }
+
+    th {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    .schedule-row {
+      &:hover {
+        background: #334155;
+      }
+
+      &.unavailable {
+        background: #334155;
+        opacity: 0.7;
+      }
+    }
+
+    .doctor-info {
+      .name-info {
+        small {
+          color: #cbd5e1;
+        }
+      }
+    }
+
+    .status-badge {
+      &.status-available {
+        background: #064e3b;
+        color: #6ee7b7;
+      }
+
+      &.status-unavailable {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+    }
+  }
+
+  /* Consultations Table Dark Mode */
+  .consultations-table {
+    th, td {
+      color: #f1f5f9;
+      border-bottom-color: #334155;
+    }
+
+    th {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    .consultation-row {
+      &:hover {
+        background: #334155;
+      }
+    }
+
+    .doctor-info, .patient-info {
+      .name-info {
+        small {
+          color: #cbd5e1;
+        }
+      }
+    }
+
+    .datetime-info {
+      .date {
+        color: #f1f5f9;
+      }
+
+      small {
+        color: #cbd5e1;
+      }
+    }
+
+    .status-badge {
+      &.status-scheduled {
+        background: #78350f;
+        color: #fbbf24;
+      }
+
+      &.status-in-progress {
+        background: #1e3a8a;
+        color: #93c5fd;
+      }
+
+      &.status-completed {
+        background: #064e3b;
+        color: #6ee7b7;
+      }
+
+      &.status-cancelled {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+    }
+
+    .consultation-link {
+      background: #3b82f6;
+      color: white;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+
+    .actions {
+      .status-dropdown {
+        .dropdown-toggle {
+          background: #6b7280;
+          color: white;
+
+          &:hover {
+            background: #4b5563;
+          }
+        }
+
+        .dropdown-menu {
+          background: #1e293b;
+          border-color: #334155;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+
+          .dropdown-item {
+            color: #cbd5e1;
+
+            &:hover {
+              background: #334155;
+            }
+
+            &.active {
+              background: #3b82f6;
+              color: white;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Empty State Dark Mode */
+  .empty-state {
+    color: #cbd5e1;
+
+    .material-icons {
+      color: #64748b;
+    }
+
+    h3 {
+      color: #f1f5f9;
+    }
+  }
+
+  /* Dialog Dark Mode */
+  .dialog-overlay {
+    .dialog {
+      background: #1e293b;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+
+      .dialog-header {
+        border-bottom-color: #334155;
+
+        h2 {
+          color: #f1f5f9;
+        }
+      }
+
+      .dialog-form {
+        .form-group {
+          label {
+            color: #cbd5e1;
+          }
+
+          .form-control {
+            background-color: #334155;
+            border-color: #475569;
+            color: #f1f5f9;
+
+            &:focus {
+              border-color: #60a5fa;
+              box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+            }
+
+            &.ng-invalid.ng-touched {
+              border-color: #f87171;
+            }
+          }
+
+          .error-message {
+            color: #f87171;
+          }
+        }
+
+        .dialog-actions {
+          border-top-color: #334155;
+        }
+      }
+    }
   }
 }

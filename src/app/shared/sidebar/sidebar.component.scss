@@ -1,5 +1,5 @@
 .sidebar {
-  width: 280px;
+  width: 265px;
   height: 100vh;
   background: white;
   border-right: 1px solid #e5e7eb;
@@ -8,7 +8,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 1000;
+  z-index: 1001; /* Higher z-index to stay above header */
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15), 1px 0 4px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -179,6 +179,54 @@
   }
 }
 
+/* Dark Mode Toggle Section */
+.dark-mode-section {
+  padding: 0.75rem 1.5rem 0.5rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #334155;
+  }
+  
+  &.active {
+    background: #1e293b;
+    color: #f1f5f9;
+    border-color: #334155;
+    
+    &:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+  }
+  
+  i {
+    font-size: 1.25rem;
+    transition: transform 0.2s ease;
+  }
+  
+  &.active i {
+    transform: rotate(180deg);
+  }
+}
+
 /* Logout Section */
 .logout-section {
   padding: 1rem 1.5rem;
@@ -239,4 +287,154 @@
 
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .sidebar {
+    background: #1e293b;
+    border-right-color: #334155;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3), 1px 0 4px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .logo-section {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border-bottom-color: #334155;
+  }
+
+  .logo-text {
+    color: #f1f5f9;
+  }
+
+  .role-badge {
+    background: #475569;
+    color: #cbd5e1;
+  }
+
+  .nav-link {
+    color: #cbd5e1;
+    
+    &:hover {
+      background: #334155;
+      color: #60a5fa;
+      border-left-color: #60a5fa;
+    }
+    
+    &.active {
+      background: #1e40af;
+      color: #dbeafe;
+      border-left-color: #60a5fa;
+    }
+  }
+
+  .nav-group-toggle {
+    color: #cbd5e1;
+    
+    &:hover {
+      background: #334155;
+      color: #60a5fa;
+    }
+  }
+
+  .nav-submenu {
+    background: #334155;
+    
+    .nav-link {
+      &:hover {
+        background: #475569;
+      }
+      
+      &.active {
+        background: #1e40af;
+      }
+    }
+  }
+
+  .dark-mode-section {
+    background: #334155;
+  }
+
+  .dark-mode-toggle {
+    background: #475569;
+    color: #cbd5e1;
+    border-color: #64748b;
+    
+    &:hover {
+      background: #64748b;
+      border-color: #94a3b8;
+      color: #f1f5f9;
+    }
+    
+    &.active {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-color: #cbd5e1;
+      
+      &:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+      }
+    }
+  }
+
+  .logout-section {
+    background: #334155;
+    border-top-color: #475569;
+  }
+
+  .logout-btn {
+    background: #7f1d1d;
+    color: #fecaca;
+    border-color: #991b1b;
+    
+    &:hover {
+      background: #991b1b;
+      border-color: #b91c1c;
+    }
+  }
+
+  .sidebar-nav::-webkit-scrollbar-track {
+    background: #334155;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-thumb {
+    background: #64748b;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Responsive Design for Dark Mode Toggle */
+@media (max-width: 1024px) {
+  .dark-mode-section {
+    padding: 0.5rem 1rem 0.25rem 1rem;
+  }
+  
+  .dark-mode-toggle {
+    width: 2.25rem;
+    height: 2.25rem;
+    
+    i {
+      font-size: 1.125rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dark-mode-section {
+    padding: 0.5rem 0.75rem 0.25rem 0.75rem;
+  }
+  
+  .dark-mode-toggle {
+    width: 2rem;
+    height: 2rem;
+    
+    i {
+      font-size: 1rem;
+    }
+  }
 }

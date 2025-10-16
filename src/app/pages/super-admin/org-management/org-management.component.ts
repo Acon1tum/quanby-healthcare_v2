@@ -471,8 +471,13 @@ export class OrgManagementComponent implements OnInit, OnDestroy {
   }
 
   onInputChange(event: Event, fieldName: StringFieldKey): void {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-    const value = target?.value || '';
+    const target = event.target as HTMLInputElement;
+    if (!target) {
+      return;
+    }
+    
+    const value = target.value || '';
+    
     if (fieldName === 'phone') {
       // Keep only digits and limit to 11
       const digits = value.replace(/\D/g, '').slice(0, 11);

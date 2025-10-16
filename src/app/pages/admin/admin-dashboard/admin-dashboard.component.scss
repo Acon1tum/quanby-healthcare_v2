@@ -17,6 +17,7 @@
   background: #f8fafc;
   min-height: calc(100vh - 80px); /* Account for header height */
   position: relative; /* Ensure proper positioning context */
+  transition: background-color 0.3s ease, color 0.3s ease;
   
   @media (max-width: 640px) {
     min-height: calc(100vh - 72px); /* Smaller for mobile */
@@ -45,6 +46,7 @@
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   
   .header-content {
     flex: 1;
@@ -58,6 +60,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      transition: color 0.3s ease;
     }
     
     .page-description {
@@ -65,6 +68,7 @@
       font-size: 1.125rem;
       color: #6b7280;
       font-weight: 400;
+      transition: color 0.3s ease;
     }
   }
   
@@ -116,11 +120,13 @@
     color: #374151;
     margin-bottom: 0.5rem;
     font-weight: 500;
+    transition: color 0.3s ease;
   }
   
   small {
     color: #6b7280;
     font-size: 0.875rem;
+    transition: color 0.3s ease;
   }
 }
 
@@ -139,6 +145,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    transition: color 0.3s ease;
     
     &::before {
       content: '';
@@ -165,7 +172,7 @@
       padding: 1.5rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       border: 1px solid #e5e7eb;
-      transition: all 0.3s ease;
+      transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
       position: relative;
       overflow: hidden;
       
@@ -206,6 +213,7 @@
           font-weight: 700;
           color: #111827;
           line-height: 1;
+          transition: color 0.3s ease;
         }
         
         .stat-label {
@@ -215,11 +223,13 @@
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          transition: color 0.3s ease;
         }
         
         .stat-change {
           font-size: 0.75rem;
           font-weight: 600;
+          transition: color 0.3s ease;
           
           &.positive {
             color: #059669;
@@ -268,7 +278,7 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       border: 1px solid #e5e7eb;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
       position: relative;
       overflow: hidden;
       
@@ -303,6 +313,7 @@
           font-size: 1.125rem;
           font-weight: 600;
           color: #111827;
+          transition: color 0.3s ease;
         }
         
         .action-description {
@@ -310,6 +321,7 @@
           font-size: 0.875rem;
           color: #6b7280;
           line-height: 1.5;
+          transition: color 0.3s ease;
         }
       }
       
@@ -346,7 +358,7 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
-      transition: color 0.2s ease;
+      transition: color 0.3s ease;
       
       &:hover {
         color: #1d4ed8;
@@ -364,6 +376,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     overflow: hidden;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     
     .activity-item {
       display: flex;
@@ -371,7 +384,7 @@
       gap: 1rem;
       padding: 1rem 1.5rem;
       border-bottom: 1px solid #f1f5f9;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.3s ease, border-bottom-color 0.3s ease;
       
       &:last-child {
         border-bottom: none;
@@ -406,6 +419,7 @@
           color: #111827;
           font-weight: 500;
           line-height: 1.4;
+          transition: color 0.3s ease;
         }
         
         .activity-meta {
@@ -417,10 +431,12 @@
           .activity-user {
             color: #3b82f6;
             font-weight: 500;
+            transition: color 0.3s ease;
           }
           
           .activity-time {
             color: #6b7280;
+            transition: color 0.3s ease;
           }
         }
       }
@@ -472,6 +488,7 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   
   .health-metrics {
     .health-metric {
@@ -491,11 +508,13 @@
           font-size: 0.875rem;
           color: #374151;
           font-weight: 500;
+          transition: color 0.3s ease;
         }
         
         .metric-value {
           font-size: 0.875rem;
           font-weight: 600;
+          transition: color 0.3s ease;
           
           &.status-success {
             color: #059669;
@@ -543,6 +562,7 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   
   .events-list {
     .event-item {
@@ -551,6 +571,7 @@
       gap: 1rem;
       padding: 1rem 0;
       border-bottom: 1px solid #f1f5f9;
+      transition: border-bottom-color 0.3s ease;
       
       &:last-child {
         border-bottom: none;
@@ -592,12 +613,14 @@
           font-size: 0.875rem;
           font-weight: 600;
           color: #111827;
+          transition: color 0.3s ease;
         }
         
         .event-time {
           margin: 0;
           font-size: 0.75rem;
           color: #6b7280;
+          transition: color 0.3s ease;
         }
       }
       
@@ -611,7 +634,7 @@
           font-size: 0.75rem;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.3s ease;
           
           &:hover {
             background: #3b82f6;
@@ -643,7 +666,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-decoration: none;
   
   &.btn-sm {
@@ -722,12 +745,14 @@
     font-size: 1.5rem;
     font-weight: 600;
     color: #111827;
+    transition: color 0.3s ease;
   }
   
   p {
     margin: 0 0 1rem 0;
     color: #6b7280;
     line-height: 1.6;
+    transition: color 0.3s ease;
     
     &:last-child {
       margin-bottom: 0;
@@ -738,5 +763,395 @@
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
+    transition: border-top-color 0.3s ease;
+  }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .admin-dashboard-container {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* Header Section Dark Mode */
+  .header-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .header-content {
+      .page-title {
+        color: #f1f5f9;
+        background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .page-description {
+        color: #cbd5e1;
+      }
+    }
+
+    .header-actions {
+      .btn {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        i {
+          color: white !important;
+        }
+      }
+    }
+  }
+
+  /* Loading State Dark Mode */
+  .loading-state {
+    p {
+      color: #e2e8f0;
+    }
+
+    small {
+      color: #cbd5e1;
+    }
+
+    .spinner {
+      border-color: #334155;
+      border-top-color: #3b82f6;
+    }
+  }
+
+  /* Section Titles Dark Mode */
+  .section-title {
+    color: #f1f5f9 !important;
+
+    &::before {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    }
+  }
+
+  /* Stats Section Title */
+  .stats-section {
+    .section-title {
+      color: #f1f5f9 !important;
+    }
+  }
+
+  /* Quick Actions Section Title */
+  .quick-actions-section {
+    .section-title {
+      color: #f1f5f9 !important;
+    }
+  }
+
+  /* Statistics Cards Dark Mode */
+  .stats-section {
+    .stats-grid {
+      .stat-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .stat-icon {
+          // Override inline styles for dark mode
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+          
+          i {
+            color: white !important;
+          }
+        }
+
+        .stat-content {
+          .stat-value {
+            color: #f1f5f9 !important;
+          }
+
+          .stat-label {
+            color: #cbd5e1 !important;
+          }
+
+          .stat-change {
+            &.positive {
+              color: #6ee7b7 !important;
+            }
+
+            &.negative {
+              color: #fca5a5 !important;
+            }
+
+            &.neutral {
+              color: #cbd5e1 !important;
+            }
+
+            &.warning {
+              color: #fbbf24 !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Quick Actions Dark Mode */
+  .quick-actions-section {
+    .quick-actions-grid {
+      .quick-action-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .action-icon {
+          // Ensure action icons maintain their colors in dark mode
+          i {
+            color: white !important;
+          }
+        }
+
+        .action-content {
+          .action-title {
+            color: #f1f5f9 !important;
+          }
+
+          .action-description {
+            color: #cbd5e1 !important;
+          }
+        }
+
+        .action-arrow {
+          color: var(--action-color, #3b82f6) !important;
+          
+          i {
+            color: var(--action-color, #3b82f6) !important;
+          }
+        }
+      }
+    }
+  }
+
+  /* Recent Activities Dark Mode */
+  .recent-activities-section {
+    .btn-text {
+      color: #60a5fa;
+
+      &:hover {
+        color: #93c5fd;
+      }
+    }
+
+    .activities-list {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      .activity-item {
+        border-bottom-color: #334155;
+
+        &:hover {
+          background: #334155;
+        }
+
+        .activity-icon {
+          background: #334155;
+          
+          i {
+            color: inherit !important;
+          }
+        }
+
+        .activity-content {
+          .activity-description {
+            color: #f1f5f9;
+          }
+
+          .activity-meta {
+            .activity-user {
+              color: #60a5fa;
+            }
+
+            .activity-time {
+              color: #cbd5e1;
+            }
+          }
+        }
+
+        .activity-status {
+          .status-badge {
+            &.status-completed {
+              background: #064e3b;
+              color: #6ee7b7;
+            }
+
+            &.status-pending {
+              background: #451a03;
+              color: #fbbf24;
+            }
+
+            &.status-cancelled {
+              background: #7f1d1d;
+              color: #fca5a5;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* System Health Dark Mode */
+  .system-health-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .health-metrics {
+      .health-metric {
+        .metric-header {
+          .metric-label {
+            color: #e2e8f0;
+          }
+
+          .metric-value {
+            &.status-success {
+              color: #6ee7b7;
+            }
+
+            &.status-warning {
+              color: #fbbf24;
+            }
+
+            &.status-danger {
+              color: #fca5a5;
+            }
+          }
+        }
+
+        .metric-bar {
+          background: #334155;
+
+          .metric-fill {
+            background: linear-gradient(90deg, #10b981, #059669);
+
+            &.status-warning {
+              background: linear-gradient(90deg, #f59e0b, #d97706);
+            }
+
+            &.status-danger {
+              background: linear-gradient(90deg, #ef4444, #dc2626);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* Upcoming Events Dark Mode */
+  .upcoming-events-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .events-list {
+      .event-item {
+        border-bottom-color: #334155;
+
+        .event-date {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          
+          .event-day {
+            color: white;
+          }
+          
+          .event-month {
+            color: white;
+          }
+        }
+
+        .event-content {
+          .event-title {
+            color: #f1f5f9;
+          }
+
+          .event-time {
+            color: #cbd5e1;
+          }
+        }
+
+        .event-actions {
+          .btn-outline {
+            border-color: #3b82f6;
+            color: #3b82f6;
+
+            &:hover {
+              background: #3b82f6;
+              color: white;
+            }
+          }
+
+          .maintenance-badge {
+            background: #451a03;
+            color: #fbbf24;
+          }
+        }
+      }
+    }
+  }
+
+  /* Test Section Dark Mode */
+  .test-scroll-section {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .section-title {
+      color: #f1f5f9;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+
+    .test-content {
+      border-top-color: #334155;
+    }
+  }
+
+  /* Button Dark Mode Adjustments */
+  .btn {
+    &.btn-primary {
+      background: #3b82f6;
+      color: white;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+
+    &.btn-secondary {
+      background: #6b7280;
+      color: white;
+
+      &:hover {
+        background: #4b5563;
+      }
+    }
   }
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { filter } from 'rxjs/operators';
 
 interface NavigationItem {
   label: string;
@@ -18,14 +19,28 @@ interface NavigationItem {
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   userRole: string = '';
   currentUser: any = null;
   navigationItems: NavigationItem[] = [];
+  isDarkMode: boolean = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    // Initialize dark mode from localStorage or system preference
+    this.initializeDarkMode();
+    
+    // Listen for route changes to reapply dark mode logic
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.applyDarkMode();
+      });
+    
     // Get user role from auth service
     this.authService.currentUser$.subscribe(user => {
       if (user) {
@@ -34,6 +49,10 @@ export class SidebarComponent implements OnInit {
         this.navigationItems = this.getNavigationItems(user.role);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any subscriptions if needed
   }
 
   getNavigationItems(role: string): NavigationItem[] {
@@ -78,6 +97,12 @@ export class SidebarComponent implements OnInit {
             label: 'Reports',
             icon: 'bar_chart',
             route: '/super-admin/reports'
+          },
+          
+          {
+            label: 'Settings',
+            icon: 'settings',
+            route: '/super-admin/settings'
           },
           
         ];
@@ -244,5 +269,45 @@ export class SidebarComponent implements OnInit {
   logout(): void {
     // Implement logout logic
     this.authService.logout();
+  }
+
+  initializeDarkMode(): void {
+    // Check localStorage first, then system preference
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme !== null) {
+      this.isDarkMode = savedTheme === 'true';
+    } else {
+      // Check system preference
+      this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    this.applyDarkMode();
+  }
+
+  toggleDarkMode(): void {
+    this.isDarkMode = !this.isDarkMode;
+    this.applyDarkMode();
+    // Save preference to localStorage
+    localStorage.setItem('darkMode', this.isDarkMode.toString());
+  }
+
+  applyDarkMode(): void {
+    const body = document.body;
+    const html = document.documentElement;
+    const currentUrl = window.location.pathname;
+    
+    // Don't apply dark mode to public pages (login, register, landing, face-scan)
+    const isPublicPage = currentUrl.includes('/login') || 
+                        currentUrl.includes('/register') || 
+                        currentUrl === '/' || 
+                        currentUrl.includes('/landing') ||
+                        currentUrl.includes('/face-scan');
+    
+    if (this.isDarkMode && !isPublicPage) {
+      body.classList.add('dark-mode');
+      html.classList.add('dark-mode');
+    } else {
+      body.classList.remove('dark-mode');
+      html.classList.remove('dark-mode');
+    }
   }
 }

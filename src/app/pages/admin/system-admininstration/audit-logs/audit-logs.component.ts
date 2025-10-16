@@ -540,4 +540,28 @@ export class AuditLogsComponent implements OnInit {
       default: return eventType.replace(/_/g, ' ');
     }
   }
+
+  getEventTypeIcon(eventType: string): string {
+    switch (eventType) {
+      case 'AUTH_FAILURE': return 'lock';
+      case 'RATE_LIMIT_VIOLATION': return 'speed';
+      case 'SUSPICIOUS_ACTIVITY': return 'warning';
+      case 'LOGIN_ATTEMPT': return 'login';
+      default: return 'security';
+    }
+  }
+
+  // Track by functions for performance
+  trackByLogId(index: number, log: AuditLog): string {
+    return log.id;
+  }
+
+  trackByEventId(index: number, event: SecurityEvent): string {
+    return event.id;
+  }
+
+  // Refresh data
+  refreshData(): void {
+    this.loadData();
+  }
 }

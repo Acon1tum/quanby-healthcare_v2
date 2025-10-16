@@ -30,6 +30,7 @@ import { AuthService, User } from '../../auth/auth.service';
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      transition: background-color 0.2s ease;
     }
     
     .dashboard-content {
@@ -40,16 +41,50 @@ import { AuthService, User } from '../../auth/auth.service';
     
     .main-content {
       flex: 1;
-      margin-left: 280px; /* Sidebar width */
-      padding: 2rem;
+      margin-left: 265px; /* Sidebar width - reduced from 280px */
+      padding: 1rem; /* Reduced from 2rem */
       background: #f8f9fa;
       min-height: calc(100vh - 80px); /* Viewport height minus header */
+      transition: background-color 0.2s ease;
     }
     
     @media (max-width: 768px) {
       .main-content {
         margin-left: 0;
         padding: 1rem;
+      }
+    }
+
+    /* Dark Mode Styles for Dashboard Layout */
+    :host-context(.dark-mode) {
+      .dashboard-layout {
+        background: #0f172a !important;
+      }
+      
+      .main-content {
+        background: #0f172a !important;
+      }
+    }
+
+    /* Also apply dark mode when body has dark-mode class */
+    :host-context(body.dark-mode) {
+      .dashboard-layout {
+        background: #0f172a !important;
+      }
+      
+      .main-content {
+        background: #0f172a !important;
+      }
+    }
+
+    /* Also apply dark mode when html has dark-mode class */
+    :host-context(html.dark-mode) {
+      .dashboard-layout {
+        background: #0f172a !important;
+      }
+      
+      .main-content {
+        background: #0f172a !important;
       }
     }
   `]

@@ -169,7 +169,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const currentRoute = this.router.url;
     this.hasSidebar = currentRoute.includes('/admin') || 
                      currentRoute.includes('/doctor') || 
-                     currentRoute.includes('/patient');
+                     currentRoute.includes('/patient') ||
+                     currentRoute.includes('/super-admin');
   }
 
   navigateToFaceScan(): void {
@@ -190,6 +191,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   navigateToProfile(): void {
     if (this.currentUser) {
       switch (this.currentUser.role) {
+        case 'SUPER_ADMIN':
+          this.router.navigate(['/super-admin/my-profile']);
+          break;
         case 'ADMIN':
           this.router.navigate(['/admin/my-profile']);
           break;
@@ -236,6 +240,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return this.currentUser.patientInfo.fullName || this.currentUser.email || 'Patient';
     } else if (this.currentUser.role === 'ADMIN') {
       return 'Administrator';
+    } else if (this.currentUser.role === 'SUPER_ADMIN') {
+      return 'Super Administrator';
     }
     
     return this.currentUser.email || 'User';
@@ -342,6 +348,49 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Navigation items based on user role
   getNavigationItems(role: string): NavigationItem[] {
     switch (role) {
+      case 'SUPER_ADMIN':
+        return [
+          {
+            label: 'Dashboard',
+            icon: 'dashboard',
+            route: '/super-admin/dashboard'
+          },
+          {
+            label: 'Notifications',
+            icon: 'notifications',
+            route: '/super-admin/notifications'
+          },
+          {
+            label: 'Organization Management',
+            icon: 'business',
+            route: '/super-admin/org-management'
+          },
+          {
+            label: 'Doctor Management',
+            icon: 'medical_services',
+            route: '/super-admin/doctor-management'
+          },
+          {
+            label: 'Patient Management',
+            icon: 'people',
+            route: '/super-admin/patient-management'
+          },
+          {
+            label: 'Audit Logs',
+            icon: 'history',
+            route: '/super-admin/audit-logs'
+          },
+          {
+            label: 'Reports',
+            icon: 'bar_chart',
+            route: '/super-admin/reports'
+          },
+          {
+            label: 'Settings',
+            icon: 'settings',
+            route: '/super-admin/settings'
+          }
+        ];
       case 'ADMIN':
         return [
           {

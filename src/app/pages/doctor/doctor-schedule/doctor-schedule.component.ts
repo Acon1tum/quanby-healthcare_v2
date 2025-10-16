@@ -1122,4 +1122,12 @@ export class DoctorScheduleComponent implements OnInit {
       console.log('❌ ERROR: Some appointments have duplicate room IDs!');
     }
   }
+
+  // Check if a calendar day is today
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
 }
