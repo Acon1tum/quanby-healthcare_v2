@@ -3018,3 +3018,874 @@
     width: 100%;
   }
 }
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .meet-container {
+    background: #0f172a;
+    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  // Join Interface Dark Mode
+  .join-interface {
+    .join-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      h2 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+
+      .room-instructions {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .room-code {
+      background: #334155;
+      border-color: #475569;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+
+      .room-input {
+        background: #334155;
+        border-color: #475569;
+        color: #f1f5f9;
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+        &:focus {
+          border-color: #60a5fa;
+          box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        &:disabled {
+          background-color: #475569;
+          color: #94a3b8;
+        }
+
+        &::placeholder {
+          color: #94a3b8;
+        }
+      }
+    }
+
+    .start-meeting-btn {
+      background: #3b82f6;
+      color: #f1f5f9;
+      transition: background-color 0.3s ease, color 0.3s ease;
+
+      &:hover:not(:disabled) {
+        background: #2563eb;
+      }
+
+      &:disabled {
+        background: #475569;
+        color: #94a3b8;
+      }
+    }
+
+    .error-message {
+      background: #7f1d1d;
+      color: #fca5a5;
+      border-color: #dc2626;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+  }
+
+  // Meeting Interface Dark Mode
+  .meeting-interface {
+    .room-status {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .status-item {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+
+        strong {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+      }
+    }
+
+    .video-wrapper {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      h3 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .video-element {
+      background: #000;
+      border-color: #475569;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .camera-off-overlay {
+      background: rgba(0, 0, 0, 0.9);
+      color: #f1f5f9;
+      transition: background-color 0.3s ease, color 0.3s ease;
+
+      p {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .video-loading {
+      background: #334155;
+      border-color: #475569;
+      color: #cbd5e1;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+      .loading-spinner {
+        border-color: #475569;
+        border-top-color: #60a5fa;
+        transition: border-color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .waiting-message {
+      background: #334155;
+      border-color: #475569;
+      color: #cbd5e1;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+    }
+
+    // Overlay Controls Dark Mode
+    .overlay-toggle {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+      color: #ffffff;
+      transition: background 0.3s ease, color 0.3s ease;
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(37, 99, 235, 1));
+      }
+    }
+
+    .overlay-menu {
+      background: rgba(17, 24, 39, 0.95);
+      border-color: rgba(255, 255, 255, 0.2);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+
+      .btn {
+        color: #e5e7eb;
+        transition: color 0.3s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #fff;
+        }
+      }
+    }
+
+    .overlay-control-group {
+      background: rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease;
+    }
+
+    .icon-btn {
+      background: #334155;
+      border-color: #475569;
+      color: #f1f5f9;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+      &.icon-danger {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: #ffffff;
+      }
+    }
+
+    // Mobile Video Controls Dark Mode
+    .mobile-video-controls {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+  }
+
+  // Doctor Details Sidebar Dark Mode
+  .doctor-details-sidebar {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+    .doctor-details-header {
+      background: #334155;
+      border-bottom-color: #475569;
+      transition: background-color 0.3s ease, border-bottom-color 0.3s ease;
+
+      h3 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      .btn {
+        background: #475569;
+        color: #cbd5e1;
+        border-color: #64748b;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+        &:hover {
+          background: #64748b;
+          color: #f1f5f9;
+        }
+      }
+    }
+
+    .doctor-details-content {
+      .doctor-section {
+        h4 {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+
+        .doctor-info-grid {
+          .info-item {
+            .info-label {
+              color: #94a3b8;
+              transition: color 0.3s ease;
+            }
+
+            .info-value {
+              color: #f1f5f9;
+              transition: color 0.3s ease;
+            }
+          }
+        }
+      }
+    }
+
+    .doctor-details-actions {
+      .btn {
+        background: #3b82f6;
+        color: #f1f5f9;
+        transition: background-color 0.3s ease, color 0.3s ease;
+
+        &:hover {
+          background: #2563eb;
+        }
+      }
+    }
+  }
+
+  // Face Scan Modals Dark Mode
+  .face-scan-request-modal {
+    .face-scan-request-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .face-scan-request-header {
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .face-scan-request-message {
+        background: #1e3a8a;
+        border-left-color: #3b82f6;
+        transition: background-color 0.3s ease, border-left-color 0.3s ease;
+
+        p {
+          color: #93c5fd;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .btn {
+        transition: background-color 0.3s ease, color 0.3s ease;
+
+        &.btn-primary {
+          background: #3b82f6;
+          color: #f1f5f9;
+
+          &:hover {
+            background: #2563eb;
+          }
+        }
+
+        &.btn-secondary {
+          background: #475569;
+          color: #cbd5e1;
+
+          &:hover {
+            background: #64748b;
+          }
+        }
+      }
+    }
+  }
+
+  .face-scan-modal {
+    .face-scan-modal-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .face-scan-header {
+        border-bottom-color: #334155;
+        transition: border-bottom-color 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        .btn-close {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+
+          &:hover {
+            background: #334155;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .face-scan-status {
+        background: #1e3a8a;
+        border-left-color: #3b82f6;
+        transition: background-color 0.3s ease, border-left-color 0.3s ease;
+
+        p {
+          color: #93c5fd;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .scan-timer-display {
+        .timer-container {
+          background: #1e40af;
+          border-color: #3b82f6;
+          transition: background-color 0.3s ease, border-color 0.3s ease;
+
+          .timer-text {
+            .timer-label {
+              color: #93c5fd;
+              transition: color 0.3s ease;
+            }
+
+            .timer-value {
+              color: #dbeafe;
+              transition: color 0.3s ease;
+            }
+          }
+        }
+      }
+
+      .face-scan-iframe-container {
+        border-color: #334155;
+        transition: border-color 0.3s ease;
+      }
+
+      .scan-results {
+        background: #334155;
+        border-color: #475569;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+
+        .results-header {
+          h4 {
+            color: #f1f5f9;
+            transition: color 0.3s ease;
+          }
+
+          .btn-sm {
+            transition: background-color 0.3s ease, color 0.3s ease;
+
+            &.btn-outline-secondary {
+              background: #475569;
+              color: #cbd5e1;
+              border-color: #64748b;
+
+              &:hover {
+                background: #64748b;
+                color: #f1f5f9;
+              }
+            }
+
+            &.btn-success {
+              background: #059669;
+              color: #f1f5f9;
+
+              &:hover {
+                background: #047857;
+              }
+            }
+          }
+        }
+
+        .results-content {
+          background: #1e293b;
+          border-color: #334155;
+          transition: background-color 0.3s ease, border-color 0.3s ease;
+
+          h5 {
+            color: #cbd5e1;
+            transition: color 0.3s ease;
+          }
+
+          pre {
+            background: #334155;
+            border-color: #475569;
+            color: #cbd5e1;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+          }
+        }
+      }
+
+      .face-scan-actions {
+        .btn {
+          transition: background-color 0.3s ease, color 0.3s ease;
+
+          &.btn-secondary {
+            background: #475569;
+            color: #cbd5e1;
+
+            &:hover {
+              background: #64748b;
+            }
+          }
+
+          &.btn-primary {
+            background: #3b82f6;
+            color: #f1f5f9;
+
+            &:hover {
+              background: #2563eb;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Save Modals Dark Mode
+  .save-success-modal {
+    .save-success-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .save-success-header {
+        h3 {
+          color: #10b981;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .save-success-message {
+        p {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .btn {
+        background: #3b82f6;
+        color: #f1f5f9;
+        transition: background-color 0.3s ease, color 0.3s ease;
+
+        &:hover {
+          background: #2563eb;
+        }
+      }
+    }
+  }
+
+  .save-error-modal {
+    .save-error-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .save-error-header {
+        h3 {
+          color: #ef4444;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .save-error-message {
+        p {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .btn {
+        transition: background-color 0.3s ease, color 0.3s ease;
+
+        &.btn-warning {
+          background: #f59e0b;
+          color: #f1f5f9;
+
+          &:hover {
+            background: #d97706;
+          }
+        }
+
+        &.btn-secondary {
+          background: #475569;
+          color: #cbd5e1;
+
+          &:hover {
+            background: #64748b;
+          }
+        }
+      }
+    }
+  }
+
+  // Notification Toast Dark Mode
+  .notification-toast {
+    background: #1e293b;
+    border-left-color: #3b82f6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-left-color 0.3s ease, box-shadow 0.3s ease;
+
+    &.notification-prescription {
+      border-left-color: #10b981;
+
+      .notification-icon {
+        background: #10b981;
+      }
+    }
+
+    &.notification-diagnosis {
+      border-left-color: #f59e0b;
+
+      .notification-icon {
+        background: #f59e0b;
+      }
+    }
+
+    &.notification-info {
+      border-left-color: #3b82f6;
+
+      .notification-icon {
+        background: #3b82f6;
+      }
+    }
+
+    .notification-message {
+      h4 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .notification-actions {
+      .btn-sm {
+        background: #475569;
+        color: #cbd5e1;
+        border-color: #64748b;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+        &:hover {
+          background: #64748b;
+          color: #f1f5f9;
+        }
+      }
+    }
+  }
+
+  // Details Modal Dark Mode
+  .details-modal {
+    .details-modal-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .details-header {
+        border-bottom-color: #334155;
+        transition: border-bottom-color 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        .btn-close {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+
+          &:hover {
+            background: #334155;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .prescription-details,
+      .diagnosis-details {
+        .detail-item {
+          background: #334155;
+          border-left-color: #3b82f6;
+          transition: background-color 0.3s ease, border-left-color 0.3s ease;
+
+          strong {
+            color: #f1f5f9;
+            transition: color 0.3s ease;
+          }
+        }
+      }
+
+      .diagnosis-details .detail-item {
+        border-left-color: #f59e0b;
+      }
+
+      .no-details {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+
+        p {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .details-actions {
+        border-top-color: #334155;
+        transition: border-top-color 0.3s ease;
+
+        .btn {
+          background: #3b82f6;
+          color: #f1f5f9;
+          transition: background-color 0.3s ease, color 0.3s ease;
+
+          &:hover {
+            background: #2563eb;
+          }
+        }
+      }
+    }
+  }
+
+  // Prescription and Diagnosis Modal Dark Mode
+  .prescription-diagnosis-modal {
+    .prescription-diagnosis-modal-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .prescription-diagnosis-header {
+        border-bottom-color: #334155;
+        transition: border-bottom-color 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        .btn-close {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+
+          &:hover {
+            background: #334155;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .section {
+        h4 {
+          color: #f1f5f9;
+          border-bottom-color: #334155;
+          transition: color 0.3s ease, border-bottom-color 0.3s ease;
+        }
+      }
+
+      .loading-section {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+
+        .loading-spinner {
+          border-color: #475569;
+          border-top-color: #3b82f6;
+          transition: border-color 0.3s ease;
+        }
+
+        p {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .empty-section {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+
+        p {
+          color: #94a3b8;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .item-card {
+        background: #334155;
+        border-color: #475569;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+
+        &:hover {
+          background: #475569;
+          border-color: #3b82f6;
+        }
+
+        .item-header {
+          h5 {
+            color: #f1f5f9;
+            transition: color 0.3s ease;
+          }
+
+          .item-date {
+            background: #475569;
+            color: #cbd5e1;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+
+          .item-severity {
+            &.severity-mild {
+              background: #065f46;
+              color: #6ee7b7;
+            }
+
+            &.severity-moderate {
+              background: #92400e;
+              color: #fbbf24;
+            }
+
+            &.severity-severe {
+              background: #991b1b;
+              color: #fca5a5;
+            }
+
+            &.severity-chronic {
+              background: #1e40af;
+              color: #93c5fd;
+            }
+          }
+        }
+
+        .item-details {
+          p {
+            color: #cbd5e1;
+            transition: color 0.3s ease;
+
+            strong {
+              color: #f1f5f9;
+              transition: color 0.3s ease;
+            }
+          }
+        }
+      }
+
+      .prescription-card {
+        border-left-color: #10b981;
+
+        &:hover {
+          border-left-color: #059669;
+        }
+      }
+
+      .diagnosis-card {
+        border-left-color: #f59e0b;
+
+        &:hover {
+          border-left-color: #d97706;
+        }
+      }
+
+      .prescription-diagnosis-actions {
+        border-top-color: #334155;
+        transition: border-top-color 0.3s ease;
+
+        .btn {
+          background: #3b82f6;
+          color: #f1f5f9;
+          transition: background-color 0.3s ease, color 0.3s ease;
+
+          &:hover {
+            background: #2563eb;
+          }
+        }
+      }
+    }
+  }
+
+  // Save Status Dark Mode
+  .save-status {
+    &.success {
+      background-color: #065f46;
+      color: #6ee7b7;
+      border-color: #059669;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    &.error {
+      background-color: #991b1b;
+      color: #fca5a5;
+      border-color: #dc2626;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+  }
+
+  .saving-indicator {
+    .spinner {
+      border-color: #475569;
+      border-top-color: #3b82f6;
+      transition: border-color 0.3s ease;
+    }
+  }
+
+  // Doctor Details Backdrop Dark Mode
+  .doctor-details-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    transition: background-color 0.3s ease;
+  }
+}

@@ -47,6 +47,7 @@ $border-radius-xl: 16px;
   font-family: $font-family-primary;
   color: $text-primary;
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 
   // Header Section
   .dashboard-header {
@@ -56,6 +57,7 @@ $border-radius-xl: 16px;
     margin-bottom: $spacing-xl;
     box-shadow: 0 2px 8px $shadow-light;
     border: 1px solid $border-color;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 
     .header-content {
       display: flex;
@@ -70,6 +72,7 @@ $border-radius-xl: 16px;
           margin: 0 0 $spacing-sm 0;
           color: $primary-color;
           letter-spacing: -0.025em;
+          transition: color 0.3s ease;
         }
 
         .subtitle {
@@ -77,6 +80,7 @@ $border-radius-xl: 16px;
           color: $text-secondary;
           margin: 0;
           font-weight: 400;
+          transition: color 0.3s ease;
         }
       }
 
@@ -88,6 +92,7 @@ $border-radius-xl: 16px;
           color: $accent-color;
           text-align: center;
           line-height: 1;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -104,6 +109,7 @@ $border-radius-xl: 16px;
       margin-bottom: $spacing-lg;
       padding-bottom: $spacing-sm;
       border-bottom: 2px solid $border-light;
+      transition: color 0.3s ease, border-bottom-color 0.3s ease;
     }
 
     .actions-grid {
@@ -121,7 +127,7 @@ $border-radius-xl: 16px;
         align-items: center;
         gap: $spacing-md;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         color: $text-primary;
         text-decoration: none;
         font-family: inherit;
@@ -135,12 +141,14 @@ $border-radius-xl: 16px;
         i {
           font-size: 2rem;
           color: $accent-color;
+          transition: color 0.3s ease;
         }
 
         span {
           font-weight: 500;
           font-size: 0.9rem;
           text-align: center;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -172,6 +180,7 @@ $border-radius-xl: 16px;
     padding: $spacing-xl;
     box-shadow: 0 2px 8px $shadow-light;
     border: 1px solid $border-color;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 
     .card-header {
       display: flex;
@@ -180,12 +189,14 @@ $border-radius-xl: 16px;
       margin-bottom: $spacing-lg;
       padding-bottom: $spacing-md;
       border-bottom: 1px solid $border-light;
+      transition: border-bottom-color 0.3s ease;
 
       h3 {
         font-size: 1.25rem;
         font-weight: 600;
         color: $text-primary;
         margin: 0;
+        transition: color 0.3s ease;
       }
 
       .text-button {
@@ -196,7 +207,7 @@ $border-radius-xl: 16px;
         cursor: pointer;
         padding: $spacing-sm $spacing-md;
         border-radius: $border-radius-sm;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         font-size: 0.875rem;
 
         &:hover {
@@ -217,7 +228,7 @@ $border-radius-xl: 16px;
       border-radius: $border-radius-md;
       margin-bottom: $spacing-md;
       background: $background-secondary;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
 
       &:hover {
         border-color: $border-color;
@@ -233,6 +244,7 @@ $border-radius-xl: 16px;
           font-weight: 600;
           color: $text-primary;
           margin-bottom: $spacing-xs;
+          transition: color 0.3s ease;
         }
 
         .date {
@@ -240,6 +252,7 @@ $border-radius-xl: 16px;
           color: $text-secondary;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          transition: color 0.3s ease;
         }
       }
 
@@ -251,6 +264,7 @@ $border-radius-xl: 16px;
           font-weight: 600;
           color: $text-primary;
           margin-bottom: $spacing-xs;
+          transition: color 0.3s ease;
         }
 
         .appointment-meta {
@@ -258,6 +272,7 @@ $border-radius-xl: 16px;
           gap: $spacing-md;
           font-size: 0.875rem;
           color: $text-secondary;
+          transition: color 0.3s ease;
 
           .specialty {
             background: rgba($accent-color, 0.1);
@@ -265,6 +280,7 @@ $border-radius-xl: 16px;
             padding: $spacing-xs $spacing-sm;
             border-radius: $border-radius-sm;
             font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease;
           }
 
           .type {
@@ -273,6 +289,7 @@ $border-radius-xl: 16px;
             padding: $spacing-xs $spacing-sm;
             border-radius: $border-radius-sm;
             font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease;
           }
         }
       }
@@ -290,16 +307,19 @@ $border-radius-xl: 16px;
       text-align: center;
       padding: $spacing-xxl;
       color: $text-secondary;
+      transition: color 0.3s ease;
 
       i {
         font-size: 3rem;
         margin-bottom: $spacing-md;
         opacity: 0.5;
+        transition: color 0.3s ease;
       }
 
       p {
         margin-bottom: $spacing-lg;
         font-size: 1.1rem;
+        transition: color 0.3s ease;
       }
     }
   }
@@ -318,7 +338,7 @@ $border-radius-xl: 16px;
       border: 1px solid $border-light;
       border-radius: $border-radius-md;
       background: $background-secondary;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
 
       &:hover {
         border-color: $border-color;
@@ -336,6 +356,7 @@ $border-radius-xl: 16px;
         justify-content: center;
         color: white;
         flex-shrink: 0;
+        transition: background 0.3s ease;
 
         i {
           font-size: 1.5rem;
@@ -350,12 +371,14 @@ $border-radius-xl: 16px;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          transition: color 0.3s ease;
         }
 
         .metric-value {
           font-size: 1.25rem;
           font-weight: 600;
           color: $text-primary;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -369,7 +392,7 @@ $border-radius-xl: 16px;
       padding: $spacing-md;
       border-radius: $border-radius-md;
       margin-bottom: $spacing-md;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
 
       &:hover {
         background: $background-secondary;
@@ -401,11 +424,13 @@ $border-radius-xl: 16px;
           color: $text-primary;
           margin-bottom: $spacing-xs;
           line-height: 1.4;
+          transition: color 0.3s ease;
         }
 
         .notification-time {
           font-size: 0.8rem;
           color: $text-secondary;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -420,7 +445,7 @@ $border-radius-xl: 16px;
       padding: $spacing-md;
       border-radius: $border-radius-md;
       margin-bottom: $spacing-md;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
 
       &:hover {
         background: $background-secondary;
@@ -436,6 +461,7 @@ $border-radius-xl: 16px;
         justify-content: center;
         color: $accent-color;
         flex-shrink: 0;
+        transition: background-color 0.3s ease, color 0.3s ease;
 
         i {
           font-size: 1.25rem;
@@ -451,11 +477,13 @@ $border-radius-xl: 16px;
           margin-bottom: $spacing-xs;
           font-size: 0.9rem;
           line-height: 1.4;
+          transition: color 0.3s ease;
         }
 
         .activity-time {
           font-size: 0.8rem;
           color: $text-secondary;
+          transition: color 0.3s ease;
         }
       }
     }
@@ -470,6 +498,7 @@ $border-radius-xl: 16px;
       font-weight: 600;
       color: $text-primary;
       margin-bottom: $spacing-sm;
+      transition: color 0.3s ease;
     }
 
     .emergency-phone {
@@ -481,6 +510,7 @@ $border-radius-xl: 16px;
       padding: $spacing-md;
       border-radius: $border-radius-md;
       border: 1px solid $border-light;
+      transition: all 0.3s ease;
     }
 
     .emergency-button {
@@ -495,7 +525,7 @@ $border-radius-xl: 16px;
       align-items: center;
       gap: $spacing-sm;
       margin: 0 auto;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       font-size: 0.9rem;
 
       &:hover {
@@ -518,7 +548,7 @@ $border-radius-xl: 16px;
     border-radius: $border-radius-md;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-size: 0.875rem;
     display: flex;
     align-items: center;
@@ -542,7 +572,7 @@ $border-radius-xl: 16px;
     border-radius: $border-radius-md;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-size: 0.875rem;
 
     &:hover {
@@ -616,6 +646,276 @@ $border-radius-xl: 16px;
 
     .metrics-grid {
       grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .patient-dashboard {
+    background-color: #0f172a;
+    color: #f1f5f9;
+
+    // Header Section
+    .dashboard-header {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      .header-content {
+        .welcome-section {
+          h1 {
+            color: #f1f5f9;
+          }
+
+          .subtitle {
+            color: #cbd5e1;
+          }
+        }
+
+        .time-display {
+          .current-time {
+            color: #60a5fa;
+          }
+        }
+      }
+    }
+
+    // Quick Actions
+    .quick-actions {
+      .section-title {
+        color: #f1f5f9;
+        border-bottom-color: #334155;
+      }
+
+      .actions-grid {
+        .action-button {
+          background: #1e293b;
+          border-color: #334155;
+          color: #f1f5f9;
+
+          &:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 4px 16px rgba(96, 165, 250, 0.2);
+            background: #334155;
+          }
+
+          i {
+            color: #60a5fa;
+          }
+
+          span {
+            color: #f1f5f9;
+          }
+        }
+      }
+    }
+
+    // Content Cards
+    .content-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      .card-header {
+        border-bottom-color: #334155;
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .text-button {
+          color: #60a5fa;
+
+          &:hover {
+            background: rgba(96, 165, 250, 0.1);
+          }
+        }
+      }
+    }
+
+    // Appointments List
+    .appointments-list {
+      .appointment-item {
+        background: #334155;
+        border-color: #475569;
+
+        &:hover {
+          background: #475569;
+          border-color: #64748b;
+        }
+
+        .appointment-time {
+          .time {
+            color: #f1f5f9;
+          }
+
+          .date {
+            color: #cbd5e1;
+          }
+        }
+
+        .appointment-details {
+          .doctor-name {
+            color: #f1f5f9;
+          }
+
+          .appointment-meta {
+            color: #cbd5e1;
+
+            .specialty {
+              background: rgba(96, 165, 250, 0.2);
+              color: #60a5fa;
+            }
+
+            .type {
+              background: rgba(91, 173, 226, 0.2);
+              color: #5dade2;
+            }
+          }
+        }
+      }
+
+      .empty-state {
+        color: #cbd5e1;
+
+        i {
+          color: #64748b;
+        }
+
+        p {
+          color: #cbd5e1;
+        }
+      }
+    }
+
+    // Health Metrics
+    .metrics-grid {
+      .metric-item {
+        background: #334155;
+        border-color: #475569;
+
+        &:hover {
+          background: #475569;
+          border-color: #64748b;
+        }
+
+        .metric-icon {
+          background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .metric-info {
+          .metric-label {
+            color: #cbd5e1;
+          }
+
+          .metric-value {
+            color: #f1f5f9;
+          }
+        }
+      }
+    }
+
+    // Notifications List
+    .notifications-list {
+      .notification-item {
+        &:hover {
+          background: #334155;
+        }
+
+        .notification-icon {
+          i {
+            &.material-icons:contains('check_circle') {
+              color: #4ade80;
+            }
+            
+            &.material-icons:contains('info') {
+              color: #60a5fa;
+            }
+            
+            &.material-icons:contains('warning') {
+              color: #fbbf24;
+            }
+          }
+        }
+
+        .notification-content {
+          .notification-message {
+            color: #f1f5f9;
+          }
+
+          .notification-time {
+            color: #cbd5e1;
+          }
+        }
+      }
+    }
+
+    // Activity List
+    .activity-list {
+      .activity-item {
+        &:hover {
+          background: #334155;
+        }
+
+        .activity-icon {
+          background: rgba(96, 165, 250, 0.2);
+          color: #60a5fa;
+        }
+
+        .activity-content {
+          .activity-title {
+            color: #f1f5f9;
+          }
+
+          .activity-time {
+            color: #cbd5e1;
+          }
+        }
+      }
+    }
+
+    // Emergency Contact
+    .emergency-info {
+      .emergency-name {
+        color: #f1f5f9;
+      }
+
+      .emergency-phone {
+        color: #cbd5e1;
+        background: #334155;
+        border-color: #475569;
+      }
+
+      .emergency-button {
+        background: #dc2626;
+
+        &:hover {
+          background: #b91c1c;
+        }
+      }
+    }
+
+    // Buttons
+    .primary-button {
+      background: #3b82f6;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+
+    .secondary-button {
+      background: #1e293b;
+      color: #60a5fa;
+      border-color: #60a5fa;
+
+      &:hover {
+        background: #60a5fa;
+        color: #1e293b;
+      }
     }
   }
 }

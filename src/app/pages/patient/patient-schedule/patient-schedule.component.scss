@@ -915,3 +915,398 @@ body.modal-open .sidebar {
   filter: grayscale(20%);
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .schedule-page {
+    background: #0f172a;
+    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .appointments-table {
+    th {
+      color: #f1f5f9;
+      background: #334155;
+    }
+
+    td {
+      color: #cbd5e1;
+      border-bottom-color: #475569;
+    }
+
+    tr:hover {
+      background: #334155;
+    }
+  }
+
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  .btn-reschedule {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+
+    &:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+  }
+
+  .btn-cancel {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+
+    &:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+  }
+
+  .btn-ghost {
+    background: #334155;
+    color: #f1f5f9;
+    border-color: #475569;
+
+    &:hover {
+      background: #475569;
+      border-color: #64748b;
+    }
+  }
+
+  .btn-accept {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+
+    &:hover {
+      background: #15803d;
+      border-color: #15803d;
+    }
+  }
+
+  .btn-join-meeting {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+
+    &:hover:not(:disabled) {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    &:disabled {
+      background: #64748b;
+      border-color: #64748b;
+    }
+  }
+
+  .badge {
+    border-color: #475569;
+    transition: all 0.3s ease;
+  }
+
+  .badge.scheduled {
+    background: #451a03;
+    color: #fbbf24;
+    border-color: #92400e;
+  }
+
+  .badge.confirmed {
+    background: #14532d;
+    color: #4ade80;
+    border-color: #166534;
+  }
+
+  .badge.cancelled {
+    background: #7f1d1d;
+    color: #fca5a5;
+    border-color: #dc2626;
+  }
+
+  .badge.completed {
+    background: #1e3a8a;
+    color: #93c5fd;
+    border-color: #1e40af;
+  }
+
+  .calendar-header {
+    h3 {
+      color: #f1f5f9;
+    }
+  }
+
+  .calendar {
+    background: #1e293b;
+    border-color: #334155;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .calendar-grid {
+    .dow {
+      color: #94a3b8;
+    }
+
+    .day {
+      background: #334155;
+      border-color: #475569;
+      color: #cbd5e1;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #3b82f6;
+        background: #475569;
+      }
+
+      &.out {
+        background: #1e293b;
+        opacity: 0.6;
+      }
+
+      &.appt {
+        outline-color: #3b82f6;
+        background: #1e3a8a;
+      }
+
+      &.clickable:hover {
+        background: #1e40af;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+      }
+
+      .num {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .appointment-indicator {
+    .appointment-count {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+  }
+
+  .calendar-legend {
+    .legend-item {
+      color: #94a3b8;
+    }
+
+    .legend-color.appt {
+      background: #3b82f6;
+      outline-color: #3b82f6;
+    }
+  }
+
+  .top-actions {
+    h2 {
+      color: #f1f5f9;
+    }
+  }
+
+  // Modal styles
+  .modal-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .modal {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .modal-header {
+    background: #334155;
+    border-bottom-color: #475569;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+
+    h3 {
+      color: #f1f5f9;
+    }
+  }
+
+  .modal-body {
+    label {
+      color: #f1f5f9;
+    }
+
+    input,
+    select,
+    textarea {
+      background: #334155;
+      border-color: #475569;
+      color: #f1f5f9;
+      transition: all 0.3s ease;
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      &::placeholder {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .modal-footer {
+    background: #334155;
+    border-top-color: #475569;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  // Error styling
+  .invalid-date {
+    border-color: #dc2626 !important;
+    background-color: #7f1d1d;
+  }
+
+  .error-text {
+    color: #fca5a5;
+  }
+
+  .help-text {
+    color: #94a3b8;
+  }
+
+  // Pagination styles
+  .pagination-container {
+    border-top-color: #475569;
+  }
+
+  .pagination-info {
+    color: #94a3b8;
+  }
+
+  .pagination-btn.btn-active {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+  }
+
+  // Mobile card styles
+  .mobile-card {
+    background: #1e293b;
+    border-color: #334155;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+  }
+
+  .mobile-card-header {
+    border-bottom-color: #475569;
+  }
+
+  .mobile-card-id {
+    color: #f1f5f9;
+  }
+
+  .mobile-card-label {
+    color: #f1f5f9;
+  }
+
+  .mobile-card-value {
+    color: #cbd5e1;
+  }
+
+  .mobile-card-actions {
+    border-top-color: #475569;
+  }
+
+  // Appointment details modal styles
+  .no-appointments {
+    color: #94a3b8;
+  }
+
+  .appointment-item {
+    background: #334155;
+    border-color: #475569;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #475569;
+      border-color: #64748b;
+    }
+  }
+
+  .appointment-doctor h4 {
+    color: #f1f5f9;
+  }
+
+  .appointment-specialty {
+    color: #94a3b8;
+  }
+
+  .appointment-time {
+    color: #94a3b8;
+  }
+
+  .appointment-reason,
+  .appointment-scheduled {
+    color: #cbd5e1;
+
+    strong {
+      color: #f1f5f9;
+    }
+  }
+
+  .meeting-status {
+    background: #475569;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+
+    &.meeting-available {
+      color: #4ade80;
+      background: #14532d;
+    }
+  }
+
+  // Form styles
+  .form-input,
+  .form-select,
+  .form-textarea {
+    background: #334155;
+    border-color: #475569;
+    color: #f1f5f9;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+
+  .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  // Loading spinner
+  .loading-spinner {
+    color: #f1f5f9;
+  }
+
+  // Meeting icon
+  .meeting-icon {
+    color: #f1f5f9;
+  }
+}

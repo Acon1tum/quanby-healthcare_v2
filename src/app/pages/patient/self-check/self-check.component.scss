@@ -823,3 +823,395 @@ $border-radius-xl: 16px;
     }
   }
 }
+
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .main-content {
+    background-color: #0f172a;
+    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .self-check-container {
+    background: #0f172a;
+    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  // Header Section Dark Mode
+  .self-check-header {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+    .back-btn {
+      background: #334155;
+      color: #cbd5e1;
+      transition: background-color 0.3s ease, color 0.3s ease;
+
+      &:hover {
+        background: #475569;
+        color: #f1f5f9;
+      }
+    }
+
+    .header-text {
+      h1 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+    }
+  }
+
+  // Scanning Section Dark Mode
+  .scanning-section {
+    .scan-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .scan-header {
+        h2 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        p {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .iframe-container {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: box-shadow 0.3s ease;
+
+        .scan-iframe {
+          background: #1e293b;
+          transition: background-color 0.3s ease;
+        }
+      }
+    }
+  }
+
+  // Loading Section Dark Mode
+  .loading-section {
+    .loading-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      h3 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+    }
+  }
+
+  // Results Section Dark Mode
+  .results-section {
+    .results-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .results-header {
+        h2 {
+          color: #27ae60;
+          transition: color 0.3s ease;
+        }
+
+        p {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+      }
+
+      .overall-score-section {
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        p {
+          color: #cbd5e1;
+          transition: color 0.3s ease;
+        }
+
+        .score-circle {
+          background: #1e293b;
+          border-color: #27ae60;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+          .score-value {
+            color: #27ae60;
+            transition: color 0.3s ease;
+          }
+
+          .score-label {
+            color: #f1f5f9;
+            transition: color 0.3s ease;
+          }
+
+          .score-status {
+            color: #cbd5e1;
+            transition: color 0.3s ease;
+          }
+        }
+      }
+
+      .health-metrics {
+        .metric-section {
+          .section-header {
+            background: #3498db;
+            color: #f1f5f9;
+            transition: background-color 0.3s ease, color 0.3s ease;
+
+            h3 {
+              color: #f1f5f9;
+              transition: color 0.3s ease;
+
+              i {
+                color: #f1f5f9;
+                transition: color 0.3s ease;
+              }
+            }
+          }
+
+          .metrics-grid {
+            background: #1e293b;
+            border-color: #334155;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+
+            .metric-card {
+              background: #334155;
+              border-color: #475569;
+              transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+
+              &:hover {
+                background: #475569;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+              }
+
+              .info-btn {
+                background: #3498db;
+                color: #f1f5f9;
+                transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+
+                &:hover {
+                  background: #2980b9;
+                }
+              }
+
+              .metric-status {
+                &.status-excellent,
+                &.status-green {
+                  color: #27ae60;
+                }
+
+                &.status-good,
+                &.status-orange {
+                  color: #f39c12;
+                }
+
+                &.status-average,
+                &.status-poor,
+                &.status-red {
+                  color: #e74c3c;
+                }
+              }
+
+              .metric-value {
+                color: #f1f5f9;
+                transition: color 0.3s ease;
+              }
+
+              .metric-title {
+                color: #cbd5e1;
+                transition: color 0.3s ease;
+              }
+
+              .metric-range {
+                color: #94a3b8;
+                transition: color 0.3s ease;
+              }
+            }
+          }
+        }
+      }
+
+      .action-buttons {
+        .primary-button {
+          background: #3498db;
+          color: #f1f5f9;
+          transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+
+          &:hover {
+            background: #2980b9;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+          }
+        }
+
+        .secondary-button {
+          background: #334155;
+          color: #f1f5f9;
+          border-color: #475569;
+          transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+
+          &:hover {
+            background: #475569;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          }
+        }
+      }
+
+      .email-section {
+        background: #334155;
+        transition: background-color 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+          transition: color 0.3s ease;
+        }
+
+        .email-form {
+          .form-group {
+            .form-control {
+              background: #1e293b;
+              border-color: #475569;
+              color: #f1f5f9;
+              transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+              &:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+              }
+
+              &::placeholder {
+                color: #94a3b8;
+              }
+            }
+
+            .primary-button {
+              background: #3498db;
+              color: #f1f5f9;
+              transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+
+              &:hover:not(:disabled) {
+                background: #2980b9;
+              }
+
+              &:disabled {
+                opacity: 0.6;
+              }
+            }
+          }
+        }
+
+        .email-status {
+          color: #27ae60;
+          transition: color 0.3s ease;
+        }
+      }
+    }
+  }
+
+  // Modal Dark Mode
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    transition: background-color 0.3s ease;
+
+    .modal-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+      .modal-close {
+        color: #cbd5e1;
+        transition: color 0.3s ease, background-color 0.3s ease;
+
+        &:hover {
+          color: #f1f5f9;
+          background: #334155;
+        }
+      }
+
+      .modal-icon {
+        background: #27ae60;
+        color: #f1f5f9;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      h3 {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      .modal-value {
+        color: #f1f5f9;
+        transition: color 0.3s ease;
+      }
+
+      .modal-status {
+        &.status-excellent,
+        &.status-green {
+          color: #27ae60;
+        }
+
+        &.status-good,
+        &.status-orange {
+          color: #f39c12;
+        }
+
+        &.status-average,
+        &.status-poor,
+        &.status-red {
+          color: #e74c3c;
+        }
+      }
+
+      .modal-description {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+
+      .modal-range {
+        color: #94a3b8;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: #cbd5e1;
+        transition: color 0.3s ease;
+      }
+
+      .primary-button {
+        background: #3498db;
+        color: #f1f5f9;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+
+        &:hover {
+          background: #2980b9;
+        }
+      }
+    }
+  }
+}

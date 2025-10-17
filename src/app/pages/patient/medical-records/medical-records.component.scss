@@ -3071,3 +3071,1275 @@
   }
 }
 
+/* Dark Mode Styles */
+:host-context(.dark-mode),
+:host-context(body.dark-mode),
+:host-context(html.dark-mode) {
+  .medical-records-container {
+    background: #0f172a;
+    color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  // Patient Information Section
+  .patient-info-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .patient-header {
+    border-bottom-color: #334155;
+  }
+
+  .patient-details h2 {
+    color: #f1f5f9;
+  }
+
+  .patient-age {
+    color: #cbd5e1;
+  }
+
+  .patient-id {
+    color: #94a3b8;
+  }
+
+  .stat-item {
+    background: #334155;
+    border-color: #475569;
+    transition: all 0.3s ease;
+  }
+
+  .stat-value {
+    color: #f1f5f9;
+  }
+
+  .stat-label {
+    color: #cbd5e1;
+  }
+
+  .info-section h3 {
+    color: #f1f5f9;
+    border-bottom-color: #334155;
+  }
+
+  .info-item {
+    i {
+      color: #60a5fa;
+    }
+
+    span {
+      color: #cbd5e1;
+    }
+  }
+
+  // Header Section
+  .records-header {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+
+    .header-text {
+      h1 {
+        color: #f1f5f9;
+      }
+
+      p {
+        color: #cbd5e1;
+      }
+    }
+
+    .back-btn {
+      background: #334155;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #475569;
+      }
+
+      i {
+        color: #cbd5e1;
+      }
+    }
+
+    .refresh-btn {
+      background: #3b82f6;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  // Loading and Error States
+  .loading-state, .error-state {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+
+    p {
+      color: #cbd5e1;
+    }
+
+    .spinner {
+      border-color: #334155;
+      border-top-color: #3b82f6;
+    }
+
+    .retry-btn {
+      background: #3b82f6;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  // Summary Cards
+  .summary-cards {
+    .summary-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      }
+
+      .card-icon {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      }
+
+      .card-content {
+        .card-value {
+          color: #f1f5f9;
+        }
+
+        .card-label {
+          color: #cbd5e1;
+        }
+      }
+    }
+  }
+
+  // Navigation Tabs
+  .nav-tabs {
+    background: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+
+    .tab-btn {
+      color: #cbd5e1;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #334155;
+        color: #60a5fa;
+      }
+
+      &.active {
+        background: #3b82f6;
+        color: white;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      }
+    }
+  }
+
+  // Tab Content
+  .tab-content {
+    background: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+
+    // Overview Tab
+    .overview-tab {
+      .overview-card {
+        background: #334155;
+        border-color: #475569;
+        transition: all 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+          border-bottom-color: #475569;
+        }
+
+        .info-grid {
+          .info-item {
+            label {
+              color: #cbd5e1;
+            }
+
+            p {
+              color: #f1f5f9;
+            }
+          }
+        }
+
+        .info-content {
+          .info-item {
+            label {
+              color: #cbd5e1;
+            }
+
+            p {
+              color: #f1f5f9;
+            }
+
+            .tags {
+              .tag {
+                background: #475569;
+                color: #e2e8f0;
+              }
+
+              .no-data {
+                color: #94a3b8;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Consultations Tab
+    .consultations-tab {
+      .consultations-header {
+        background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+        transition: all 0.3s ease;
+
+        .header-info {
+          h3 {
+            color: #f1f5f9;
+          }
+
+          p {
+            color: #e2e8f0;
+          }
+        }
+
+        .header-actions {
+          .filter-btn,
+          .sort-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.3);
+            }
+          }
+        }
+      }
+
+      .filter-sort-container {
+        background: #334155;
+        border-color: #475569;
+        transition: all 0.3s ease;
+
+        .filter-menu,
+        .sort-menu {
+          h4 {
+            color: #f1f5f9;
+          }
+        }
+
+        .sort-menu select {
+          background: #475569;
+          border-color: #64748b;
+          color: #f1f5f9;
+          transition: all 0.3s ease;
+
+          &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+      }
+    }
+
+    .consultation-card {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+
+      &.featured {
+        border-color: #3b82f6;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+
+        &::before {
+          background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+      }
+
+      &:hover {
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        border-color: #3b82f6;
+      }
+    }
+
+    .consultation-header {
+      background: linear-gradient(135deg, #334155 0%, #475569 100%);
+      border-bottom-color: #334155;
+    }
+
+    .consultation-date {
+      .date {
+        color: #f1f5f9;
+      }
+
+      .time {
+        color: #cbd5e1;
+      }
+
+      .day-of-week {
+        color: #94a3b8;
+      }
+    }
+
+    .consultation-doctor {
+      .doctor-info {
+        .doctor-name {
+          color: #f1f5f9;
+        }
+
+        .specialty {
+          color: #cbd5e1;
+        }
+
+        .doctor-rating {
+          color: #fbbf24;
+        }
+      }
+    }
+
+    .consultation-status {
+      .status-badge {
+        &.completed {
+          background: #14532d;
+          color: #4ade80;
+        }
+
+        &.scheduled {
+          background: #1e3a8a;
+          color: #93c5fd;
+        }
+
+        &.in-progress {
+          background: #92400e;
+          color: #fbbf24;
+        }
+      }
+
+      .priority-indicator {
+        color: #f87171;
+      }
+    }
+
+    .consultation-quick-info {
+      background: #334155;
+      border-bottom-color: #334155;
+
+      .info-item {
+        color: #cbd5e1;
+
+        i {
+          color: #60a5fa;
+        }
+      }
+    }
+
+    .consultation-summary {
+      border-bottom-color: #334155;
+
+      .summary-header {
+        h4 {
+          color: #f1f5f9;
+        }
+
+        .summary-indicators {
+          .indicator {
+            background: #475569;
+            color: #60a5fa;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #60a5fa;
+              color: white;
+            }
+          }
+        }
+      }
+
+      .summary-content {
+        .summary-item {
+          background: #334155;
+          border-left-color: #60a5fa;
+
+          .item-header {
+            i {
+              color: #60a5fa;
+            }
+
+            .item-label {
+              color: #f1f5f9;
+            }
+          }
+
+          .item-content {
+            color: #cbd5e1;
+          }
+        }
+      }
+    }
+
+    .health-scan-preview {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      border-bottom-color: #334155;
+
+      .scan-header {
+        h4 {
+          color: #f1f5f9;
+        }
+
+        .scan-date {
+          color: #cbd5e1;
+        }
+      }
+
+      .scan-metrics {
+        .metric {
+          background: #1e293b;
+          border-color: #334155;
+          transition: all 0.3s ease;
+
+          &:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          }
+
+          .metric-value {
+            color: #f1f5f9;
+          }
+
+          .metric-unit {
+            color: #cbd5e1;
+          }
+
+          .metric-label {
+            color: #94a3b8;
+          }
+        }
+      }
+    }
+
+    .consultation-actions {
+      background: #334155;
+
+      .action-btn {
+        transition: all 0.3s ease;
+
+        &.primary {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+          &:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+          }
+        }
+
+        &.secondary {
+          background: #475569;
+          color: #f1f5f9;
+          border-color: #64748b;
+
+          &:hover {
+            background: #64748b;
+          }
+        }
+
+        &.tertiary {
+          background: #92400e;
+          color: #fbbf24;
+          border-color: #d97706;
+
+          &:hover {
+            background: #d97706;
+          }
+        }
+
+        &.danger {
+          background: linear-gradient(135deg, #dc2626, #b91c1c);
+          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+
+          &:hover {
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+          }
+        }
+      }
+    }
+
+    // Medical History Tab
+    .medical-history-tab {
+      .medical-history-list {
+        .medical-record-card {
+          background: #334155;
+          border-color: #475569;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #475569;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          }
+
+          .record-header {
+            .record-type {
+              .type-info {
+                .type-name {
+                  color: #f1f5f9;
+                }
+
+                .record-title {
+                  color: #cbd5e1;
+                }
+              }
+            }
+
+            .record-meta {
+              .privacy-badge {
+                &.privacy-success {
+                  background: #14532d;
+                  color: #4ade80;
+                }
+
+                &.privacy-warning {
+                  background: #92400e;
+                  color: #fbbf24;
+                }
+
+                &.privacy-danger {
+                  background: #7f1d1d;
+                  color: #fca5a5;
+                }
+              }
+
+              .record-date {
+                color: #cbd5e1;
+              }
+            }
+          }
+
+          .record-content {
+            .record-preview {
+              color: #cbd5e1;
+            }
+          }
+
+          .record-footer {
+            .creator-info {
+              .creator-label {
+                color: #cbd5e1;
+              }
+
+              .creator-name {
+                color: #f1f5f9;
+              }
+            }
+
+            .record-actions {
+              color: #60a5fa;
+            }
+          }
+        }
+      }
+    }
+
+    // Health Trends Tab
+    .trends-tab {
+      .trends-grid {
+        .trend-card {
+          background: #334155;
+          border-color: #475569;
+          transition: all 0.3s ease;
+
+          &:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+          }
+
+          &.selected {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+          }
+
+          .trend-header {
+            h4 {
+              color: #f1f5f9;
+            }
+
+            .trend-indicator {
+              &.success {
+                background: #14532d;
+                color: #4ade80;
+              }
+
+              &.danger {
+                background: #7f1d1d;
+                color: #fca5a5;
+              }
+
+              &.info {
+                background: #1e3a8a;
+                color: #93c5fd;
+              }
+            }
+          }
+
+          .trend-change {
+            .change-value {
+              &.success {
+                color: #4ade80;
+              }
+
+              &.danger {
+                color: #fca5a5;
+              }
+
+              &.info {
+                color: #93c5fd;
+              }
+            }
+          }
+
+          .metric-unit {
+            color: #cbd5e1;
+          }
+        }
+      }
+
+      .chart-section {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+
+        .chart-header {
+          border-bottom-color: #334155;
+
+          h3 {
+            color: #f1f5f9;
+          }
+
+          .chart-controls {
+            .metric-selector {
+              label {
+                color: #cbd5e1;
+              }
+
+              select {
+                background: #334155;
+                border-color: #475569;
+                color: #f1f5f9;
+                transition: all 0.3s ease;
+
+                &:focus {
+                  border-color: #3b82f6;
+                  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }
+              }
+            }
+          }
+        }
+
+        .chart-container {
+          .chart-wrapper {
+            .simple-chart {
+              .chart-title {
+                color: #f1f5f9;
+              }
+
+              .chart-area {
+                background: #334155;
+                border-color: #475569;
+
+                .trend-chart {
+                  background: #1e293b;
+
+                  .chart-grid {
+                    line {
+                      stroke: #475569;
+                    }
+                  }
+
+                  .axis-label {
+                    fill: #94a3b8;
+                  }
+                }
+              }
+
+              .chart-legend {
+                .legend-item {
+                  background: #334155;
+                  border-color: #475569;
+
+                  span {
+                    color: #f1f5f9;
+                  }
+                }
+              }
+            }
+          }
+
+          .no-data-chart {
+            color: #94a3b8;
+
+            p {
+              color: #f1f5f9;
+            }
+
+            small {
+              color: #cbd5e1;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Empty States
+  .empty-state {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+
+    .empty-icon {
+      i {
+        color: #64748b;
+      }
+    }
+
+    h3 {
+      color: #f1f5f9;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+
+    .empty-actions {
+      .cta-btn {
+        &.primary {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+          &:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+          }
+        }
+
+        &.secondary {
+          background: #475569;
+          color: #f1f5f9;
+          border-color: #64748b;
+
+          &:hover {
+            background: #64748b;
+          }
+        }
+      }
+    }
+  }
+
+  // Modals
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    transition: all 0.3s ease;
+
+    .modal-content {
+      background: #1e293b;
+      border-color: #334155;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+
+      .modal-header {
+        background: #334155;
+        border-bottom-color: #475569;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+
+        h3 {
+          color: #f1f5f9;
+        }
+
+        .close-btn {
+          color: #cbd5e1;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #475569;
+            color: #f1f5f9;
+          }
+        }
+      }
+
+      .modal-body {
+        .detail-section {
+          h4 {
+            color: #f1f5f9;
+            border-bottom-color: #475569;
+          }
+
+          .metrics-grid, .info-grid {
+            .metric-item, .info-item {
+              label {
+                color: #cbd5e1;
+              }
+
+              span {
+                color: #f1f5f9;
+              }
+            }
+          }
+
+          .risk-grid {
+            .risk-item {
+              background: #334155;
+              border-color: #475569;
+
+              label {
+                color: #cbd5e1;
+              }
+
+              .risk-level {
+                &.success {
+                  background: #14532d;
+                  color: #4ade80;
+                }
+
+                &.warning {
+                  background: #92400e;
+                  color: #fbbf24;
+                }
+
+                &.danger {
+                  background: #7f1d1d;
+                  color: #fca5a5;
+                }
+
+                &.secondary {
+                  background: #475569;
+                  color: #cbd5e1;
+                }
+              }
+
+              .risk-value {
+                color: #f1f5f9;
+              }
+            }
+          }
+
+          .conditions-grid {
+            .condition-item {
+              background: #334155;
+              border-color: #475569;
+
+              label {
+                color: #cbd5e1;
+              }
+
+              .condition-value {
+                &.yes {
+                  color: #fca5a5;
+                }
+
+                &.no {
+                  color: #4ade80;
+                }
+              }
+            }
+          }
+
+          .consultation-info, .scan-summary {
+            p {
+              color: #f1f5f9;
+
+              strong {
+                color: #f1f5f9;
+              }
+            }
+          }
+
+          .medical-info {
+            .info-item {
+              label {
+                color: #cbd5e1;
+              }
+
+              .notes-content, .diagnosis-content, .treatment-content, .followup-content {
+                background: #334155;
+                border-color: #475569;
+
+                p {
+                  color: #f1f5f9;
+
+                  strong {
+                    color: #f1f5f9;
+                  }
+                }
+              }
+
+              .diagnosis-content {
+                border-left-color: #fca5a5;
+              }
+
+              .treatment-content {
+                border-left-color: #4ade80;
+              }
+
+              .followup-content {
+                border-left-color: #60a5fa;
+              }
+            }
+          }
+
+          .view-scan-btn {
+            background: #3b82f6;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #2563eb;
+            }
+          }
+
+          .consultation-link {
+            p {
+              color: #f1f5f9;
+            }
+
+            .copy-code-btn {
+              background: #10b981;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: #059669;
+              }
+            }
+          }
+
+          // Medical Record Modal Styles
+          .medical-record-details {
+            .record-type-badge {
+              &.type-primary {
+                background: #1e3a8a;
+                color: #93c5fd;
+              }
+
+              &.type-success {
+                background: #14532d;
+                color: #4ade80;
+              }
+
+              &.type-warning {
+                background: #92400e;
+                color: #fbbf24;
+              }
+
+              &.type-danger {
+                background: #7f1d1d;
+                color: #fca5a5;
+              }
+
+              &.type-info {
+                background: #1e3a8a;
+                color: #93c5fd;
+              }
+
+              &.type-secondary {
+                background: #475569;
+                color: #cbd5e1;
+              }
+            }
+
+            .record-content-full {
+              background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+              border-color: #475569;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+              color: #cbd5e1;
+
+              &::before {
+                background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+              }
+
+              h3, h4 {
+                color: #f1f5f9;
+                background: linear-gradient(135deg, #f1f5f9, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+              }
+
+              li {
+                &::before {
+                  color: #60a5fa;
+                }
+              }
+
+              p {
+                color: #cbd5e1;
+              }
+
+              // Health scan results formatting
+              .health-scan-results {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+                border-color: #475569 !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+
+                &::before {
+                  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4, #10b981) !important;
+                }
+
+                .scan-header {
+                  border-bottom-color: #475569;
+
+                  h3 {
+                    color: #f1f5f9;
+                    background: linear-gradient(135deg, #f1f5f9, #60a5fa, #8b5cf6);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                  }
+
+                  .scan-summary {
+                    color: #cbd5e1;
+                  }
+                }
+
+                .metrics-grid {
+                  .health-metric-card {
+                    background: #334155 !important;
+                    border-color: #475569 !important;
+
+                    &::before {
+                      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+                    }
+
+                    &::after {
+                      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+                    }
+
+                    &:hover {
+                      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2);
+                    }
+
+                    .metric-icon {
+                      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.4);
+
+                      &::after {
+                        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                      }
+                    }
+
+                    .metric-content {
+                      .metric-title {
+                        color: #f1f5f9;
+                      }
+
+                      .metric-value {
+                        color: #f1f5f9;
+                        background: linear-gradient(135deg, #f1f5f9, #60a5fa, #8b5cf6);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                      }
+
+                      .metric-status {
+                        &.status-good {
+                          background: linear-gradient(135deg, #14532d, #166534);
+                          color: #4ade80;
+                          border-color: #166534;
+                        }
+
+                        &.status-fair {
+                          background: linear-gradient(135deg, #92400e, #b45309);
+                          color: #fbbf24;
+                          border-color: #b45309;
+                        }
+
+                        &.status-poor {
+                          background: linear-gradient(135deg, #7f1d1d, #991b1b);
+                          color: #fca5a5;
+                          border-color: #991b1b;
+                        }
+
+                        &.status-normal {
+                          background: linear-gradient(135deg, #1e3a8a, #1e40af);
+                          color: #93c5fd;
+                          border-color: #1e40af;
+                        }
+                      }
+
+                      .metric-description {
+                        color: #cbd5e1;
+                        background: linear-gradient(135deg, #334155, #1e293b);
+                        border-left-color: #475569;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                      }
+                    }
+                  }
+                }
+
+                .scan-footer {
+                  border-top-color: #475569;
+
+                  .scan-note {
+                    color: #cbd5e1;
+                    background: linear-gradient(135deg, #334155, #1e293b);
+                    border-color: #475569;
+                  }
+                }
+
+                .no-data {
+                  color: #cbd5e1;
+                  background: #334155;
+                  border-color: #475569;
+                }
+              }
+            }
+
+            .creator-details {
+              p {
+                color: #f1f5f9;
+
+                strong {
+                  color: #f1f5f9;
+                }
+              }
+            }
+
+            .privacy-settings {
+              .privacy-setting {
+                background: #334155;
+                border-color: #475569;
+
+                .setting-info {
+                  .setting-type {
+                    color: #f1f5f9;
+                  }
+
+                  .setting-status {
+                    &.enabled {
+                      background: #14532d;
+                      color: #4ade80;
+                    }
+
+                    &.disabled {
+                      background: #7f1d1d;
+                      color: #fca5a5;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Health scan results table dark mode
+  :host ::ng-deep .health-scan-results {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  :host ::ng-deep .health-scan-results::before {
+    background: linear-gradient(90deg, #3b82f6, #06b6d4) !important;
+  }
+
+  :host ::ng-deep .scan-header {
+    border-bottom-color: #334155 !important;
+
+    h3 {
+      color: #f1f5f9 !important;
+    }
+  }
+
+  :host ::ng-deep .scan-summary {
+    color: #cbd5e1 !important;
+  }
+
+  :host ::ng-deep .health-scan-table {
+    background: #1e293b !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  :host ::ng-deep .health-scan-table thead {
+    background: #334155 !important;
+  }
+
+  :host ::ng-deep .health-scan-table th {
+    color: #f1f5f9 !important;
+    border-bottom-color: #475569 !important;
+  }
+
+  :host ::ng-deep .health-scan-table td {
+    border-bottom-color: #334155 !important;
+    color: #cbd5e1 !important;
+  }
+
+  :host ::ng-deep .health-scan-table tbody tr:hover {
+    background: #334155 !important;
+  }
+
+  :host ::ng-deep .metric-name {
+    color: #f1f5f9 !important;
+  }
+
+  :host ::ng-deep .metric-description {
+    color: #94a3b8 !important;
+  }
+
+  :host ::ng-deep .value-cell {
+    color: #f1f5f9 !important;
+  }
+
+  :host ::ng-deep .status-badge.status-good {
+    background: #14532d !important;
+    color: #4ade80 !important;
+  }
+
+  :host ::ng-deep .status-badge.status-fair {
+    background: #92400e !important;
+    color: #fbbf24 !important;
+  }
+
+  :host ::ng-deep .status-badge.status-poor {
+    background: #7f1d1d !important;
+    color: #fca5a5 !important;
+  }
+
+  :host ::ng-deep .status-badge.status-normal {
+    background: #1e3a8a !important;
+    color: #93c5fd !important;
+  }
+
+  :host ::ng-deep .category-cell {
+    color: #94a3b8 !important;
+  }
+
+  :host ::ng-deep .scan-footer {
+    border-top-color: #334155 !important;
+  }
+
+  :host ::ng-deep .scan-note {
+    color: #94a3b8 !important;
+  }
+}
+
